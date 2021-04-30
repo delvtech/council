@@ -28,7 +28,6 @@ const config: HardhatUserConfig = {
         },
       },
     ],
-    },
   },
   mocha: { timeout: 0 },
   networks: {
@@ -43,7 +42,7 @@ const config: HardhatUserConfig = {
         count: 5,
       },
     },
-  },
+  }
 };
 
 export default config;
