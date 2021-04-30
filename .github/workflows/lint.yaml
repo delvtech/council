@@ -1,0 +1,32 @@
+name: Lint
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+jobs:
+
+    lint:
+      runs-on: ubuntu-latest
+
+      steps:
+      - name: check out github repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: init
+        run: npm ci
+      
+      - name: Style Check
+        run: npm run style-check
+
+      - name: Solhint
+        run: npm run solhint
+
+      - name: Spell Check
+        run: npm run spell-check

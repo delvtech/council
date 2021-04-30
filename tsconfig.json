@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+      "target": "es5",
+      "module": "commonjs",
+      "strict": true,
+      "esModuleInterop": true,
+      "outDir": "dist",
+      "resolveJsonModule": true,
+      "paths": {
+        "test": ["./test"],
+        "test/*": ["./test/*"],
+        "typechain": ["./typechain"],
+        "typechain/*": ["./typechain/*"],
+      },
+    },
+    "include": [
+      "./scripts",
+      "./test",
+      "./typechain"
+    ],
+    "files": ["./hardhat.config.ts", "./hardhat.config.test.ts"]
+  }
