@@ -13,13 +13,19 @@ contract MockTokenLogic is ReadAndWriteAnyStorage {
     // address owner
     // mapping(address => balance) balances
     // Access functions which prevent us from typo-ing the variable name below
-    function getOwner() internal pure returns(Storage.Address storage) {
+    function _getOwner() internal pure returns (Storage.Address storage) {
         return Storage.addressPtr("owner");
     }
-    function getTotalSupply() internal pure returns(Storage.Uint256 storage) {
+
+    function _getTotalSupply() internal pure returns (Storage.Uint256 storage) {
         return Storage.uint256Ptr("totalSupply");
     }
-    function getBalancesMapping() internal pure returns(mapping(address => uint256) storage) {
+
+    function _getBalancesMapping()
+        internal
+        pure
+        returns (mapping(address => uint256) storage)
+    {
         return Storage.mappingAddressToUnit256Ptr("balances");
     }
 
@@ -29,31 +35,31 @@ contract MockTokenLogic is ReadAndWriteAnyStorage {
     }
 
     function transfer(address to, uint256 amount) external {
-        mapping(address => uint256) storage balances = getBalancesMapping();
+        mapping(address => uint256) storage balances = _getBalancesMapping();
 
         balances[msg.sender] -= amount;
         balances[to] += amount;
     }
 
-    function balanceOf(address who) external view returns(uint256) {
-        mapping(address => uint256) storage balances = getBalancesMapping();
-        return(balances[who]);
+    function balanceOf(address who) external view returns (uint256) {
+        mapping(address => uint256) storage balances = _getBalancesMapping();
+        return (balances[who]);
     }
 
-    function totalSupply() external view returns(uint256) {
-        Storage.Uint256 storage totalSupply = getTotalSupply();
-        return(totalSupply.load());
+    function totalSupply() external view returns (uint256) {
+        Storage.Uint256 storage totalSupply = _getTotalSupply();
+        return (totalSupply.load());
     }
-    
+
     modifier onlyOwner {
-        Storage.Address storage owner = getOwner();
+        Storage.Address storage owner = _getOwner();
         require(msg.sender == owner.load(), "unauthorized");
         _;
     }
 
     function mint(address to, uint256 amount) external onlyOwner() {
-        Storage.Uint256 storage totalSupply = getTotalSupply();
-        mapping(address => uint256) storage balances = getBalancesMapping();
+        Storage.Uint256 storage totalSupply = _getTotalSupply();
+        mapping(address => uint256) storage balances = _getBalancesMapping();
 
         balances[to] += amount;
         uint256 localTotalSupply = totalSupply.load();

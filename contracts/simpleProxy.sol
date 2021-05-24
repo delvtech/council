@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
 
 contract SimpleProxy {
-    // This contract splits the storage of a contract from its logic, it will 
+    // This contract splits the storage of a contract from its logic, it will
     // call an implementation contract via delegatecall. That implementation
     // changes what is stored in this contract, by changing the implementation
     // address this contract effectively has different logic.
@@ -73,19 +73,23 @@ contract SimpleProxy {
             // Load the implementation address
             let implementation := sload(proxyImplementation.slot)
             // It's very unlikely any extra data got loaded but we clean anyway
-            implementation := and(implementation, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000000000)
+            implementation := and(
+                implementation,
+                0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000000000
+            )
             // Now we make the delegatecall
             let success := delegatecall(
                 // The gas param
-                gas(), 
+                gas(),
                 // The address
-                implementation, 
+                implementation,
                 // The memory location of the input data
-                ptr, 
+                ptr,
                 // The input size
-                calldataLength, 
+                calldataLength,
                 // The output memory pointer and size, we use the return data instead
-                0, 0
+                0,
+                0
             )
             // Load our new free memory pointer
             ptr := mload(0x40)

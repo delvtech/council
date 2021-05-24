@@ -42,7 +42,7 @@ const config: HardhatUserConfig = {
         count: 5,
       },
     },
-  }
+  },
 };
 
 export default config;
