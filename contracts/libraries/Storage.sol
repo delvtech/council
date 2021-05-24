@@ -88,4 +88,14 @@ library Storage {
             data.slot := offset
         }
     }
+
+    /// @notice Allows external users to calculate the slot given by this lib
+    /// @param typeString the string which encodes the type
+    /// @param name the variable name
+    /// @return the slot assigned by this lib
+    function getPtr(string memory typeString, string memory name) external pure returns(uint256) {
+        bytes32 typehash = keccak256(abi.encodePacked(typeString));
+        bytes32 offset = keccak256(abi.encodePacked(typehash, name));
+        return (uint256)(offset);
+    }
 }
