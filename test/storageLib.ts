@@ -7,9 +7,19 @@ import { MockTokenLogic__factory } from "../typechain/factories/MockTokenLogic__
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { Storage } from "../typechain/Storage";
 import { Storage__factory } from "../typechain/factories/Storage__factory";
-import { BigNumber } from "ethers";
+import { BigNumberish, BigNumber } from "ethers";
 
 const { provider } = waffle;
+
+function addressToStoragePointer(pointer: BigNumberish, address: string) {
+  console.log(
+    ethers.utils.solidityPack(["uint256", "address"], [pointer, address])
+  );
+  return ethers.utils.solidityKeccak256(
+    ["uint256", "address"],
+    [pointer, address]
+  );
+}
 
 describe("erc20", function () {
   let token: MockTokenLogic;
@@ -82,6 +92,28 @@ describe("erc20", function () {
         )
       ).to.be.eq(ethers.utils.parseEther("100"));
     });
-    it("Does not store balances in the normal location", async () => {});
+    it("Stores the balance in the correct location", async () => {
+      const balancesPtr = await storageLib.getPtr(
+        "mapping(address => uint256)",
+        "balances"
+      );
+
+      expect(
+        BigNumber.from(
+          await token.readStorage(
+            addressToStoragePointer(balancesPtr, signers[0].address)
+          )
+        )
+      ).to.be.eq(ethers.utils.parseEther("100"));
+    });
+    it("doesn't store to a balances mapping in any of the first 100 slots", async () => {
+      for (let i = 0; i < 100; i++) {
+        expect(
+          await token.readStorage(
+            addressToStoragePointer(i, signers[0].address)
+          )
+        ).to.be.eq();
+      }
+    });
   });
 });
