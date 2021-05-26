@@ -19,7 +19,7 @@ jobs:
         - name: Install dependencies
           run: npm ci
         - name: compile
-          run: npx hardhat compile
+          run: npm run build
         - name: test
           run: npm run test
 
