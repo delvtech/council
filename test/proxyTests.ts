@@ -5,7 +5,7 @@ import { ethers, waffle } from "hardhat";
 import { createSnapshot, restoreSnapshot } from "./helpers/snapshots";
 
 import { MockTokenLogic } from "typechain/MockTokenLogic";
-import { MockTokenLogic__factory } from "typechain/factories/MockTokenLogic__Factory";
+import { MockTokenLogic__factory } from "typechain/factories/MockTokenLogic__factory";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { Storage } from "typechain/Storage";
 import { Storage__factory } from "typechain/factories/Storage__factory";
