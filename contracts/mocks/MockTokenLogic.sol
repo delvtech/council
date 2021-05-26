@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 import "../libraries/Storage.sol";
 import "./StorageRead.sol";
 
+import "hardhat/console.sol";
+
 contract MockTokenLogic is ReadAndWriteAnyStorage {
     // This contract is an implementation target for the proxy so uses the
     // proxy storage lib for safe portable slotting cross upgrades.
@@ -58,6 +60,16 @@ contract MockTokenLogic is ReadAndWriteAnyStorage {
     }
 
     function mint(address to, uint256 amount) external onlyOwner() {
+        Storage.Uint256 storage totalSupply = _getTotalSupply();
+        mapping(address => uint256) storage balances = _getBalancesMapping();
+
+        balances[to] += amount;
+        uint256 localTotalSupply = totalSupply.load();
+        totalSupply.set(localTotalSupply + amount);
+    }
+
+    // A function purely for testing which is a totally unrestricted mint
+    function increaseBalance(address to, uint256 amount) external {
         Storage.Uint256 storage totalSupply = _getTotalSupply();
         mapping(address => uint256) storage balances = _getBalancesMapping();
 

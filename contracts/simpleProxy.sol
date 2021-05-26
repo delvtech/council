@@ -1,5 +1,7 @@
 pragma solidity ^0.8.0;
 
+import "hardhat/console.sol";
+
 contract SimpleProxy {
     // This contract splits the storage of a contract from its logic, it will
     // call an implementation contract via delegatecall. That implementation
@@ -46,6 +48,8 @@ contract SimpleProxy {
     /// @notice The fallback is the routing function for the proxy and uses delegatecall
     ///         to forward any calls which are made to this address to be executed by the
     ///         logic contract.
+    /// @dev WARNING - We don't do extcode size checks like high level solidity if the
+    ///                implementation has 0 bytecode this will succeed but do nothing.
     fallback() external payable {
         assembly {
             let calldataLength := calldatasize()
@@ -75,7 +79,7 @@ contract SimpleProxy {
             // It's very unlikely any extra data got loaded but we clean anyway
             implementation := and(
                 implementation,
-                0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000000000
+                0x000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
             )
             // Now we make the delegatecall
             let success := delegatecall(
