@@ -18,10 +18,10 @@ jobs:
             node-version: "14.x"
         - name: Install dependencies
           run: npm ci
-        - name: Look at typechain
-          run: ls && cd typechain && ls
         - name: compile
           run: npm run build
+        - name: Look at typechain
+          run: ls && cd typechain && ls
         - name: test
           run: npm run test
 
