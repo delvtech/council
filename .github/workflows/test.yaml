@@ -19,7 +19,7 @@ jobs:
         - name: Install dependencies
           run: npm ci
         - name: Look at typechain
-          run: cd typechain && ls
+          run: ls && cd typechain && ls
         - name: compile
           run: npm run build
         - name: test
