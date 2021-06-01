@@ -13,7 +13,7 @@ contract SimpleProxy {
     // edge case a 4 bit hash collision between function selectors could block other function names.
 
     // The implementation contains the logic for this proxy, it for security reasons
-    // should not assume only this contract can all it.
+    // should not assume only this contract can call it.
     // NOTE - It's insecure in implementation proxies to use the default storage layout since
     //        it is possible to overwrite this address. Use Storage.sol for storage.
     address public proxyImplementation;
