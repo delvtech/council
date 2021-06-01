@@ -75,7 +75,8 @@
         "ytoken",
         "yusdc",
         "yweth",
-        "speedbump"
+        "speedbump",
+        "typename'Ptr"
     ],
     "enabledLanguageIds": [
         "asciidoc",
