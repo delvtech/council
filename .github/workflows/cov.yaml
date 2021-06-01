@@ -16,6 +16,8 @@ jobs:
           run: npm ci
         - name: Coverage
           run: npm run build && npm run coverage
+        - name: Edit lcov.info
+          run: cat coverage/lcov.info | sed '/.*\/interfaces\/.*/,/TN:/d' | sed '/.*\/mocks\/.*/,/TN:/d' > coverage/tmp.info && mv coverage/tmp.info coverage/lcov.info
         - name: Coveralls
           uses: coverallsapp/github-action@v1.1.2
           with:
