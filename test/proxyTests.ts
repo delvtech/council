@@ -5,13 +5,10 @@ import { ethers, waffle } from "hardhat";
 import { createSnapshot, restoreSnapshot } from "./helpers/snapshots";
 
 import { MockTokenLogic } from "typechain/MockTokenLogic";
-import { MockTokenLogic__factory } from "typechain/factories/MockTokenLogic__factory";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { Storage } from "typechain/Storage";
-import { Storage__factory } from "typechain/factories/Storage__factory";
 import { BigNumberish, BigNumber } from "ethers";
 import { SimpleProxy } from "typechain/SimpleProxy";
-import { SimpleProxy__factory } from "typechain/factories/SimpleProxy__factory";
 
 const { provider } = waffle;
 
@@ -32,7 +29,10 @@ describe("erc20", function () {
   before(async function () {
     await createSnapshot(provider);
     signers = await ethers.getSigners();
-    const deployer = new MockTokenLogic__factory(signers[0]);
+    const deployer = await ethers.getContractFactory(
+      "MockTokenLogic",
+      signers[0]
+    );
     token = await deployer.deploy(signers[0].address);
     await token.mint(signers[0].address, ethers.utils.parseEther("100"));
   });
@@ -69,7 +69,10 @@ describe("erc20", function () {
     let storageLib: Storage;
 
     before(async function () {
-      const storageFactory = new Storage__factory(signers[0]);
+      const storageFactory = await ethers.getContractFactory(
+        "Storage",
+        signers[0]
+      );
       storageLib = await storageFactory.deploy();
     });
 
@@ -127,10 +130,16 @@ describe("erc20", function () {
     let proxy: SimpleProxy;
 
     before(async () => {
-      const proxyFactory = new SimpleProxy__factory(wallet);
+      const proxyFactory = await ethers.getContractFactory(
+        "SimpleProxy",
+        wallet
+      );
       proxy = await proxyFactory.deploy(wallet.address, token.address);
 
-      const tokenFactory = new MockTokenLogic__factory(wallet);
+      const tokenFactory = await ethers.getContractFactory(
+        "MockTokenLogic",
+        wallet
+      );
       proxyToken = tokenFactory.attach(proxy.address);
     });
 
