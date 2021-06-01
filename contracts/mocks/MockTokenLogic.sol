@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 import "../libraries/Storage.sol";
 import "./StorageRead.sol";
 
-
 contract MockTokenLogic is ReadAndWriteAnyStorage {
     // This contract is an implementation target for the proxy so uses the
     // proxy storage lib for safe portable slotting cross upgrades.
