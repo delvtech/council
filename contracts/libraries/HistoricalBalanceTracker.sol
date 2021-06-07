@@ -8,7 +8,7 @@ import "./Storage.sol";
 // WARNING - Developers using it should not access the underlying storage
 // directly since we break some assumptions of high level solidity. Please
 // note this library also increases the risk profile of memory manipulation
-// please be cautious in your usage of un-inited memory structs and other
+// please be cautious in your usage of uninitialized memory structs and other
 // anti patterns.
 library HistoricalBalanceTracker {
     // The storage layout of the historical array looks like this
