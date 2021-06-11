@@ -2,6 +2,7 @@
 pragma solidity ^0.8.3;
 
 import "./Storage.sol";
+import "hardhat/console.sol";
 
 // This library is an assembly optimized storage library which is designed
 // to track timestamp history in a struct which uses hash derived pointers.
@@ -10,7 +11,7 @@ import "./Storage.sol";
 // note this library also increases the risk profile of memory manipulation
 // please be cautious in your usage of uninitialized memory structs and other
 // anti patterns.
-library HistoricalBalanceTracker {
+library History {
     // The storage layout of the historical array looks like this
     // [(128 bit length)(128 bit length)] [0][0] ... [(64 bit block num)(192 bit data)] .... [(64 bit block num)(192 bit data)]
     //                                                   ^ min index
@@ -62,6 +63,8 @@ library HistoricalBalanceTracker {
     }
 
     /// @notice This function adds a block stamp indexed piece of data to a historical data array
+    ///         To prevent duplicate entries, if the top of the array has the same blocknumber
+    ///         the value is updated instead
     /// @param wrapper The wrapper which hold the reference to the historical data
     /// @param who The address which indexes the array we need to push to
     /// @param data The data to append, should be at most 192 bits and will revert if not
@@ -82,14 +85,38 @@ library HistoricalBalanceTracker {
         uint256 blockNumber = block.number << 192;
         // We combine it with the data, because of our require this will have a clean
         // top 64 bits
-        uint256 packedData = blockNumber & data;
-        // NOTE - The following is kind of a hack. We can use a vanilla storage push w/o
-        //        assembly because length is the in the small bit slot of the 'length' field
-        //        this means when our array.push compiles down to loading the whole field and adding 1
-        //        it adds 1 to the length field but doesn't affect our minInd field.
-        // Warning - this only works because of packing order, don't reverse it or risk
-        //           data corruption.
-        storageData.push(packedData);
+        uint256 packedData = blockNumber | data;
+        // Load the array length
+        (uint256 minIndex, uint256 length) = _loadBounds(storageData);
+        // On the first push we don't try to load
+        uint256 loadedBlockNumber = 0;
+        if (length != 0) {
+            (loadedBlockNumber, ) = _loadAndUnpack(storageData, length - 1);
+        }
+        // The index we push to, note - we use this pattern to not branch the assembly
+        uint256 index = length;
+        // If the caller is changing data in the same block we change the entry for this block
+        // instead of adding a new one. This ensures each block numb is unique in the array.
+        if (loadedBlockNumber == block.number) {
+            index = length - 1;
+        }
+        // We use assembly to write to write our data to the index
+        assembly {
+            // Stores packed data in the equivalent of storageData[length]
+            sstore(
+                add(
+                    // The start of the data slots
+                    add(storageData.slot, 1),
+                    // index where we store
+                    index
+                ),
+                packedData
+            )
+        }
+        // Reset the boundaries if they changed
+        if (loadedBlockNumber != block.number) {
+            _setBounds(storageData, minIndex, length + 1);
+        }
     }
 
     /// @notice Finds the data stored with the highest block number which is less than or equal to a provided
@@ -111,7 +138,7 @@ library HistoricalBalanceTracker {
         // Pre load the bounds
         (uint256 minIndex, uint256 length) = _loadBounds(storageData);
         // Search for the blocknumber
-        (uint256 unused, uint256 loadedData) =
+        (, uint256 loadedData) =
             _find(storageData, blocknumber, 0, minIndex, length);
         // In this function we don't have to change the stored length data
         return (loadedData);
@@ -148,7 +175,7 @@ library HistoricalBalanceTracker {
             // Delete the outdated stored info
             _clear(minIndex, staleIndex, storageData);
             // Reset the array info with stale index as the new minIndex
-            _setBounds(storageData, uint128(staleIndex), uint128(length));
+            _setBounds(storageData, staleIndex, length);
         }
         return (loadedData);
     }
@@ -184,7 +211,7 @@ library HistoricalBalanceTracker {
         while (minIndex != maxIndex) {
             // We use the ceil instead of the floor because this guarantees that
             // we pick the highest blocknumber less than or equal the requested one
-            uint256 mid = maxIndex - (minIndex + maxIndex) / 2;
+            uint256 mid = maxIndex + minIndex - (minIndex + maxIndex) / 2;
             // Load and unpack the data in the midpoint index
             (uint256 pastBlock, uint256 loadedData) = _loadAndUnpack(data, mid);
 
@@ -219,7 +246,10 @@ library HistoricalBalanceTracker {
         return (staleIndex, _loadedData);
     }
 
-    /// @notice
+    /// @notice Clears storage between two bounds in array
+    /// @param oldMin The first index to set to zero
+    /// @param newMin The new minium filled index, ie clears to index < newMin
+    /// @param data The storage array pointer
     function _clear(
         uint256 oldMin,
         uint256 newMin,
@@ -274,17 +304,17 @@ library HistoricalBalanceTracker {
     /// @param data the pointer to the storage array
     function _setBounds(
         uint256[] storage data,
-        uint128 minIndex,
-        uint128 length
+        uint256 minIndex,
+        uint256 length
     ) private {
         assembly {
             // Ensure data cleanliness
-            let clearedLength := add(
+            let clearedLength := and(
                 length,
                 0x00000000000000000000000000000000ffffffffffffffffffffffffffffffff
             )
             // We move the min index into the top 128 bits by shifting it left by 128 bits
-            let minInd := shl(minIndex, 128)
+            let minInd := shl(128, minIndex)
             // We pack the data using binary or
             let packed := or(minInd, clearedLength)
             // We store in the packed data in the length field of this storage array
@@ -299,7 +329,7 @@ library HistoricalBalanceTracker {
     function _loadBounds(uint256[] storage data)
         private
         view
-        returns (uint128 minInd, uint128 length)
+        returns (uint256 minInd, uint256 length)
     {
         // Use assembly to manually load the length storage field
         uint256 packedData;
@@ -307,11 +337,10 @@ library HistoricalBalanceTracker {
             packedData := sload(data.slot)
         }
         // We use a shift right to clear out the low order bits of the data field
-        minInd = uint128(packedData >> 128);
+        minInd = packedData >> 128;
         // We use a binary and to extract only the bottom 128 bits
-        length = uint128(
+        length =
             packedData &
-                0x00000000000000000000000000000000ffffffffffffffffffffffffffffffff
-        );
+            0x00000000000000000000000000000000ffffffffffffffffffffffffffffffff;
     }
 }
