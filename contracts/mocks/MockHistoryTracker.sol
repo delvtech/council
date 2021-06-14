@@ -12,7 +12,7 @@ contract MockHistory {
     using History for History.HistoricalBalances;
 
     // A random [ish] testing address to index the array
-    address constant presetUser = 0x829BD824B016326A401d083B33D092293333A830;
+    address constant _presetUser = 0x829BD824B016326A401d083B33D092293333A830;
 
     function peekArrayData(uint256 start, uint256 end)
         external
@@ -21,7 +21,7 @@ contract MockHistory {
     {
         History.HistoricalBalances memory balances = History.load("balances");
         uint256[] storage balancesArray =
-            _load(balances.cachedPointer)[presetUser];
+            _load(balances.cachedPointer)[_presetUser];
 
         uint256[] memory blockNumbers = new uint256[](end - start);
         uint256[] memory storedData = new uint256[](end - start);
@@ -41,20 +41,20 @@ contract MockHistory {
 
     function push(uint256 data) external {
         History.HistoricalBalances memory balances = History.load("balances");
-        balances.push(presetUser, data);
+        balances.push(_presetUser, data);
     }
 
     function multiPush(uint256[] calldata toBePushed) external {
         History.HistoricalBalances memory balances = History.load("balances");
 
         for (uint256 i = 0; i < toBePushed.length; i++) {
-            balances.push(presetUser, toBePushed[i]);
+            balances.push(_presetUser, toBePushed[i]);
         }
     }
 
     function find(uint256 which) external view returns (uint256) {
         History.HistoricalBalances memory balances = History.load("balances");
-        return balances.find(presetUser, which);
+        return balances.find(_presetUser, which);
     }
 
     function findAndClear(uint256 which, uint256 stale)
@@ -62,13 +62,13 @@ contract MockHistory {
         returns (uint256)
     {
         History.HistoricalBalances memory balances = History.load("balances");
-        return balances.findAndClear(presetUser, which, stale);
+        return balances.findAndClear(_presetUser, which, stale);
     }
 
     function loadBounds() external view returns (uint256, uint256) {
         History.HistoricalBalances memory balances = History.load("balances");
         uint256[] storage balancesArray =
-            _load(balances.cachedPointer)[presetUser];
+            _load(balances.cachedPointer)[_presetUser];
 
         return _loadBounds(balancesArray);
     }
@@ -76,7 +76,7 @@ contract MockHistory {
     function clear(uint256 newMin) external {
         History.HistoricalBalances memory balances = History.load("balances");
         uint256[] storage balancesArray =
-            _load(balances.cachedPointer)[presetUser];
+            _load(balances.cachedPointer)[_presetUser];
 
         (uint256 oldMin, uint256 length) = _loadBounds(balancesArray);
         if (newMin > oldMin) {

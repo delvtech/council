@@ -13,14 +13,16 @@ import "hardhat/console.sol";
 // anti patterns.
 library History {
     // The storage layout of the historical array looks like this
-    // [(128 bit length)(128 bit length)] [0][0] ... [(64 bit block num)(192 bit data)] .... [(64 bit block num)(192 bit data)]
-    //                                                   ^ min index
+    // [(128 bit min index)(128 bit length)] [0][0] ... [(64 bit block num)(192 bit data)] .... [(64 bit block num)(192 bit data)]
     // We give the option to the invoker of the search function the ability to clear
-    // stale storage. So before the min index will be zero and after the min index will be
-    // currently relevant block numbs. To find data we binary search for the block number we need
+    // stale storage. To find data we binary search for the block number we need
+    // This library expects the blocknumber indexed data to be pushed in ascending block number
+    // order and if data is pushed with the same blocknumber it only retains the most recent.
+    // This ensures each blocknumber is unique and contains the most recent data at the end
+    // of whatever block it indexes [as long as that block is not the current one].
 
-    // A struct which wraps a memory pointer to a string and then derives
-    // storage pointers to the data from
+    // A struct which wraps a memory pointer to a string and the pointer to storage
+    // derived from that name string by the storage library
     // WARNING - For security purposes never directly construct this object always use load
     // TODO - Consider moving away from this caching model to reduce risk profile
     struct HistoricalBalances {
@@ -31,8 +33,8 @@ library History {
 
     /// @notice The method by which inheriting contracts init the HistoricalBalances struct
     /// @param name The name of the variable. Note - these are globals, any invocations of this
-    ///             with the same name work on the same memory.
-    /// @return The memory pointer
+    ///             with the same name work on the same storage.
+    /// @return The memory pointer to the wrapper of the storage pointer
     function load(string memory name)
         internal
         pure
@@ -51,7 +53,7 @@ library History {
     /// @param pointer cached pointer to storage
     /// @return storageData A storage array mapping pointer
     /// @dev PLEASE DO NOT USE THIS METHOD WITHOUT SERIOUS REVIEW. IF AN EXTERNAL ACTOR CAN CALL THIS WITH
-    //       ARBITRARY DATA THEY CAN OVERWRITE ANY STORAGE IN THE CONTRACT.
+    //       ARBITRARY DATA THEY MAY BE ABLE TO OVERWRITE ANY STORAGE IN THE CONTRACT.
     function _load(bytes32 pointer)
         private
         pure
@@ -63,9 +65,9 @@ library History {
     }
 
     /// @notice This function adds a block stamp indexed piece of data to a historical data array
-    ///         To prevent duplicate entries, if the top of the array has the same blocknumber
+    ///         To prevent duplicate entries if the top of the array has the same blocknumber
     ///         the value is updated instead
-    /// @param wrapper The wrapper which hold the reference to the historical data
+    /// @param wrapper The wrapper which hold the reference to the historical data storage pointer
     /// @param who The address which indexes the array we need to push to
     /// @param data The data to append, should be at most 192 bits and will revert if not
     function push(
@@ -74,7 +76,7 @@ library History {
         uint256 data
     ) internal {
         // Check preconditions
-        // OoB = Out of Bounds
+        // OoB = Out of Bounds, short for contract bytecode size reduction
         require(data < uint256(1) << 192, "OoB");
         // Get the storage this is referencing
         mapping(address => uint256[]) storage storageMapping =
@@ -150,7 +152,7 @@ library History {
     /// @param who The address which indexes the historical data we want to search
     /// @param blocknumber The blocknumber we want to load the historical state of
     /// @param staleBlock A block number which we can [but are not obligated to] delete history older than
-    /// @return The loaded data
+    /// @return The found data
     function findAndClear(
         HistoricalBalances memory wrapper,
         address who,
@@ -168,9 +170,9 @@ library History {
         (uint256 staleIndex, uint256 loadedData) =
             _find(storageData, blocknumber, staleBlock, minIndex, length);
         // We clear any data in the stale region
-        // Note - Since find returns 0 if no data is found which is stale and we use > instead of >=
+        // Note - Since find returns 0 if no stale data is found and we use > instead of >=
         //        this won't trigger if no stale data is found. Plus it won't trigger on minIndex == staleIndex
-        //        == maxIndex.
+        //        == maxIndex and clear the whole array.
         if (staleIndex > minIndex) {
             // Delete the outdated stored info
             _clear(minIndex, staleIndex, storageData);
