@@ -148,6 +148,21 @@ describe("Historical data tracker", function () {
       expect(lengths[0]).to.be.eq(0);
       expect(lengths[1]).to.be.eq(6);
     });
+    it("compresses multiple pushes in the same block on the first push", async () => {
+      const awaitTx = await historicalTracker.multiPush([1, 2, 3, 4, 5]);
+      const blocknumber = awaitTx.blockNumber;
+      const arrayState = await historicalTracker.peekArrayData(0, 6);
+      // Check that the 1th is the correct value
+      expect(arrayState[0][0]).to.be.deep.eq(blocknumber);
+      expect(arrayState[1][0]).to.be.deep.eq(5);
+      // Check that no extra data exists
+      expect(arrayState[0][1]).to.be.deep.eq(0);
+      expect(arrayState[1][1]).to.be.deep.eq(0);
+      // Check that the length is 1 and min index 0
+      const lengths = await historicalTracker.loadBounds();
+      expect(lengths[0]).to.be.eq(0);
+      expect(lengths[1]).to.be.eq(1);
+    });
   });
 
   describe("Finds exact match block numbers in an array", async () => {
