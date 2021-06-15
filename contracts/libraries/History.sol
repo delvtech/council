@@ -101,7 +101,7 @@ library History {
         if (loadedBlockNumber == block.number) {
             index = length - 1;
         }
-        // We use assembly to write to write our data to the index
+        // We use assembly to write our data to the index
         assembly {
             // Stores packed data in the equivalent of storageData[length]
             sstore(
