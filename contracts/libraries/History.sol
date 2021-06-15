@@ -2,7 +2,6 @@
 pragma solidity ^0.8.3;
 
 import "./Storage.sol";
-import "hardhat/console.sol";
 
 // This library is an assembly optimized storage library which is designed
 // to track timestamp history in a struct which uses hash derived pointers.
@@ -54,7 +53,7 @@ library History {
     /// @return storageData A storage array mapping pointer
     /// @dev PLEASE DO NOT USE THIS METHOD WITHOUT SERIOUS REVIEW. IF AN EXTERNAL ACTOR CAN CALL THIS WITH
     //       ARBITRARY DATA THEY MAY BE ABLE TO OVERWRITE ANY STORAGE IN THE CONTRACT.
-    function _load(bytes32 pointer)
+    function _getMapping(bytes32 pointer)
         private
         pure
         returns (mapping(address => uint256[]) storage storageData)
@@ -80,7 +79,7 @@ library History {
         require(data < uint256(1) << 192, "OoB");
         // Get the storage this is referencing
         mapping(address => uint256[]) storage storageMapping =
-            _load(wrapper.cachedPointer);
+            _getMapping(wrapper.cachedPointer);
         // Get the array we need to push to
         uint256[] storage storageData = storageMapping[who];
         // We load the block number and then shift it to be in the top 64 bits
@@ -134,7 +133,7 @@ library History {
     ) internal view returns (uint256) {
         // Get the storage this is referencing
         mapping(address => uint256[]) storage storageMapping =
-            _load(wrapper.cachedPointer);
+            _getMapping(wrapper.cachedPointer);
         // Get the array we need to push to
         uint256[] storage storageData = storageMapping[who];
         // Pre load the bounds
@@ -161,7 +160,7 @@ library History {
     ) internal returns (uint256) {
         // Get the storage this is referencing
         mapping(address => uint256[]) storage storageMapping =
-            _load(wrapper.cachedPointer);
+            _getMapping(wrapper.cachedPointer);
         // Get the array we need to push to
         uint256[] storage storageData = storageMapping[who];
         // Pre load the bounds
