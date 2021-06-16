@@ -1,4 +1,5 @@
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.8.3;
 
 contract ReadAndWriteAnyStorage {
     function readStorage(uint256 slot) public view returns (bytes32 data) {

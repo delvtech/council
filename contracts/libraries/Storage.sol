@@ -1,4 +1,5 @@
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.8.3;
 
 // This library allows for secure storage pointers across proxy implementations
 // It will return storage pointers based on a hashed name and type string.
@@ -94,6 +95,21 @@ library Storage {
         returns (mapping(address => uint256) storage data)
     {
         bytes32 typehash = keccak256("mapping(address => uint256)");
+        bytes32 offset = keccak256(abi.encodePacked(typehash, name));
+        assembly {
+            data.slot := offset
+        }
+    }
+
+    /// @notice Returns the storage pointer for a named mapping of address to uint256[]
+    /// @param name the variable name for the pointer
+    /// @return data the mapping pointer
+    function mappingAddressToUnit256ArrayPtr(string memory name)
+        internal
+        pure
+        returns (mapping(address => uint256[]) storage data)
+    {
+        bytes32 typehash = keccak256("mapping(address => uint256[])");
         bytes32 offset = keccak256(abi.encodePacked(typehash, name));
         assembly {
             data.slot := offset
