@@ -9,7 +9,8 @@
     "private-vars-leading-underscore": "error",
     "compiler-version": ["off"],
     "func-visibility": ["warn",{"ignoreConstructors":true}],
-    "not-rely-on-time": "off"
+    "not-rely-on-time": "off",
+    "no-inline-assembly": "off"
   },
   "plugins": ["prettier"]
 }
