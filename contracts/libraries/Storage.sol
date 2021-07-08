@@ -129,4 +129,26 @@ library Storage {
         bytes32 offset = keccak256(abi.encodePacked(typehash, name));
         return (uint256)(offset);
     }
+
+    // A struct which represents 1 packed storage location with a compressed
+    // address and uint96 pair
+    struct AddressUint {
+        address who;
+        uint96 amount;
+    }
+
+    /// @notice Returns the storage pointer for a named mapping of address to uint256[]
+    /// @param name the variable name for the pointer
+    /// @return data the mapping pointer
+    function mappingAddressToPackedAddressUint(string memory name)
+        internal
+        pure
+        returns (mapping(address => AddressUint) storage data)
+    {
+        bytes32 typehash = keccak256("mapping(address => AddressUint)");
+        bytes32 offset = keccak256(abi.encodePacked(typehash, name));
+        assembly {
+            data.slot := offset
+        }
+    }
 }
