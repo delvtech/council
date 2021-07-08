@@ -14,7 +14,7 @@ contract LockingVault is IVotingVault {
     // Immutables are in bytecode so don't need special storage treatment
     IERC20 immutable token;
     // A constant which is how far back stale blocks are
-    uint256 staleBlockLag;
+    uint256 immutable staleBlockLag;
 
     constructor(IERC20 _token, uint256 _staleBlockLag) {
         token = _token;
