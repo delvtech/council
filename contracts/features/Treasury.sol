@@ -20,7 +20,7 @@ contract Treasury {
     // Sends either erc20 or eth
     function sendFunds(address token, uint256 amount) external onlyGovernance {}
 
-    // aproves an erc20 spender
+    // approves an erc20 spender
     function approve(
         address token,
         address spender,
