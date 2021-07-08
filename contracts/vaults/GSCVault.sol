@@ -16,7 +16,7 @@ contract GSCVault {
         _;
     }
 
-    uint256 votingPowerBound;
+    uint256 public votingPowerBound;
 
     function join(address[] calldata votingVaults) external {
         // Checks that each voting vault is registered

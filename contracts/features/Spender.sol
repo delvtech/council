@@ -25,15 +25,31 @@ contract Spender {
 
     // Each of these should be settable by a function which is only callable
     // by the timelock.
-    uint256 smallSpendLimit;
-    uint256 mediumSpendLimit;
-    uint256 highSpendLimit;
+    uint256 public smallSpendLimit;
+    uint256 public mediumSpendLimit;
+    uint256 public highSpendLimit;
 
     function smallSpend(uint256 amount, uint256 destination)
         external
         onlyGovernance
         oncePerBlock
     {
-        // Checks that amount
+        // Checks that amount < small send limit
+    }
+
+    function mediumSpend(uint256 amount, uint256 destination)
+        external
+        onlyGovernance
+        oncePerBlock
+    {
+        // Checks that amount < medium send limit
+    }
+
+    function largeSpend(uint256 amount, uint256 destination)
+        external
+        onlyGovernance
+        oncePerBlock
+    {
+        // Checks that amount < high spend limit
     }
 }
