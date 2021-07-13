@@ -39,6 +39,6 @@ contract GSCVault {
 
     function queryVotingPower(address who, uint256 when) public {
         // function which looks up who's voting power at block when, fulfills the vault interface
-        // TODO - consider giving the gov address an huge number of votes
+        // TODO - consider giving the gov address a huge number of votes
     }
 }
