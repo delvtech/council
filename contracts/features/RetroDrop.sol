@@ -1,4 +1,4 @@
-// This contract is current a scaffold, meaning it is unimplemented and
+// This contract is currently a scaffold, meaning it is unimplemented and
 // just designed to show the shape of future code. The naming and other
 // conventions are 'soft' and more of suggestions that the implementer
 // has full ability to change. Changes which break interface compatibility though
