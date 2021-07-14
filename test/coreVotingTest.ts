@@ -4,14 +4,10 @@ import { expect } from "chai";
 import { ethers, waffle } from "hardhat";
 import { createSnapshot, restoreSnapshot } from "./helpers/snapshots";
 
-import { CoreVoting } from "typechain/CoreVoting";
-import { MockVotingVault } from "typechain/MockVotingVault";
-import { MockTimelock } from "typechain/MockTimelock";
-
+import { CoreVoting } from "../typechain/CoreVoting";
+import { MockVotingVault } from "../typechain/MockVotingVault";
+import { MockTimelock } from "../typechain/MockTimelock";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { Storage } from "typechain/Storage";
-import { BigNumberish, BigNumber } from "ethers";
-import { SimpleProxy } from "typechain/SimpleProxy";
 
 const { provider } = waffle;
 
@@ -58,6 +54,7 @@ describe("CoreVoting", function () {
       0,
       0,
       0,
+      ethers.constants.AddressZero,
       votingVaults
     );
   });

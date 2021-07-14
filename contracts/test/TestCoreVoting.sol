@@ -9,6 +9,7 @@ contract TestCoreVoting is CoreVoting {
         uint256 _baseQuorum,
         uint256 _lockDuration,
         uint256 _minProposalPower,
+        address _gsc,
         address[] memory votingVaults
     )
         CoreVoting(
@@ -16,6 +17,7 @@ contract TestCoreVoting is CoreVoting {
             _baseQuorum,
             _lockDuration,
             _minProposalPower,
+            _gsc,
             votingVaults
         )
     {}

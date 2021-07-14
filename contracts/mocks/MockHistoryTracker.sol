@@ -7,7 +7,7 @@ import "../libraries/History.sol";
 // in the historical balance tracking lib. Most patterns in this lib are
 // anti patterns which should not be emulated in live systems since they
 // break the abstraction layer between this contract and the lib.
-contract MockHistory {
+contract MockHistoryTracker {
     // Bring the internal library methods into scope for the the memory pointer
     using History for History.HistoricalBalances;
 
