@@ -2,8 +2,9 @@ pragma solidity ^0.8.0;
 
 import "./interfaces/IVotingVault.sol";
 import "./interfaces/ITimelock.sol";
+import "./libraries/Authorizable.sol";
 
-contract CoreVoting {
+contract CoreVoting is Authorizable {
     // if a function selector does not have a set quorum we use this default quorum
     uint256 public baseQuorum;
 
@@ -75,14 +76,16 @@ contract CoreVoting {
     /// @param _baseQuorum Default quorum for all functions with no set quorum.
     /// @param _lockDuration Minimum time a proposal must be active for before executing.
     /// @param _minProposalPower Minimum voting power needed to submit a proposal.
+    /// @param _gsc governance steering comity contract.
     /// @param votingVaults Initial voting vaults to approve.
     constructor(
         ITimelock _timelock,
         uint256 _baseQuorum,
         uint256 _lockDuration,
         uint256 _minProposalPower,
+        address _gsc,
         address[] memory votingVaults
-    ) {
+    ) Authorizable() {
         timelock = _timelock;
         baseQuorum = _baseQuorum;
         lockDuration = _lockDuration;
@@ -90,6 +93,8 @@ contract CoreVoting {
         for (uint256 i = 0; i < votingVaults.length; i++) {
             _approvedVaults[votingVaults[i]] = true;
         }
+        owner = address(_timelock);
+        _authorize(_gsc);
     }
 
     /// @notice Create a new proposal
@@ -135,7 +140,15 @@ contract CoreVoting {
         );
 
         uint256 votingPower = vote(votingVaults, proposalCount, ballot);
-        require(votingPower >= minProposalPower, "insufficient voting power");
+
+        // the proposal quorum is the lowest of minProposalPower and the proposal quorum
+        // because it is awkward for the proposal to require more voting power than
+        // the execution
+        uint256 minPower =
+            quorum <= minProposalPower ? quorum : minProposalPower;
+        if (!isAuthorized(msg.sender)) {
+            require(votingPower >= minPower, "insufficient voting power");
+        }
 
         emit ProposalCreated(
             proposalCount,
