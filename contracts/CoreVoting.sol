@@ -121,13 +121,13 @@ contract CoreVoting is Authorizable {
         for (uint256 i = 0; i < targets.length; i++) {
             // function selector should be the first 4 bytes of the calldata
             bytes4 selector = _getSelector(calldatas[i]);
-            if (quorums[targets[i]][selector] > quorum) {
-                quorum = quorums[targets[i]][selector];
+            uint256 unitQuorum = quorums[targets[i]][selector];
+
+            // don't assume baseQuorum is the highest
+            unitQuorum = unitQuorum == 0 ? baseQuorum : unitQuorum;
+            if (unitQuorum > quorum) {
+                quorum = unitQuorum;
             }
-        }
-        // if no selectors have set quorums use baseQuorum
-        if (quorum == 0) {
-            quorum = baseQuorum;
         }
 
         _proposals[proposalCount] = Proposal(
