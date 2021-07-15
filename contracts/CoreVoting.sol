@@ -1,15 +1,11 @@
 pragma solidity ^0.8.0;
 
 import "./interfaces/IVotingVault.sol";
-import "./interfaces/ITimelock.sol";
 import "./libraries/Authorizable.sol";
 
 contract CoreVoting is Authorizable {
     // if a function selector does not have a set quorum we use this default quorum
     uint256 public baseQuorum;
-
-    // timelock contract
-    ITimelock public timelock;
 
     // minimum time a proposal must be active for before executing
     uint256 public lockDuration;
@@ -27,7 +23,7 @@ contract CoreVoting is Authorizable {
     mapping(address => bool) internal _approvedVaults;
 
     // proposal storage with the proposalID as key
-    mapping(uint256 => Proposal) internal _proposals;
+    mapping(uint256 => Proposal) public proposals;
 
     // mapping of addresses and proposalIDs to vote struct representing
     // the voting actions taken for each proposal
@@ -39,20 +35,20 @@ contract CoreVoting is Authorizable {
         // hash of this proposal's intended function calls
         bytes32 proposalHash;
         // block of the proposal creation
-        uint256 created;
+        uint128 created;
         // timestamp when the proposal can execute
-        uint256 unlock;
+        uint128 unlock;
         // the quorum required for the proposal to execute
-        uint256 quorum;
+        uint128 quorum;
         // bool checking if the Proposal is still active
         bool active;
         // [yes, no, maybe] voting power
-        uint256[3] votingPower;
+        uint128[3] votingPower;
     }
 
     struct Vote {
         // voting power of the vote
-        uint256 votingPower;
+        uint128 votingPower;
         // direction of the vote
         Ballot castBallot;
     }
@@ -65,12 +61,6 @@ contract CoreVoting is Authorizable {
 
     event ProposalExecuted(uint256 proposalId, bool passed);
 
-    /// @dev Prevents execution if the caller is not the timelock contract
-    modifier onlyTimelock() {
-        require(msg.sender == address(timelock), "not timelock");
-        _;
-    }
-
     /// @notice constructor
     /// @param _timelock Timelock contract.
     /// @param _baseQuorum Default quorum for all functions with no set quorum.
@@ -79,14 +69,13 @@ contract CoreVoting is Authorizable {
     /// @param _gsc governance steering comity contract.
     /// @param votingVaults Initial voting vaults to approve.
     constructor(
-        ITimelock _timelock,
+        address _timelock,
         uint256 _baseQuorum,
         uint256 _lockDuration,
         uint256 _minProposalPower,
         address _gsc,
         address[] memory votingVaults
     ) Authorizable() {
-        timelock = _timelock;
         baseQuorum = _baseQuorum;
         lockDuration = _lockDuration;
         minProposalPower = _minProposalPower;
@@ -130,13 +119,13 @@ contract CoreVoting is Authorizable {
             }
         }
 
-        _proposals[proposalCount] = Proposal(
+        proposals[proposalCount] = Proposal(
             proposalHash,
-            block.number,
-            block.number + lockDuration,
-            quorum,
+            uint128(block.number),
+            uint128(block.number + lockDuration),
+            uint128(quorum),
             true,
-            _proposals[proposalCount].votingPower
+            proposals[proposalCount].votingPower
         );
 
         uint256 votingPower = vote(votingVaults, proposalCount, ballot);
@@ -146,6 +135,8 @@ contract CoreVoting is Authorizable {
         // the execution
         uint256 minPower =
             quorum <= minProposalPower ? quorum : minProposalPower;
+        // the GSC (governance steering comity) contract does not have a voting power requirement
+        // to submit a proposal
         if (!isAuthorized(msg.sender)) {
             require(votingPower >= minPower, "insufficient voting power");
         }
@@ -171,7 +162,7 @@ contract CoreVoting is Authorizable {
         uint256 proposalId,
         Ballot ballot
     ) public returns (uint256) {
-        uint256 votingPower;
+        uint128 votingPower;
 
         for (uint256 i = 0; i < votingVaults.length; i++) {
             // ensure there are no voting vault duplicates
@@ -179,22 +170,24 @@ contract CoreVoting is Authorizable {
                 require(votingVaults[i] != votingVaults[j], "duplicate vault");
             }
             require(_approvedVaults[votingVaults[i]], "unverified vault");
-            votingPower += IVotingVault(votingVaults[i]).queryVotePower(
-                msg.sender,
-                _proposals[proposalId].created
+            votingPower += uint128(
+                IVotingVault(votingVaults[i]).queryVotePower(
+                    msg.sender,
+                    proposals[proposalId].created
+                )
             );
         }
 
         // if a user has already voted, undo their previous vote.
         // NOTE: A new vote can have less voting power
         if (_votes[msg.sender][proposalId].votingPower > 0) {
-            _proposals[proposalId].votingPower[
+            proposals[proposalId].votingPower[
                 uint256(_votes[msg.sender][proposalId].castBallot)
             ] -= _votes[msg.sender][proposalId].votingPower;
         }
         _votes[msg.sender][proposalId] = Vote(votingPower, ballot);
 
-        _proposals[proposalId].votingPower[uint256(ballot)] += votingPower;
+        proposals[proposalId].votingPower[uint256(ballot)] += votingPower;
         return votingPower;
     }
 
@@ -208,67 +201,69 @@ contract CoreVoting is Authorizable {
         address[] memory targets,
         bytes[] memory calldatas
     ) external {
-        require(_proposals[proposalId].active, "inactive");
-        require(block.number >= _proposals[proposalId].unlock, "not unlocked");
+        require(proposals[proposalId].active, "inactive");
+        require(block.number >= proposals[proposalId].unlock, "not unlocked");
         // ensure the data matches the hash
         require(
             keccak256(abi.encodePacked(targets, abi.encode(calldatas))) ==
-                _proposals[proposalId].proposalHash,
+                proposals[proposalId].proposalHash,
             "hash mismatch"
         );
 
-        uint256[3] memory results = _proposals[proposalId].votingPower;
+        uint128[3] memory results = proposals[proposalId].votingPower;
         // if there are enough votes to meet quorum and there are more yes votes than no votes
-        // then the proposal is executed (submitted to the timelock)
+        // then the proposal is executed
         if (
             results[0] + results[1] + results[2] >=
-            _proposals[proposalId].quorum &&
+            proposals[proposalId].quorum &&
             results[0] > results[1]
         ) {
-            timelock.receiveProposal(targets, calldatas);
+            for (uint256 i = 0; i < targets.length; i++) {
+                targets[i].call(calldatas[i]);
+            }
         }
 
         emit ProposalExecuted(proposalId, results[0] > results[1]);
 
         // delete proposal for some gas savings
-        delete _proposals[proposalId];
+        delete proposals[proposalId];
     }
 
     /// @notice Sets a quorum for a specific address and selector.
     /// @param target Target contract address.
     /// @param selector Function selector.
-    /// @param fraction Fraction to set quorum to.
+    /// @param quorum Fraction to set quorum to.
     function setCustomQuorum(
         address target,
         bytes4 selector,
-        uint256 fraction
-    ) external onlyTimelock {
-        quorums[target][selector] = fraction;
+        uint256 quorum
+    ) external onlyOwner {
+        quorums[target][selector] = quorum;
     }
 
     /// @notice Updates the status of a voting vault.
     /// @param vault Address of the voting vault.
     /// @param isValid True to be valid, false otherwise.
-    function changeVaultStatus(address vault, bool isValid)
-        external
-        onlyTimelock
-    {
+    function changeVaultStatus(address vault, bool isValid) external onlyOwner {
         _approvedVaults[vault] = isValid;
     }
 
     /// @notice Updates the default quorum.
     /// @param quorum New base quorum.
-    function setDefaultQuroum(uint256 quorum) external onlyTimelock {
+    function setDefaultQuroum(uint256 quorum) external onlyOwner {
         baseQuorum = quorum;
     }
 
     /// @notice Updates the minimum voting power needed to submit a proposal.
     /// @param _minProposalPower Minimum voting power needed to submit a proposal.
-    function setMinProposalPower(uint256 _minProposalPower)
-        external
-        onlyTimelock
-    {
+    function setMinProposalPower(uint256 _minProposalPower) external onlyOwner {
         minProposalPower = _minProposalPower;
+    }
+
+    /// @notice Updates the lock duration of a proposal.
+    /// @param _lockDuration New lock duration.
+    function setLockDuration(uint256 _lockDuration) external onlyOwner {
+        lockDuration = _lockDuration;
     }
 
     /// @notice Internal helper function to get the function selector of a calldata string.
@@ -283,29 +278,5 @@ contract CoreVoting is Authorizable {
                 0xFFFFFFFFF0000000000000000000000000000000000000000000000000000000
             )
         }
-    }
-
-    /// @notice get proposal data.
-    /// @param _ptoposalID proposal identifier.
-    function getProposalData(uint256 _ptoposalID)
-        public
-        view
-        returns (
-            bytes32,
-            uint256,
-            uint256,
-            uint256,
-            bool,
-            uint256[3] memory
-        )
-    {
-        return (
-            _proposals[_ptoposalID].proposalHash,
-            _proposals[_ptoposalID].created,
-            _proposals[_ptoposalID].unlock,
-            _proposals[_ptoposalID].quorum,
-            _proposals[_ptoposalID].active,
-            _proposals[_ptoposalID].votingPower
-        );
     }
 }
