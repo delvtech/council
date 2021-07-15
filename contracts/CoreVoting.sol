@@ -40,10 +40,10 @@ contract CoreVoting is Authorizable {
         uint128 unlock;
         // the quorum required for the proposal to execute
         uint128 quorum;
-        // bool checking if the Proposal is still active
-        bool active;
         // [yes, no, maybe] voting power
         uint128[3] votingPower;
+        // bool checking if the Proposal is still active
+        bool active;
     }
 
     struct Vote {
@@ -124,8 +124,8 @@ contract CoreVoting is Authorizable {
             uint128(block.number),
             uint128(block.number + lockDuration),
             uint128(quorum),
-            true,
-            proposals[proposalCount].votingPower
+            proposals[proposalCount].votingPower,
+            true
         );
 
         uint256 votingPower = vote(votingVaults, proposalCount, ballot);
