@@ -4,11 +4,11 @@ import { expect } from "chai";
 import { ethers, waffle } from "hardhat";
 import { createSnapshot, restoreSnapshot } from "./helpers/snapshots";
 
-import { MockTokenLogic } from "typechain/MockTokenLogic";
+import { MockTokenLogic } from "../typechain/MockTokenLogic";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { Storage } from "typechain/Storage";
+import { Storage } from "../typechain/Storage";
 import { BigNumberish, BigNumber } from "ethers";
-import { SimpleProxy } from "typechain/SimpleProxy";
+import { SimpleProxy } from "../typechain/SimpleProxy";
 
 const { provider } = waffle;
 
