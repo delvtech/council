@@ -120,6 +120,29 @@ library History {
         }
     }
 
+    /// @notice Loads the most recent timestamp of delegation power
+    /// @param wrapper The memory struct which we want to search for historical data
+    /// @param who The user who's balance we want to load
+    /// @return the top slot of the array
+    function loadTop(HistoricalBalances memory wrapper, address who)
+        internal
+        view
+        returns (uint256)
+    {
+        // Load the storage pointer
+        uint256[] storage userData = _getMapping(wrapper.cachedPointer)[who];
+        // Load the length
+        (, uint256 length) = _loadBounds(userData);
+        // If it's zero no data has ever been pushed so we return zero
+        if (length == 0) {
+            return 0;
+        }
+        // Load the current top
+        (, uint256 storedData) = _loadAndUnpack(userData, length - 1);
+        // and return it
+        return (storedData);
+    }
+
     /// @notice Finds the data stored with the highest block number which is less than or equal to a provided
     ///         blocknumber user.
     /// @param wrapper The memory struct which we want to search for historical data
