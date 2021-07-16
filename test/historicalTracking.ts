@@ -443,4 +443,29 @@ describe("Historical data tracker", function () {
       await expect(tx).to.be.revertedWith("Search Failure");
     });
   });
+  describe("It loads the top of the array properly", async () => {
+    it("Pushes 100 elements and loads them correctly when they are the top", async () => {
+      let previousBlockhash = "0xf00dbabe";
+
+      for (let i = 0; i < 100; i++) {
+        // This gets us a non crypto random bn with no bits higher than 192
+        const toBePushed = BigNumber.from(previousBlockhash).mask(192);
+        // This tries to push
+        const tx = await historicalTracker.push(toBePushed);
+        const awaitTx = await tx.wait(1);
+        // Gives me pseudo random data and will be different each run
+        previousBlockhash = awaitTx.blockHash;
+        const blocknumber = awaitTx.blockNumber;
+
+        // We mine a random number of blocks in the loop
+        const blocks = Math.round(Math.random() * 10) + 1;
+        for (let j = 0; j < blocks; j++) {
+          await provider.send("evm_mine", []);
+        }
+
+        const top = await historicalTracker.loadTop();
+        expect(top).to.be.eq(toBePushed);
+      }
+    });
+  });
 });

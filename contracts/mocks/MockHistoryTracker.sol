@@ -87,6 +87,11 @@ contract MockHistoryTracker {
         }
     }
 
+    function loadTop() external view returns (uint256) {
+        History.HistoricalBalances memory balances = History.load("balances");
+        return (balances.loadTop(_presetUser));
+    }
+
     // Copy of methods from History because inheritance of private methods is
     // impossible.
 
