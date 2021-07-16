@@ -455,4 +455,113 @@ describe("CoreVoting", function () {
       expect(proposal[1]).to.be.eq(0);
     });
   });
+
+  describe("setMinProposalPower", async () => {
+    beforeEach(async () => {
+      await createSnapshot(provider);
+    });
+    afterEach(async () => {
+      await restoreSnapshot(provider);
+    });
+    it("fails to execute if caller is not the timelock", async () => {
+      const tx = coreVoting.connect(signers[1]).setMinProposalPower(100);
+
+      await expect(tx).to.be.revertedWith("Sender not owner");
+    });
+    it("correctly executes", async () => {
+      await coreVoting.connect(signers[0]).setMinProposalPower(100);
+
+      const minProposalPower = await coreVoting.minProposalPower();
+      expect(minProposalPower).to.be.eq(100);
+    });
+  });
+
+  describe("setDefaultQuroum", async () => {
+    beforeEach(async () => {
+      await createSnapshot(provider);
+    });
+    afterEach(async () => {
+      await restoreSnapshot(provider);
+    });
+    it("fails to execute if caller is not the timelock", async () => {
+      const tx = coreVoting.connect(signers[1]).setDefaultQuroum(100);
+
+      await expect(tx).to.be.revertedWith("Sender not owner");
+    });
+    it("correctly executes", async () => {
+      await coreVoting.connect(signers[0]).setDefaultQuroum(100);
+
+      const baseQuarum = await coreVoting.baseQuorum();
+      expect(baseQuarum).to.be.eq(100);
+    });
+  });
+  describe("setLockDuration", async () => {
+    beforeEach(async () => {
+      await createSnapshot(provider);
+    });
+    afterEach(async () => {
+      await restoreSnapshot(provider);
+    });
+    it("fails to execute if caller is not the timelock", async () => {
+      const tx = coreVoting.connect(signers[1]).setLockDuration(100);
+
+      await expect(tx).to.be.revertedWith("Sender not owner");
+    });
+    it("correctly executes", async () => {
+      await coreVoting.connect(signers[0]).setLockDuration(100);
+
+      const lockDuration = await coreVoting.lockDuration();
+      expect(lockDuration).to.be.eq(100);
+    });
+  });
+
+  describe("setCustomQuorum", async () => {
+    beforeEach(async () => {
+      await createSnapshot(provider);
+    });
+    afterEach(async () => {
+      await restoreSnapshot(provider);
+    });
+    it("fails to execute if caller is not the timelock", async () => {
+      const tx = coreVoting
+        .connect(signers[1])
+        .setCustomQuorum(signers[0].address, "0x11223344", 244);
+
+      await expect(tx).to.be.revertedWith("Sender not owner");
+    });
+    it("correctly executes", async () => {
+      await coreVoting
+        .connect(signers[0])
+        .setCustomQuorum(signers[0].address, "0x11223344", 244);
+
+      const quorum = await coreVoting.getCustomQuorum(
+        signers[0].address,
+        "0x11223344"
+      );
+      expect(quorum).to.be.eq(244);
+    });
+  });
+  describe("changeVaultStatus", async () => {
+    beforeEach(async () => {
+      await createSnapshot(provider);
+    });
+    afterEach(async () => {
+      await restoreSnapshot(provider);
+    });
+    it("fails to execute if caller is not the timelock", async () => {
+      const tx = coreVoting
+        .connect(signers[1])
+        .changeVaultStatus(signers[0].address, true);
+
+      await expect(tx).to.be.revertedWith("Sender not owner");
+    });
+    it("correctly executes", async () => {
+      await coreVoting
+        .connect(signers[0])
+        .changeVaultStatus(signers[0].address, true);
+
+      const status = await coreVoting.getVaultStatus(signers[0].address);
+      expect(status).to.be.eq(true);
+    });
+  });
 });

@@ -20,7 +20,7 @@ contract CoreVoting is Authorizable {
     mapping(address => mapping(bytes4 => uint256)) public quorums;
 
     // stores approved voting vaults
-    mapping(address => bool) internal _approvedVaults;
+    mapping(address => bool) public approvedVaults;
 
     // proposal storage with the proposalID as key
     mapping(uint256 => Proposal) public proposals;
@@ -80,14 +80,14 @@ contract CoreVoting is Authorizable {
         lockDuration = _lockDuration;
         minProposalPower = _minProposalPower;
         for (uint256 i = 0; i < votingVaults.length; i++) {
-            _approvedVaults[votingVaults[i]] = true;
+            approvedVaults[votingVaults[i]] = true;
         }
         owner = address(_timelock);
         _authorize(_gsc);
     }
 
     /// @notice Create a new proposal
-    /// @dev all provided votingVaults must be approved vaults `_approvedVaults`.
+    /// @dev all provided votingVaults must be approved vaults `approvedVaults`.
     /// @param votingVaults voting vaults to draw voting power from.
     /// @param targets list of target addresses the timelock contract will interact with.
     /// @param calldatas execution calldata for each target.
@@ -151,7 +151,7 @@ contract CoreVoting is Authorizable {
     }
 
     /// @notice Votes for a new proposal.
-    /// @dev all provided votingVaults must be approved vaults `_approvedVaults`.
+    /// @dev all provided votingVaults must be approved vaults `approvedVaults`.
     /// Addresses can re-vote, but the previous vote's effect will be negated.
     /// @param votingVaults voting vaults to draw voting power from.
     /// @param proposalId proposal identifier.
@@ -169,7 +169,7 @@ contract CoreVoting is Authorizable {
             for (uint256 j = i + 1; j < votingVaults.length; j++) {
                 require(votingVaults[i] != votingVaults[j], "duplicate vault");
             }
-            require(_approvedVaults[votingVaults[i]], "unverified vault");
+            require(approvedVaults[votingVaults[i]], "unverified vault");
             votingPower += uint128(
                 IVotingVault(votingVaults[i]).queryVotePower(
                     msg.sender,
@@ -245,7 +245,7 @@ contract CoreVoting is Authorizable {
     /// @param vault Address of the voting vault.
     /// @param isValid True to be valid, false otherwise.
     function changeVaultStatus(address vault, bool isValid) external onlyOwner {
-        _approvedVaults[vault] = isValid;
+        approvedVaults[vault] = isValid;
     }
 
     /// @notice Updates the default quorum.

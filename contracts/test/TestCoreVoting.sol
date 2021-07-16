@@ -49,4 +49,16 @@ contract TestCoreVoting is CoreVoting {
     function updateDummy(uint256 _newValue) public {
         dummyValue = _newValue;
     }
+
+    function getVaultStatus(address _vault) public view returns (bool) {
+        return approvedVaults[_vault];
+    }
+
+    function getCustomQuorum(address _target, bytes4 _selector)
+        public
+        view
+        returns (uint256)
+    {
+        return quorums[_target][_selector];
+    }
 }
