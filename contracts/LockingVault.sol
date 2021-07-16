@@ -26,7 +26,7 @@ contract LockingVault is IVotingVault {
 
     // deposits mapping(address => (address, uint96))
     /// @notice A single function endpoint for loading storage for deposits
-    /// @return returns a storage mapping which can be used to look deposit data
+    /// @return returns a storage mapping which can be used to look up deposit data
     function _deposits()
         internal
         pure
