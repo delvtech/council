@@ -4,14 +4,14 @@ import { expect } from "chai";
 import { ethers, network, waffle } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { BigNumberish, BigNumber } from "ethers";
-import { MockHistory } from "typechain/MockHistory";
+import { MockHistoryTracker } from "../typechain/MockHistoryTracker";
 import { createSnapshot, restoreSnapshot } from "./helpers/snapshots";
 
 const { provider } = waffle;
 
 describe("Historical data tracker", function () {
   // We use the history tracker and signers in each test
-  let historicalTracker: MockHistory;
+  let historicalTracker: MockHistoryTracker;
   const [wallet] = provider.getWallets();
   let signers: SignerWithAddress[];
 
@@ -20,7 +20,10 @@ describe("Historical data tracker", function () {
     await createSnapshot(provider);
     signers = await ethers.getSigners();
     // deploy the contract
-    const deployer = await ethers.getContractFactory("MockHistory", signers[0]);
+    const deployer = await ethers.getContractFactory(
+      "MockHistoryTracker",
+      signers[0]
+    );
     historicalTracker = await deployer.deploy();
   });
   // After we reset our state in the fork

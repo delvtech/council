@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.3;
 
-import "hardhat/console.sol";
-
 contract SimpleProxy {
     // This contract splits the storage of a contract from its logic, it will
     // call an implementation contract via delegatecall. That implementation
