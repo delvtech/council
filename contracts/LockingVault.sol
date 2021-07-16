@@ -113,7 +113,7 @@ contract LockingVault is IVotingVault {
         address delegate = userData.who;
 
         if (delegate == address(0)) {
-            // If the user is und-delegated we delegate to their indicated address
+            // If the user is un-delegated we delegate to their indicated address
             delegate = firstDelegation;
             // TODO - consider reversion if firstDelegation != 0 && firstDelegation != delegation
             // TODO - Ensure that this compiles to one sstore
