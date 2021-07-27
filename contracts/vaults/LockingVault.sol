@@ -91,7 +91,7 @@ contract LockingVault is IVotingVault {
     {
         // Get our reference to historical data
         History.HistoricalBalances memory votingPower = _votingPower();
-        // Find the historical datas
+        // Find the historical datum
         return votingPower.find(user, blockNumber);
     }
 
