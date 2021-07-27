@@ -17,6 +17,7 @@ contract CoreVoting is Authorizable {
     uint256 public proposalCount;
 
     // mapping of address and selector to quorum
+    // RV: you may want to make this private and have a separate public getter function that takes into account the default quorum
     mapping(address => mapping(bytes4 => uint256)) public quorums;
 
     // stores approved voting vaults
@@ -214,6 +215,7 @@ contract CoreVoting is Authorizable {
         // if there are enough votes to meet quorum and there are more yes votes than no votes
         // then the proposal is executed
         if (
+            // RV: it would be a better practice to use enum instead of magic numbers
             results[0] + results[1] + results[2] >=
             proposals[proposalId].quorum &&
             results[0] > results[1]
@@ -223,6 +225,7 @@ contract CoreVoting is Authorizable {
             }
         }
 
+        // RV: why not including `results[0] + results[1] + results[2] >= proposals[proposalId].quorum` for the passed?
         emit ProposalExecuted(proposalId, results[0] > results[1]);
 
         // delete proposal for some gas savings
