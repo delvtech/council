@@ -11,23 +11,44 @@ pragma solidity ^0.8.3;
 // be canceled within a waiting period.
 
 contract Timelock {
+    uint256 public waitTime;
+    address public self;
+    bool public isGovernance;
+
+    // Mapping for callHashes to timestamps?
+    mapping(bytes32 => uint256) public callTimestamps;
+
+    constructor(
+        uint256 _waitTime,
+        address _self,
+        bool _isGovernance
+    ) {
+        waitTime = _waitTime;
+        self = _self;
+        isGovernance = _isGovernance;
+    }
+
     // Checks that the caller is the governance contract
     modifier onlyGovernance() {
+        require(isGovernance == true, "Must be a governance contract");
         _;
     }
 
     // Checks that the caller is making an external call from
     // this address
     modifier onlySelf() {
+        require(self == msg.sender);
         _;
     }
 
     function registerCall(bytes32 callHash) external onlyGovernance {
         // stores at the callHash the current block timestamp
+        callTimestamps[callHash] = block.timestamp;
     }
 
     function stopCall(bytes32 callHash) external onlyGovernance {
         // removes stored callHash data
+        delete callTimestamps[callHash];
     }
 
     function execute(
@@ -38,8 +59,22 @@ contract Timelock {
         // loads the stored callHash data and checks enough time has passed
         // Hashes the provided data and checks it matches the callHash
         // executes call
+
+        bytes256 timeStamp = callTimestamps[callHash];
+        require(timeStamp >= waitTime, "Not enough time has passed");
+
+        // this should be hashed first, but I'm not sure which hashing function should be used
+        bytes32 dataHash = callData;
+        require(
+            dataHash == callHash,
+            "Provided data does not match the call hash"
+        );
+
+        // execute call
     }
 
     // Allow a call from this contract to reset the wait time storage variable
-    function setWaitTime(uint256 waitTime) external onlySelf {}
+    function setWaitTime(uint256 _waitTime) external onlySelf {
+        waitTime = _waitTime;
+    }
 }
