@@ -7,46 +7,35 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.3;
 
+import "../libraries/Authorizable.sol";
+
 // Allows a call to be executed after a waiting period, also allows a call to
 // be canceled within a waiting period.
 
-contract Timelock {
-    uint256 public waitTime;
-    address public self;
-    bool public isGovernance;
+contract Timelock is Authorizable{
 
-    // Mapping for callHashes to timestamps?
+    uint256 public waitTime;
+
+    address public governance;
     mapping(bytes32 => uint256) public callTimestamps;
 
+    // do we need to include anything else in this constructor?
     constructor(
         uint256 _waitTime,
-        address _self,
-        bool _isGovernance
-    ) {
+        address _governance
+    ) Authorizable() {
         waitTime = _waitTime;
-        self = _self;
-        isGovernance = _isGovernance;
+        setOwner(_governance);
+        governance = _governance;
     }
 
-    // Checks that the caller is the governance contract
-    modifier onlyGovernance() {
-        require(isGovernance == true, "Must be a governance contract");
-        _;
-    }
-
-    // Checks that the caller is making an external call from
-    // this address
-    modifier onlySelf() {
-        require(self == msg.sender);
-        _;
-    }
-
-    function registerCall(bytes32 callHash) external onlyGovernance {
+    function registerCall(bytes32 callHash) external onlyOwner {
         // stores at the callHash the current block timestamp
         callTimestamps[callHash] = block.timestamp;
     }
 
-    function stopCall(bytes32 callHash) external onlyGovernance {
+    // I"m pretty sure this is okay but it feels weird and I think that's solidity
+    function stopCall(bytes32 callHash) external onlyOwner {
         // removes stored callHash data
         delete callTimestamps[callHash];
     }
@@ -60,21 +49,18 @@ contract Timelock {
         // Hashes the provided data and checks it matches the callHash
         // executes call
 
-        bytes256 timeStamp = callTimestamps[callHash];
-        require(timeStamp >= waitTime, "Not enough time has passed");
+        bytes256 callTimestamp = callTimestamps[callHash];
+        bytes256 currentTime = block.tiemstamp;
 
-        // this should be hashed first, but I'm not sure which hashing function should be used
-        bytes32 dataHash = callData;
-        require(
-            dataHash == callHash,
-            "Provided data does not match the call hash"
-        );
+        require(keccak256(abi.encodePacked(callData) == callHash,"hash mismatch");
 
         // execute call
+        call(callData);
     }
 
     // Allow a call from this contract to reset the wait time storage variable
-    function setWaitTime(uint256 _waitTime) external onlySelf {
+    function setWaitTime(uint256 _waitTime) external onlyOwner {
         waitTime = _waitTime;
     }
 }
+
