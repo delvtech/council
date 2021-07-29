@@ -15,11 +15,9 @@ import "../libraries/Authorizable.sol";
 contract Timelock is Authorizable{
 
     uint256 public waitTime;
-
     address public governance;
     mapping(bytes32 => uint256) public callTimestamps;
 
-    // do we need to include anything else in this constructor?
     constructor(
         uint256 _waitTime,
         address _governance
@@ -34,7 +32,6 @@ contract Timelock is Authorizable{
         callTimestamps[callHash] = block.timestamp;
     }
 
-    // I"m pretty sure this is okay but it feels weird and I think that's solidity
     function stopCall(bytes32 callHash) external onlyOwner {
         // removes stored callHash data
         delete callTimestamps[callHash];
@@ -52,10 +49,12 @@ contract Timelock is Authorizable{
         bytes256 callTimestamp = callTimestamps[callHash];
         bytes256 currentTime = block.tiemstamp;
 
+        require(currentTime >= callTimestamp + waitTime, "not enough time has passed")
+
         require(keccak256(abi.encodePacked(callData) == callHash,"hash mismatch");
 
         // execute call
-        call(callData);
+        governance.call(callData);
     }
 
     // Allow a call from this contract to reset the wait time storage variable
