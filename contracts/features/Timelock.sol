@@ -12,16 +12,12 @@ import "../libraries/Authorizable.sol";
 // Allows a call to be executed after a waiting period, also allows a call to
 // be canceled within a waiting period.
 
-contract Timelock is Authorizable{
-
+contract Timelock is Authorizable {
     uint256 public waitTime;
     address public governance;
     mapping(bytes32 => uint256) public callTimestamps;
 
-    constructor(
-        uint256 _waitTime,
-        address _governance
-    ) Authorizable() {
+    constructor(uint256 _waitTime, address _governance) Authorizable() {
         waitTime = _waitTime;
         setOwner(_governance);
         governance = _governance;
@@ -49,12 +45,17 @@ contract Timelock is Authorizable{
         bytes256 callTimestamp = callTimestamps[callHash];
         bytes256 currentTime = block.tiemstamp;
 
-        require(currentTime >= callTimestamp + waitTime, "not enough time has passed")
+        require(
+            currentTime >= callTimestamp + waitTime,
+            "not enough time has passed"
+        );
 
-        require(keccak256(abi.encodePacked(callData) == callHash,"hash mismatch");
+        require(
+            keccak256(abi.encodePacked(callData) == callHash, "hash mismatch")
+        );
 
         // execute call
-        governance.call(callData);
+        target.call(callData);
     }
 
     // Allow a call from this contract to reset the wait time storage variable
@@ -62,4 +63,3 @@ contract Timelock is Authorizable{
         waitTime = _waitTime;
     }
 }
-
