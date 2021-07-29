@@ -42,16 +42,14 @@ contract Timelock is Authorizable {
         // Hashes the provided data and checks it matches the callHash
         // executes call
 
-        bytes256 callTimestamp = callTimestamps[callHash];
-        bytes256 currentTime = block.tiemstamp;
-
         require(
-            currentTime >= callTimestamp + waitTime,
+            block.timestamp >= callTimestamps[callHash] + waitTime,
             "not enough time has passed"
         );
 
         require(
-            keccak256(abi.encodePacked(callData) == callHash, "hash mismatch")
+            keccak256(abi.encodePacked(callData)) == callHash,
+            "hash mismatch"
         );
 
         // execute call

@@ -23,7 +23,7 @@ describe("Timelock", () => {
     signers = await ethers.getSigners();
 
     const deployer = await ethers.getContractFactory("Timelock", signers[0]);
-    timelock = await deployer.deploy();
+    timelock = await deployer.deploy(0, ethers.constants.AddressZero);
   });
 
   after(async () => {
