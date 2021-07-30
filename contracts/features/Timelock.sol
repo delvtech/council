@@ -16,11 +16,13 @@ contract Timelock is Authorizable {
     uint256 public waitTime;
     address public governance;
     mapping(bytes32 => uint256) public callTimestamps;
+    bool public timeIncreased;
 
     constructor(uint256 _waitTime, address _governance) Authorizable() {
         waitTime = _waitTime;
         setOwner(_governance);
         governance = _governance;
+        timeIncreased = false;
     }
 
     function registerCall(bytes32 callHash) external onlyOwner {
@@ -34,30 +36,39 @@ contract Timelock is Authorizable {
     }
 
     function execute(
-        bytes32 callHash,
-        address target,
-        bytes calldata callData
+        bytes32[] callHashes,
+        address[] targets,
+        bytes[] calldata callDatas
     ) external {
         // loads the stored callHash data and checks enough time has passed
         // Hashes the provided data and checks it matches the callHash
         // executes call
 
         require(
-            block.timestamp >= callTimestamps[callHash] + waitTime,
-            "not enough time has passed"
-        );
-
-        require(
-            keccak256(abi.encodePacked(callData)) == callHash,
+            keccak256(abi.encodePacked(callDatas)) == callHashes,
             "hash mismatch"
         );
 
-        // execute call
-        target.call(callData);
+        for (uint256 i = 0; i < targets.length; i++) {
+            require(
+                block.timestamp >= callTimestamps[callHashes[i]] + waitTime,
+                "not enough time has passed"
+            );
+            returnData = targets[i].call(calldatas[i]);
+            require(returnData == true, "call reverted");
+        }
     }
 
     // Allow a call from this contract to reset the wait time storage variable
     function setWaitTime(uint256 _waitTime) external onlyOwner {
         waitTime = _waitTime;
+    }
+
+    function increaseTime(uint256 timeValue, bytes32 callHash)
+        external
+        onlyAuthorized
+    {
+        require(timeIncreased == false, "value can only be changed once");
+        callTimestamps[callHash] += timeValue;
     }
 }
