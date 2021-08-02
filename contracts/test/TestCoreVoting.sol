@@ -9,7 +9,6 @@ contract TestCoreVoting is CoreVoting {
     constructor(
         address _timelock,
         uint256 _baseQuorum,
-        uint256 _lockDuration,
         uint256 _minProposalPower,
         address _gsc,
         address[] memory votingVaults
@@ -17,7 +16,6 @@ contract TestCoreVoting is CoreVoting {
         CoreVoting(
             _timelock,
             _baseQuorum,
-            _lockDuration,
             _minProposalPower,
             _gsc,
             votingVaults
@@ -32,8 +30,7 @@ contract TestCoreVoting is CoreVoting {
             uint128,
             uint128,
             uint128,
-            uint128[3] memory,
-            bool
+            uint128[3] memory
         )
     {
         return (
@@ -41,8 +38,7 @@ contract TestCoreVoting is CoreVoting {
             proposals[_proposalID].created,
             proposals[_proposalID].unlock,
             proposals[_proposalID].quorum,
-            proposals[_proposalID].votingPower,
-            proposals[_proposalID].active
+            proposals[_proposalID].votingPower
         );
     }
 
