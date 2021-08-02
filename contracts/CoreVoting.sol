@@ -7,8 +7,18 @@ contract CoreVoting is Authorizable {
     // if a function selector does not have a set quorum we use this default quorum
     uint256 public baseQuorum;
 
+    // Assumes avg block time of 13.3 seconds. May be longer or shorter due
+    // to ice ages or short term changes in hash power.
+    uint256 public constant DAY_IN_BLOCKS = 6496;
+
     // minimum time a proposal must be active for before executing
-    uint256 public lockDuration;
+    // Default to 3 days, this avoids weekend surprise proposals
+    uint256 public lockDuration = DAY_IN_BLOCKS * 3;
+
+    // The number of blocks after the proposal is unlocked during which
+    // voting can continue. Max vote time = lockDuration + extraVoteTime
+    // Default to ~5 days of blocks, ie 8 days max vote time
+    uint256 public extraVoteTime = DAY_IN_BLOCKS * 5;
 
     // minimum amount of voting power required to submit a proposal
     uint256 public minProposalPower;
@@ -38,12 +48,12 @@ contract CoreVoting is Authorizable {
         uint128 created;
         // timestamp when the proposal can execute
         uint128 unlock;
+        // expiration time of a proposal
+        uint128 expiration;
         // the quorum required for the proposal to execute
         uint128 quorum;
         // [yes, no, maybe] voting power
         uint128[3] votingPower;
-        // bool checking if the Proposal is still active
-        bool active;
     }
 
     struct Vote {
@@ -56,28 +66,26 @@ contract CoreVoting is Authorizable {
     event ProposalCreated(
         uint256 proposalId,
         uint256 created,
+        uint256 execution,
         uint256 expiration
     );
 
-    event ProposalExecuted(uint256 proposalId, bool passed);
+    event ProposalExecuted(uint256 proposalId);
 
     /// @notice constructor
     /// @param _timelock Timelock contract.
     /// @param _baseQuorum Default quorum for all functions with no set quorum.
-    /// @param _lockDuration Minimum time a proposal must be active for before executing.
     /// @param _minProposalPower Minimum voting power needed to submit a proposal.
     /// @param _gsc governance steering comity contract.
     /// @param votingVaults Initial voting vaults to approve.
     constructor(
         address _timelock,
         uint256 _baseQuorum,
-        uint256 _lockDuration,
         uint256 _minProposalPower,
         address _gsc,
         address[] memory votingVaults
     ) Authorizable() {
         baseQuorum = _baseQuorum;
-        lockDuration = _lockDuration;
         minProposalPower = _minProposalPower;
         for (uint256 i = 0; i < votingVaults.length; i++) {
             approvedVaults[votingVaults[i]] = true;
@@ -123,9 +131,9 @@ contract CoreVoting is Authorizable {
             proposalHash,
             uint128(block.number),
             uint128(block.number + lockDuration),
+            uint128(block.number + lockDuration + extraVoteTime),
             uint128(quorum),
-            proposals[proposalCount].votingPower,
-            true
+            proposals[proposalCount].votingPower
         );
 
         uint256 votingPower = vote(votingVaults, proposalCount, ballot);
@@ -144,7 +152,8 @@ contract CoreVoting is Authorizable {
         emit ProposalCreated(
             proposalCount,
             block.number,
-            block.number + lockDuration
+            block.number + lockDuration,
+            block.number + lockDuration + extraVoteTime
         );
 
         proposalCount += 1;
@@ -162,6 +171,9 @@ contract CoreVoting is Authorizable {
         uint256 proposalId,
         Ballot ballot
     ) public returns (uint256) {
+        // No votes after the vote period is over
+        require(block.number <= proposals[proposalId].expiration, "Expired");
+
         uint128 votingPower;
 
         for (uint256 i = 0; i < votingVaults.length; i++) {
@@ -201,8 +213,10 @@ contract CoreVoting is Authorizable {
         address[] memory targets,
         bytes[] memory calldatas
     ) external {
-        require(proposals[proposalId].active, "inactive");
         require(block.number >= proposals[proposalId].unlock, "not unlocked");
+        // If executed the proposal will be deleted and this will be zero
+        require(proposals[proposalId].unlock != 0, "Previously executed");
+
         // ensure the data matches the hash
         require(
             keccak256(abi.encodePacked(targets, abi.encode(calldatas))) ==
@@ -213,19 +227,25 @@ contract CoreVoting is Authorizable {
         uint128[3] memory results = proposals[proposalId].votingPower;
         // if there are enough votes to meet quorum and there are more yes votes than no votes
         // then the proposal is executed
-        if (
+        bool passesQuorum =
             results[0] + results[1] + results[2] >=
-            proposals[proposalId].quorum &&
-            results[0] > results[1]
-        ) {
-            for (uint256 i = 0; i < targets.length; i++) {
-                targets[i].call(calldatas[i]);
-            }
+                proposals[proposalId].quorum;
+        bool majorityInFavor = results[0] > results[1];
+
+        require(passesQuorum && majorityInFavor, "Cannot execute");
+
+        // Execute a package of low level calls
+        // SECURITY - WILL NOT REVERT IF A SINGLE CALL FAILS, PROPOSALS MUST BE CONSTRUCTED
+        //            WITH THIS IN MIND
+        for (uint256 i = 0; i < targets.length; i++) {
+            targets[i].call(calldatas[i]);
         }
+        // Notification of proposal execution
+        emit ProposalExecuted(proposalId);
 
-        emit ProposalExecuted(proposalId, results[0] > results[1]);
-
-        // delete proposal for some gas savings
+        // delete proposal for some gas savings,
+        // Proposals are only deleted when they are actually executed, failed proposals
+        // are never deleted
         delete proposals[proposalId];
     }
 
@@ -264,6 +284,12 @@ contract CoreVoting is Authorizable {
     /// @param _lockDuration New lock duration.
     function setLockDuration(uint256 _lockDuration) external onlyOwner {
         lockDuration = _lockDuration;
+    }
+
+    /// @notice Updates the extra voting period
+    /// @param _extraVoteTime New extra voting time
+    function changeExtraVotingTime(uint256 _extraVoteTime) external onlyOwner {
+        extraVoteTime = _extraVoteTime;
     }
 
     /// @notice Internal helper function to get the function selector of a calldata string.
