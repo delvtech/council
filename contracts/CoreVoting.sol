@@ -27,7 +27,26 @@ contract CoreVoting is Authorizable {
     uint256 public proposalCount;
 
     // mapping of address and selector to quorum
-    mapping(address => mapping(bytes4 => uint256)) public quorums;
+    mapping(address => mapping(bytes4 => uint256)) private _quorums;
+
+    /// @notice Override of the getter for the 'quorums' mapping which returns the default
+    ///         quorum when the quorum is not set.
+    /// @param target the contract for which the quorum is set
+    /// @param functionSelector the function which is callable
+    /// @return The quorum needed to pass the function at this point in time
+    function quorums(address target, bytes4 functionSelector)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 storedQuorum = _quorums[target][functionSelector];
+
+        if (storedQuorum == 0) {
+            return baseQuorum;
+        } else {
+            return storedQuorum;
+        }
+    }
 
     // stores approved voting vaults
     mapping(address => bool) public approvedVaults;
@@ -118,7 +137,7 @@ contract CoreVoting is Authorizable {
         for (uint256 i = 0; i < targets.length; i++) {
             // function selector should be the first 4 bytes of the calldata
             bytes4 selector = _getSelector(calldatas[i]);
-            uint256 unitQuorum = quorums[targets[i]][selector];
+            uint256 unitQuorum = _quorums[targets[i]][selector];
 
             // don't assume baseQuorum is the highest
             unitQuorum = unitQuorum == 0 ? baseQuorum : unitQuorum;
@@ -258,7 +277,7 @@ contract CoreVoting is Authorizable {
         bytes4 selector,
         uint256 quorum
     ) external onlyOwner {
-        quorums[target][selector] = quorum;
+        _quorums[target][selector] = quorum;
     }
 
     /// @notice Updates the status of a voting vault.

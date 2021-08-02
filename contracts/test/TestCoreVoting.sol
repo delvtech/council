@@ -55,6 +55,6 @@ contract TestCoreVoting is CoreVoting {
         view
         returns (uint256)
     {
-        return quorums[_target][_selector];
+        return quorums(_target, _selector);
     }
 }
