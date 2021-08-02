@@ -95,7 +95,7 @@ describe("CoreVoting", function () {
         .setMinProposalPower(baseVotingPower * 4);
       await coreVoting
         .connect(signers[0])
-        .setDefaultQuroum(baseVotingPower * 4);
+        .setDefaultQuorum(baseVotingPower * 4);
 
       const tx = coreVoting
         .connect(signers[0])
@@ -139,7 +139,7 @@ describe("CoreVoting", function () {
       const baseQuorum = 5;
 
       // set default quorum above the caller's means
-      await coreVoting.connect(signers[0]).setDefaultQuroum(baseQuorum);
+      await coreVoting.connect(signers[0]).setDefaultQuorum(baseQuorum);
 
       //set the individual selector quorums within the user's means
       await coreVoting
@@ -170,7 +170,7 @@ describe("CoreVoting", function () {
       const baseQuorum = 5;
 
       // set default quorum above the caller's means
-      await coreVoting.connect(signers[0]).setDefaultQuroum(baseQuorum);
+      await coreVoting.connect(signers[0]).setDefaultQuorum(baseQuorum);
 
       //set the individual selector quorums within the user's means
       await coreVoting
@@ -197,7 +197,7 @@ describe("CoreVoting", function () {
       // set default quorum above the caller's means
       await coreVoting
         .connect(signers[0])
-        .setDefaultQuroum(baseVotingPower * 4);
+        .setDefaultQuorum(baseVotingPower * 4);
 
       //set the individual selector quorums within the user's means
       await coreVoting
@@ -426,7 +426,7 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .setDefaultQuroum(baseVotingPower * 4);
+        .setDefaultQuorum(baseVotingPower * 4);
 
       await coreVoting
         .connect(signers[0])
@@ -461,7 +461,7 @@ describe("CoreVoting", function () {
     });
   });
 
-  describe("setDefaultQuroum", async () => {
+  describe("setDefaultQuorum", async () => {
     beforeEach(async () => {
       await createSnapshot(provider);
     });
@@ -469,12 +469,12 @@ describe("CoreVoting", function () {
       await restoreSnapshot(provider);
     });
     it("fails to execute if caller is not the timelock", async () => {
-      const tx = coreVoting.connect(signers[1]).setDefaultQuroum(100);
+      const tx = coreVoting.connect(signers[1]).setDefaultQuorum(100);
 
       await expect(tx).to.be.revertedWith("Sender not owner");
     });
     it("correctly executes", async () => {
-      await coreVoting.connect(signers[0]).setDefaultQuroum(100);
+      await coreVoting.connect(signers[0]).setDefaultQuorum(100);
 
       const baseQuarum = await coreVoting.baseQuorum();
       expect(baseQuarum).to.be.eq(100);
