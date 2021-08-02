@@ -43,8 +43,7 @@ contract GSCVault is Authorizable {
         setOwner(address(_owner));
     }
 
-    /// @notice Called to prove membership in the GSC either as a first time
-    ///         joiner or to respond to a challenge
+    /// @notice Called to prove membership in the GSC
     /// @param votingVaults The contracts this person has their voting power in
     function proveMembership(address[] calldata votingVaults) external {
         // Check for call validity
