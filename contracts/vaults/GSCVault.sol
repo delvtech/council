@@ -29,6 +29,13 @@ contract GSCVault is Authorizable {
     // The challenge duration
     uint256 public challengeDuration = 1330;
 
+    // Events to make it easy to track challenges
+    event Challenged(address indexed who, uint256 when);
+    // Event to help tracking members
+    event MembershipProved(address indexed who, uint256 when);
+    // Event to help tracking kicks
+    event Kicked(address indexed who, uint256 when);
+
     /// @notice constructs this contract and initial vars
     /// @param _coreVoting The core voting contract
     /// @param _votingPowerBound The first voting power bound
@@ -78,6 +85,8 @@ contract GSCVault is Authorizable {
         // If that passes we store that the caller is a member
         // This storage will wipe out that the caller has been challenged
         members[msg.sender] = Status(true, false, 0, votingVaults);
+        // Emit the event tracking this
+        emit MembershipProved(msg.sender, block.timestamp);
     }
 
     /// @notice Challenges a GSC member to re prove their membership within a period [default ~ 48 hours] or be kick-able
@@ -116,6 +125,9 @@ contract GSCVault is Authorizable {
             uint64(block.number),
             currentStatus.vaults
         );
+
+        // Emit a challenge event
+        emit Challenged(who, block.number);
     }
 
     /// @notice Removes a member who has not proven membership criteria within the time period
@@ -130,6 +142,8 @@ contract GSCVault is Authorizable {
         require(currentStatus.isChallenged, "Challenge failed or not started");
         // We delete the entry for this GSC member
         delete members[who];
+        // Emit event tracking deletion
+        emit Kicked(who, block.number);
     }
 
     /// @notice Queries voting power, GSC members get one vote and the owner gets 100k
