@@ -36,26 +36,22 @@ contract Timelock is Authorizable {
     }
 
     function execute(
-        bytes32[] callHashes,
-        address[] targets,
-        bytes[] calldata callDatas
+        bytes32 callHash,
+        address[] memory targets,
+        bytes[] calldata calldatas
     ) external {
         // loads the stored callHash data and checks enough time has passed
         // Hashes the provided data and checks it matches the callHash
         // executes call
-
-        require(
-            keccak256(abi.encodePacked(callDatas)) == callHashes,
-            "hash mismatch"
-        );
-
+        require(keccak256(abi.encode(calldatas)) == callHash, "hash mismatch");
         for (uint256 i = 0; i < targets.length; i++) {
             require(
-                block.timestamp >= callTimestamps[callHashes[i]] + waitTime,
+                block.timestamp >= callTimestamps[callHash] + waitTime,
                 "not enough time has passed"
             );
-            returnData = targets[i].call(calldatas[i]);
-            require(returnData == true, "call reverted");
+            (bool success, bytes memory returnData) =
+                targets[i].call(calldatas[i]);
+            require(success == true, "call reverted");
         }
     }
 

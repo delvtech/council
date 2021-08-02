@@ -32,45 +32,79 @@ describe("Timelock", () => {
 
   describe("execute", () => {
     it("fails to execute with bad data", async () => {
-      const baddata = "0xBAD45678ffffffff";
-      const target = ethers.constants.AddressZero;
+      const badcalldata = ["0xBAD45678ffffffff", "0x12345678ffffffff"];
+      const targets = [
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+      ];
       const callHash =
         "0x4bf388daaa919de3acb4d3fefb194e5af0403dcaea5ab842d09cfa8c76fdf8eb";
 
       const tx = timelock
         .connect(signers[0])
-        .execute(callHash, target, baddata);
+        .execute(callHash, targets, badcalldata);
       await expect(tx).to.be.revertedWith("hash mismatch");
     });
 
     it("fails to execute prematurely", async () => {
-      const calldata = "0x12345678ffffffff";
-      const target = ethers.constants.AddressZero;
+      const calldatas = ["0x12345678ffffffff", "0x12345678ffffffff"];
+      const targets = [
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+      ];
       const callHash =
-        "0x4bf388daaa919de3acb4d3fefb194e5af0403dcaea5ab842d09cfa8c76fdf8eb";
-
+        "0xb7ec49e53dd1ba1fbe652d46a161ca1487239a94da35929d38669d3e90b9fcbf";
       await timelock.connect(signers[0]).registerCall(callHash);
       await timelock.connect(signers[0]).setWaitTime(10000000000000);
 
       const tx = timelock
         .connect(signers[0])
-        .execute(callHash, target, calldata);
+        .execute(callHash, targets, calldatas);
       await expect(tx).to.be.revertedWith("not enough time has passed");
     });
-
-    it("executes correctly", async () => {
-      const calldata = "0x12345678ffffffff";
-      const target = ethers.constants.AddressZero;
-      const callHash =
-        "0x4bf388daaa919de3acb4d3fefb194e5af0403dcaea5ab842d09cfa8c76fdf8eb";
-
-      await timelock.connect(signers[0]).registerCall(callHash);
-      await timelock.connect(signers[0]).setWaitTime(0);
-
-      const tx = timelock
-        .connect(signers[0])
-        .execute(callHash, target, calldata);
-      // not sure what we should expect here
-    });
   });
+
+  // describe("execute", () => {
+  //   it("fails to execute with bad data", async () => {
+  //     const baddata = "0xBAD45678ffffffff";
+  //     const target = ethers.constants.AddressZero;
+  //     const callHash =
+  //       "0x4bf388daaa919de3acb4d3fefb194e5af0403dcaea5ab842d09cfa8c76fdf8eb";
+
+  //     const tx = timelock
+  //       .connect(signers[0])
+  //       .execute(callHash, target, baddata);
+  //     await expect(tx).to.be.revertedWith("hash mismatch");
+  //   });
+
+  //   it("fails to execute prematurely", async () => {
+  //     const calldata = "0x12345678ffffffff";
+  //     const target = ethers.constants.AddressZero;
+  //     const callHash =
+  //       "0x4bf388daaa919de3acb4d3fefb194e5af0403dcaea5ab842d09cfa8c76fdf8eb";
+
+  //     await timelock.connect(signers[0]).registerCall(callHash);
+  //     await timelock.connect(signers[0]).setWaitTime(10000000000000);
+
+  //     const tx = timelock
+  //       .connect(signers[0])
+  //       .execute(callHash, target, calldata);
+  //     await expect(tx).to.be.revertedWith("not enough time has passed");
+  //   });
+
+  //   it("executes correctly", async () => {
+  //     const calldata = "0x12345678ffffffff";
+  //     const target = ethers.constants.AddressZero;
+  //     const callHash =
+  //       "0x4bf388daaa919de3acb4d3fefb194e5af0403dcaea5ab842d09cfa8c76fdf8eb";
+
+  //     await timelock.connect(signers[0]).registerCall(callHash);
+  //     await timelock.connect(signers[0]).setWaitTime(0);
+
+  //     const tx = timelock
+  //       .connect(signers[0])
+  //       .execute(callHash, target, calldata);
+  //     // not sure what we should expect here
+  //   });
+  // });
 });
