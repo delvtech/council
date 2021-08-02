@@ -108,7 +108,7 @@ contract GSCVault is Authorizable {
         delete members[who];
     }
 
-    /// @notice Queries voting power, GSC members get one vote and the owner gets 10k
+    /// @notice Queries voting power, GSC members get one vote and the owner gets 100k
     /// @param who Which address to query
     /// @dev Because this function ignores the when variable it creates a unique voting system
     ///      and should not be plugged in with truly historic ones.
