@@ -13,15 +13,8 @@ import "../libraries/Authorizable.sol";
 // in the voting period can vote.
 
 contract GSCVault is Authorizable {
-    // This struct will compact into one evm storage word for gas efficient loads
-    struct Status {
-        bool isMember;
-        bool isChallenged;
-        uint64 challengeBlock;
-        address[] vaults;
-    }
-    // Tracks which people are in the GSC and if they have been challenged
-    mapping(address => Status) public members;
+    // Tracks which people are in the GSC and which vaults they use
+    mapping(address => address[]) public memberVaults;
     // The core voting contract with approved voting vaults
     ICoreVoting public coreVoting;
     // The amount of votes needed to be on the GSC
@@ -29,8 +22,6 @@ contract GSCVault is Authorizable {
     // The challenge duration
     uint256 public challengeDuration = 1330;
 
-    // Events to make it easy to track challenges
-    event Challenged(address indexed who, uint256 when);
     // Event to help tracking members
     event MembershipProved(address indexed who, uint256 when);
     // Event to help tracking kicks
@@ -56,6 +47,8 @@ contract GSCVault is Authorizable {
     ///         joiner or to respond to a challenge
     /// @param votingVaults The contracts this person has their voting power in
     function proveMembership(address[] calldata votingVaults) external {
+        // Check for call validity
+        assert(votingVaults.length > 0);
         // We loop through the voting vaults to check they are authorized
         // We check all up front to prevent any reentrancy or weird side effects
         for (uint256 i = 0; i < votingVaults.length; i++) {
@@ -84,20 +77,16 @@ contract GSCVault is Authorizable {
         require(totalVotes >= votingPowerBound, "Not enough votes");
         // If that passes we store that the caller is a member
         // This storage will wipe out that the caller has been challenged
-        members[msg.sender] = Status(true, false, 0, votingVaults);
+        memberVaults[msg.sender] = votingVaults;
         // Emit the event tracking this
         emit MembershipProved(msg.sender, block.timestamp);
     }
 
-    /// @notice Challenges a GSC member to re prove their membership within a period [default ~ 48 hours] or be kick-able
+    /// @notice Removes a GSC member who's registered vaults no longer contain enough votes
     /// @param who The address to challenge.
-    /// @dev This function means that there's a trolling attack which can force GSC members to
-    ///       spend gas, but because it costs gas it's fairly unlikely to be seen in the wild.
-    function challenge(address who) external {
-        // Load the status of who, and do not assume they are really a GSC member
-        Status storage currentStatus = members[who];
+    function kick(address who) external {
         // Load the vaults into memory
-        address[] memory votingVaults = currentStatus.vaults;
+        address[] memory votingVaults = memberVaults[who];
         // We verify that they have lost sufficient voting power to be kicked
         uint256 totalVotes = 0;
         // Parse through the list of vaults
@@ -118,31 +107,9 @@ contract GSCVault is Authorizable {
         }
         // Only proceed if the member is currently kick-able
         require(totalVotes < votingPowerBound, "Not kick-able");
-        // Store that they have been challenged plus timestamp
-        members[who] = Status(
-            currentStatus.isMember,
-            true,
-            uint64(block.number),
-            currentStatus.vaults
-        );
-
+        // Delete the member
+        delete memberVaults[who];
         // Emit a challenge event
-        emit Challenged(who, block.number);
-    }
-
-    /// @notice Removes a member who has not proven membership criteria within the time period
-    /// @param who The member address
-    function kick(address who) external {
-        // Load the 'who' status
-        Status storage currentStatus = members[who];
-        // The challenge must be active and it must be at least 'challengeDuration' blocks ago
-        uint256 blocksPassed =
-            (block.number - uint256(currentStatus.challengeBlock));
-        require(blocksPassed >= challengeDuration, "Not enough time passed");
-        require(currentStatus.isChallenged, "Challenge failed or not started");
-        // We delete the entry for this GSC member
-        delete members[who];
-        // Emit event tracking deletion
         emit Kicked(who, block.number);
     }
 
@@ -163,7 +130,7 @@ contract GSCVault is Authorizable {
             return 100000;
         }
         // If the who is in the GSC return 1 and otherwise return 0
-        if (members[who].isMember) {
+        if (memberVaults[who].length > 0) {
             return 1;
         } else {
             return 0;

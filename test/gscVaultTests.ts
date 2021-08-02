@@ -9,7 +9,7 @@ import { MockERC20 } from "typechain/MockERC20";
 import { MockVotingVault } from "typechain/MockVotingVault";
 import { MockCoreVoting } from "typechain/MockCoreVoting";
 import { createSnapshot, restoreSnapshot } from "./helpers/snapshots";
-import exp from "constants";
+import exp, { EPERM } from "constants";
 
 const { provider } = waffle;
 
@@ -151,37 +151,35 @@ describe("GSC Vault", function () {
       await restoreSnapshot(provider);
     });
 
-    it("Allows challenge for one", async () => {
-      const tx1 = await (await gscVault.challenge(signers[1].address)).wait();
-
-      const status1 = await gscVault.members(signers[1].address);
-      // Check the member status
-      expect(status1[0]).to.be.eq(true);
-      expect(status1[1]).to.be.eq(true);
-      expect(status1[2]).to.be.eq(tx1.blockNumber);
-    });
-
-    it("Blocks challenge for user with enough voting power", async () => {
-      const tx1 = gscVault.challenge(signers[2].address);
-      await expect(tx1).to.be.revertedWith("Not kick-able");
-    });
-
-    it("Allows kicking after waiting", async () => {
-      const tx1 = await (await gscVault.challenge(signers[1].address)).wait();
-
-      await gscVault.challenge(signers[1].address);
-      await increaseBlocknumber(provider, 100);
+    it("Allows kick for singer with not enough vote", async () => {
+      // Kick and then check vaults
       await gscVault.kick(signers[1].address);
-      const status = await gscVault.members(signers[1].address);
-      // Check the member status
-      expect(status[0]).to.be.eq(false);
-      expect(status[1]).to.be.eq(false);
-      expect(status[2]).to.be.eq(0);
+      // Check they have been fully removed
+      const votes = await gscVault.queryVotingPower(signers[1].address, 0);
+      expect(votes).to.be.eq(0);
+    });
+
+    it("Allows kick for singer with out of date vaults", async () => {
+      // We set the vault to not be approved anymore
+      await coreVoting.setVault(votingVault.address, false);
+      // Use the otherwise qualified signer 2
+      await gscVault.kick(signers[2].address);
+      // Check they have been fully removed
+      const votes = await gscVault.queryVotingPower(signers[2].address, 0);
+      expect(votes).to.be.eq(0);
+    });
+
+    it("Blocks kicking for user with enough voting power", async () => {
+      const tx1 = gscVault.kick(signers[2].address);
+      await expect(tx1).to.be.revertedWith("Not kick-able");
     });
 
     it("Allows member to reprove membership if valid", async () => {
       // Challenge signer 1
-      const tx1 = await (await gscVault.challenge(signers[1].address)).wait();
+      await gscVault.kick(signers[1].address);
+      // check for removal
+      let votes = await gscVault.queryVotingPower(signers[1].address, 0);
+      expect(votes).to.be.eq(0);
 
       // Increase voting power for signer 1
       await votingVault.setVotingPower(signers[1].address, one.add(1));
@@ -191,26 +189,11 @@ describe("GSC Vault", function () {
       // Reprove membership
       await gscVault.connect(signers[1]).proveMembership([votingVault.address]);
 
-      const status = await gscVault.members(signers[2].address);
       // Check the member status
-      expect(status[0]).to.be.eq(true);
-      expect(status[1]).to.be.eq(false);
-      expect(status[2]).to.be.eq(0);
-    });
-
-    it("Blocks invalid kicks", async () => {
-      // Kick attempt without challenge period
-      let tx = gscVault.kick(signers[1].address);
-      await expect(tx).to.be.revertedWith("Challenge failed or not started");
-      tx = gscVault.kick(signers[2].address);
-      await expect(tx).to.be.revertedWith("Challenge failed or not started");
-      // Now challenge and attempt to kick before period
-      await gscVault.challenge(signers[1].address);
-      // Mine a few blocks
-      await increaseBlocknumber(provider, 50);
-      // Kicks should still fail
-      tx = gscVault.kick(signers[1].address);
-      await expect(tx).to.be.revertedWith("Not enough time passed");
+      const storedVault = await gscVault.memberVaults(signers[1].address, 0);
+      expect(storedVault).to.be.eq(votingVault.address);
+      votes = await gscVault.queryVotingPower(signers[1].address, 0);
+      expect(votes).to.be.eq(1);
     });
   });
 });
