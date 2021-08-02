@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.3;
 
-import "./libraries/History.sol";
-import "./libraries/Storage.sol";
-import "./interfaces/IERC20.sol";
-import "./interfaces/IVotingVault.sol";
+import "../libraries/History.sol";
+import "../libraries/Storage.sol";
+import "../interfaces/IERC20.sol";
+import "../interfaces/IVotingVault.sol";
 
 contract LockingVault is IVotingVault {
     // Bring our libraries into scope
@@ -91,7 +91,7 @@ contract LockingVault is IVotingVault {
     {
         // Get our reference to historical data
         History.HistoricalBalances memory votingPower = _votingPower();
-        // Find the historical datas
+        // Find the historical datum
         return votingPower.find(user, blockNumber);
     }
 

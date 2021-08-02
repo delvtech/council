@@ -6,7 +6,7 @@ import { createSnapshot, restoreSnapshot } from "./helpers/snapshots";
 
 import { TestCoreVoting } from "../typechain/TestCoreVoting";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import corevotingData from "../artifacts/contracts/test/TestCoreVoting.sol/TestCoreVoting.json";
+import corevotingData from "../artifacts/contracts/mocks/TestCoreVoting.sol/TestCoreVoting.json";
 
 const { provider } = waffle;
 
