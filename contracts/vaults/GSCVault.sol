@@ -18,6 +18,7 @@ contract GSCVault is Authorizable {
         bool isMember;
         bool isChallenged;
         uint64 challengeBlock;
+        address[] vaults;
     }
     // Tracks which people are in the GSC and if they have been challenged
     mapping(address => Status) public members;
@@ -76,7 +77,7 @@ contract GSCVault is Authorizable {
         require(totalVotes >= votingPowerBound, "Not enough votes");
         // If that passes we store that the caller is a member
         // This storage will wipe out that the caller has been challenged
-        members[msg.sender] = Status(true, false, 0);
+        members[msg.sender] = Status(true, false, 0, votingVaults);
     }
 
     /// @notice Challenges a GSC member to re prove their membership within a period [default ~ 48 hours] or be kick-able
@@ -86,11 +87,34 @@ contract GSCVault is Authorizable {
     function challenge(address who) external {
         // Load the status of who, and do not assume they are really a GSC member
         Status storage currentStatus = members[who];
+        // Load the vaults into memory
+        address[] memory votingVaults = currentStatus.vaults;
+        // We verify that they have lost sufficient voting power to be kicked
+        uint256 totalVotes = 0;
+        // Parse through the list of vaults
+        for (uint256 i = 0; i < votingVaults.length; i++) {
+            // If the vault is not approved we don't count its votes now
+            if (coreVoting.approvedVaults(votingVaults[i])) {
+                // Call the vault to check last block's voting power
+                // Last block to ensure there's no flash loan or other
+                // intra contract interaction
+                uint256 votes =
+                    IVotingVault(votingVaults[i]).queryVotePower(
+                        who,
+                        block.number - 1
+                    );
+                // Add up the votes
+                totalVotes += votes;
+            }
+        }
+        // Only proceed if the member is currently kick-able
+        require(totalVotes < votingPowerBound, "Not kick-able");
         // Store that they have been challenged plus timestamp
         members[who] = Status(
             currentStatus.isMember,
             true,
-            uint64(block.number)
+            uint64(block.number),
+            currentStatus.vaults
         );
     }
 

@@ -151,26 +151,23 @@ describe("GSC Vault", function () {
       await restoreSnapshot(provider);
     });
 
-    it("Allows challenge for both", async () => {
+    it("Allows challenge for one", async () => {
       const tx1 = await (await gscVault.challenge(signers[1].address)).wait();
-      const tx2 = await (await gscVault.challenge(signers[2].address)).wait();
 
       const status1 = await gscVault.members(signers[1].address);
       // Check the member status
       expect(status1[0]).to.be.eq(true);
       expect(status1[1]).to.be.eq(true);
       expect(status1[2]).to.be.eq(tx1.blockNumber);
+    });
 
-      const status2 = await gscVault.members(signers[2].address);
-      // Check the member status
-      expect(status2[0]).to.be.eq(true);
-      expect(status2[1]).to.be.eq(true);
-      expect(status2[2]).to.be.eq(tx2.blockNumber);
+    it("Blocks challenge for user with enough voting power", async () => {
+      const tx1 = gscVault.challenge(signers[2].address);
+      await expect(tx1).to.be.revertedWith("Not kick-able");
     });
 
     it("Allows kicking after waiting", async () => {
       const tx1 = await (await gscVault.challenge(signers[1].address)).wait();
-      const tx2 = await (await gscVault.challenge(signers[2].address)).wait();
 
       await gscVault.challenge(signers[1].address);
       await increaseBlocknumber(provider, 100);
@@ -183,17 +180,16 @@ describe("GSC Vault", function () {
     });
 
     it("Allows member to reprove membership if valid", async () => {
+      // Challenge signer 1
       const tx1 = await (await gscVault.challenge(signers[1].address)).wait();
-      const tx2 = await (await gscVault.challenge(signers[2].address)).wait();
+
+      // Increase voting power for signer 1
+      await votingVault.setVotingPower(signers[1].address, one.add(1));
 
       // mine a few blocks for good measure
       await increaseBlocknumber(provider, 10);
-
-      await gscVault.connect(signers[2]).proveMembership([votingVault.address]);
-      const tx = gscVault
-        .connect(signers[1])
-        .proveMembership([votingVault.address]);
-      await expect(tx).to.be.revertedWith("Not enough votes");
+      // Reprove membership
+      await gscVault.connect(signers[1]).proveMembership([votingVault.address]);
 
       const status = await gscVault.members(signers[2].address);
       // Check the member status
@@ -210,13 +206,10 @@ describe("GSC Vault", function () {
       await expect(tx).to.be.revertedWith("Challenge failed or not started");
       // Now challenge and attempt to kick before period
       await gscVault.challenge(signers[1].address);
-      await gscVault.challenge(signers[2].address);
       // Mine a few blocks
       await increaseBlocknumber(provider, 50);
       // Kicks should still fail
       tx = gscVault.kick(signers[1].address);
-      await expect(tx).to.be.revertedWith("Not enough time passed");
-      tx = gscVault.kick(signers[2].address);
       await expect(tx).to.be.revertedWith("Not enough time passed");
     });
   });
