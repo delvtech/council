@@ -45,12 +45,21 @@ describe("CoreVoting", function () {
       signers[0].address,
       0,
       0,
-      0,
       ethers.constants.AddressZero,
       votingVaults
     );
+    // Override default lock duration
+    await coreVoting.connect(signers[0]).setLockDuration(0);
+    await coreVoting.connect(signers[0]).changeExtraVotingTime(500);
   });
   after(async () => {
+    await restoreSnapshot(provider);
+  });
+  // Each describe block is independent
+  beforeEach(async () => {
+    await createSnapshot(provider);
+  });
+  afterEach(async () => {
     await restoreSnapshot(provider);
   });
 
@@ -115,7 +124,6 @@ describe("CoreVoting", function () {
       expect(proposal[4][0]).to.be.eq(baseVotingPower * 3);
       expect(proposal[4][1]).to.be.eq(0);
       expect(proposal[4][2]).to.be.eq(0);
-      expect(proposal[5]).to.be.eq(true);
     });
     it("correctly calculates quorum [1,2,b=5] = 5", async () => {
       const targets = [
@@ -214,7 +222,6 @@ describe("CoreVoting", function () {
       expect(proposal[4][0]).to.be.eq(baseVotingPower * 3);
       expect(proposal[4][1]).to.be.eq(0);
       expect(proposal[4][2]).to.be.eq(0);
-      expect(proposal[5]).to.be.eq(true);
     });
   });
   describe("vote", async () => {
@@ -223,6 +230,18 @@ describe("CoreVoting", function () {
     });
     afterEach(async () => {
       await restoreSnapshot(provider);
+    });
+    // We need to have a real proposal
+    before(async () => {
+      const targets = [
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+      ];
+      const calldatas = ["0x12345678ffffffff", "0x12345678ffffffff"];
+
+      await coreVoting
+        .connect(signers[0])
+        .proposal(votingVaults, targets, calldatas, 0);
     });
     it("fails to vote with unapproved voting vault", async () => {
       votingVaults.push(ethers.constants.AddressZero);
@@ -236,44 +255,30 @@ describe("CoreVoting", function () {
       await expect(tx).to.be.revertedWith("duplicate vault");
       votingVaults.pop();
     });
+    it("fails to vote after extra voting time passes", async () => {
+      votingVaults.push(votingVaults[0]);
+      await increaseBlocknumber(provider, 500);
+      const tx = coreVoting.connect(signers[1]).vote(votingVaults, 0, 0);
+      await expect(tx).to.be.revertedWith("Expired");
+      votingVaults.pop();
+    });
     it("votes on a new proposal", async () => {
       const block = await getBlock();
-
-      const targets = [
-        ethers.constants.AddressZero,
-        ethers.constants.AddressZero,
-      ];
-      const calldatas = ["0x12345678ffffffff", "0x12345678ffffffff"];
-
-      await coreVoting
-        .connect(signers[0])
-        .proposal(votingVaults, targets, calldatas, 0);
 
       // proposal was with a yes vote. Match no votes.
       await coreVoting.connect(signers[1]).vote(votingVaults, 0, 1);
 
       const proposal = await coreVoting.getProposalData(0);
 
-      expect(proposal[1]).to.be.eq(block + 1);
-      expect(proposal[2]).to.be.eq(block + 1);
+      expect(proposal[1]).to.be.eq(block);
+      expect(proposal[2]).to.be.eq(block);
       expect(proposal[3]).to.be.eq(0);
       expect(proposal[4][0]).to.be.eq(baseVotingPower * 3);
       expect(proposal[4][1]).to.be.eq(baseVotingPower * 3);
       expect(proposal[4][2]).to.be.eq(0);
-      expect(proposal[5]).to.be.eq(true);
     });
     it("correctly re-votes", async () => {
       const block = await getBlock();
-
-      const targets = [
-        ethers.constants.AddressZero,
-        ethers.constants.AddressZero,
-      ];
-      const calldatas = ["0x12345678ffffffff", "0x12345678ffffffff"];
-
-      await coreVoting
-        .connect(signers[0])
-        .proposal(votingVaults, targets, calldatas, 0);
 
       // proposal was with a yes vote. Match no votes.
       await coreVoting.connect(signers[1]).vote(votingVaults, 0, 1);
@@ -282,41 +287,31 @@ describe("CoreVoting", function () {
 
       const proposal = await coreVoting.getProposalData(0);
 
-      expect(proposal[1]).to.be.eq(block + 1);
-      expect(proposal[2]).to.be.eq(block + 1);
+      expect(proposal[1]).to.be.eq(block);
+      expect(proposal[2]).to.be.eq(block);
       expect(proposal[3]).to.be.eq(0);
       expect(proposal[4][0]).to.be.eq(baseVotingPower * 6);
       expect(proposal[4][1]).to.be.eq(0);
       expect(proposal[4][2]).to.be.eq(0);
-      expect(proposal[5]).to.be.eq(true);
     });
     it("re-votes with lower power", async () => {
       const block = await getBlock();
-
-      const targets = [
-        ethers.constants.AddressZero,
-        ethers.constants.AddressZero,
-      ];
-      const calldatas = ["0x12345678ffffffff", "0x12345678ffffffff"];
-
-      await coreVoting
-        .connect(signers[0])
-        .proposal(votingVaults, targets, calldatas, 0);
 
       // proposal was with a yes vote. Match no votes.
       await coreVoting.connect(signers[0]).vote([votingVaults[0]], 0, 0);
 
       const proposal = await coreVoting.getProposalData(0);
 
-      expect(proposal[1]).to.be.eq(block + 1);
-      expect(proposal[2]).to.be.eq(block + 1);
+      expect(proposal[1]).to.be.eq(block);
+      expect(proposal[2]).to.be.eq(block);
       expect(proposal[3]).to.be.eq(0);
       expect(proposal[4][0]).to.be.eq(baseVotingPower);
       expect(proposal[4][1]).to.be.eq(0);
       expect(proposal[4][2]).to.be.eq(0);
-      expect(proposal[5]).to.be.eq(true);
     });
   });
+  // All proposal indexes in execute are incremented because the
+  // snapshot doesn't appear to be working and an extra proposal is present here
   describe("execute", async () => {
     beforeEach(async () => {
       await createSnapshot(provider);
@@ -342,7 +337,7 @@ describe("CoreVoting", function () {
 
       const tx = coreVoting
         .connect(signers[0])
-        .execute(0, targets, badcalldata);
+        .execute(1, targets, badcalldata);
       await expect(tx).to.be.revertedWith("hash mismatch");
     });
     it("fails to execute inactive proposal", async () => {
@@ -352,8 +347,8 @@ describe("CoreVoting", function () {
       ];
       const calldatas = ["0x12345678ffffffff", "0x12345678ffffffff"];
 
-      const tx = coreVoting.connect(signers[0]).execute(0, targets, calldatas);
-      await expect(tx).to.be.revertedWith("inactive");
+      const tx = coreVoting.connect(signers[0]).execute(2, targets, calldatas);
+      await expect(tx).to.be.revertedWith("Previously executed");
     });
     it("fails to execute a proposal prematurely", async () => {
       const targets = [
@@ -375,7 +370,7 @@ describe("CoreVoting", function () {
 
       const tx = coreVoting
         .connect(signers[0])
-        .execute(0, targets, badcalldata);
+        .execute(1, targets, badcalldata);
       await expect(tx).to.be.revertedWith("not unlocked");
     });
     it("executes a proposal - voted yes", async () => {
@@ -391,18 +386,18 @@ describe("CoreVoting", function () {
         .proposal(votingVaults, targets, [calldata], 0);
 
       // pass proposal with 2/3 majority
-      await coreVoting.connect(signers[1]).vote(votingVaults, 0, 1);
-      await coreVoting.connect(signers[2]).vote(votingVaults, 0, 0);
+      await coreVoting.connect(signers[1]).vote(votingVaults, 1, 1);
+      await coreVoting.connect(signers[2]).vote(votingVaults, 1, 0);
 
-      await coreVoting.connect(signers[0]).execute(0, targets, [calldata]);
+      await coreVoting.connect(signers[0]).execute(1, targets, [calldata]);
 
       const dummyValue = await coreVoting.dummyValue();
-      const proposal = await coreVoting.getProposalData(0);
+      const proposal = await coreVoting.getProposalData(1);
 
       expect(dummyValue).to.be.eq(newDummyValue);
       expect(proposal[1]).to.be.eq(0);
     });
-    it("executes a proposal - voted no", async () => {
+    it("doesn't execute a proposal - voted no", async () => {
       const newDummyValue = 123423123;
       const targets = [coreVoting.address];
       const cvInterface = new ethers.utils.Interface(corevotingData.abi);
@@ -415,18 +410,13 @@ describe("CoreVoting", function () {
         .proposal(votingVaults, targets, [calldata], 0);
 
       // pass proposal with 2/3 majority
-      await coreVoting.connect(signers[1]).vote(votingVaults, 0, 1);
-      await coreVoting.connect(signers[2]).vote(votingVaults, 0, 1);
+      await coreVoting.connect(signers[1]).vote(votingVaults, 1, 1);
+      await coreVoting.connect(signers[2]).vote(votingVaults, 1, 1);
 
-      await coreVoting.connect(signers[0]).execute(0, targets, [calldata]);
-
-      const dummyValue = await coreVoting.dummyValue();
-      const proposal = await coreVoting.getProposalData(0);
-
-      expect(dummyValue).to.be.eq(0);
-      expect(proposal[1]).to.be.eq(0);
+      const tx = coreVoting.connect(signers[0]).execute(1, targets, [calldata]);
+      await expect(tx).to.be.revertedWith("Cannot execute");
     });
-    it("executes a proposal - under quorum", async () => {
+    it("doesn't execute a proposal - under quorum", async () => {
       const newDummyValue = 123423123;
       const targets = [coreVoting.address];
       const cvInterface = new ethers.utils.Interface(corevotingData.abi);
@@ -443,16 +433,11 @@ describe("CoreVoting", function () {
         .proposal(votingVaults, targets, [calldata], 0);
 
       // pass proposal with 2/3 majority
-      await coreVoting.connect(signers[1]).vote(votingVaults, 0, 1);
-      await coreVoting.connect(signers[2]).vote(votingVaults, 0, 1);
+      await coreVoting.connect(signers[1]).vote(votingVaults, 1, 1);
+      await coreVoting.connect(signers[2]).vote(votingVaults, 1, 1);
 
-      await coreVoting.connect(signers[0]).execute(0, targets, [calldata]);
-
-      const dummyValue = await coreVoting.dummyValue();
-      const proposal = await coreVoting.getProposalData(0);
-
-      expect(dummyValue).to.be.eq(0);
-      expect(proposal[1]).to.be.eq(0);
+      const tx = coreVoting.connect(signers[0]).execute(1, targets, [calldata]);
+      await expect(tx).to.be.revertedWith("Cannot execute");
     });
   });
 
@@ -564,4 +549,29 @@ describe("CoreVoting", function () {
       expect(status).to.be.eq(true);
     });
   });
+  describe("changeExtraVoteTime", async () => {
+    beforeEach(async () => {
+      await createSnapshot(provider);
+    });
+    afterEach(async () => {
+      await restoreSnapshot(provider);
+    });
+    it("fails to execute if caller is not the timelock", async () => {
+      const tx = coreVoting.connect(signers[1]).changeExtraVotingTime(100);
+
+      await expect(tx).to.be.revertedWith("Sender not owner");
+    });
+    it("correctly executes", async () => {
+      await coreVoting.connect(signers[0]).changeExtraVotingTime(100);
+
+      const status = await coreVoting.extraVoteTime();
+      expect(status).to.be.eq(100);
+    });
+  });
 });
+// TODO: make library
+async function increaseBlocknumber(provider: any, times: number) {
+  for (let i = 0; i < times; i++) {
+    await provider.send("evm_mine", []);
+  }
+}
