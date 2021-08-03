@@ -173,7 +173,7 @@ contract VestingVault is IVotingVault {
     }
 
     /// @notice Removes a grant.
-    /// @dev The manager has the power to remove a grant at any time. Ay withdrawable tokens will be
+    /// @dev The manager has the power to remove a grant at any time. Any withdrawable tokens will be
     /// sent to the grant owner.
     /// @param _who The Grant owner.
     function removeGrant(address _who) public onlyManager {
