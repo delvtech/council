@@ -20,17 +20,36 @@ contract Timelock is Authorizable {
 
     constructor(uint256 _waitTime, address _governance) Authorizable() {
         waitTime = _waitTime;
-        setOwner(_governance);
         governance = _governance;
         timeIncreased = false;
     }
 
-    function registerCall(bytes32 callHash) external onlyOwner {
+    // Checks that the caller is the governance contract
+    modifier onlyGovernance() {
+        require(isGovernance(msg.sender), "Contract is not governance");
+        _;
+    }
+
+    // Checks that the caller is making an external call from
+    // this address
+    modifier onlySelf() {
+        require(msg.sender == address(this));
+        _;
+    }
+
+    /// @dev Returns true if an address is authorized
+    /// @param who the address to check
+    /// @return true if authorized false if not
+    function isGovernance(address who) public view returns (bool) {
+        return who == governance;
+    }
+
+    function registerCall(bytes32 callHash) external onlyGovernance {
         // stores at the callHash the current block timestamp
         callTimestamps[callHash] = block.timestamp;
     }
 
-    function stopCall(bytes32 callHash) external onlyOwner {
+    function stopCall(bytes32 callHash) external onlyGovernance {
         // removes stored callHash data
         delete callTimestamps[callHash];
     }
@@ -39,7 +58,7 @@ contract Timelock is Authorizable {
         bytes32 callHash,
         address[] memory targets,
         bytes[] calldata calldatas
-    ) external {
+    ) external onlyGovernance {
         // loads the stored callHash data and checks enough time has passed
         // Hashes the provided data and checks it matches the callHash
         // executes call
@@ -56,7 +75,7 @@ contract Timelock is Authorizable {
     }
 
     // Allow a call from this contract to reset the wait time storage variable
-    function setWaitTime(uint256 _waitTime) external onlyOwner {
+    function setWaitTime(uint256 _waitTime) external onlySelf {
         waitTime = _waitTime;
     }
 
