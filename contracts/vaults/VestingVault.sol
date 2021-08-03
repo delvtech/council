@@ -394,20 +394,23 @@ contract VestingVault is IVotingVault {
         return (unlocked - _grant.withdrawn);
     }
 
-    /// @notice Returns the historical voting power tracker
-    /// @return A struct which can push to and find items in block indexed storage``
+    /// @notice Returns the historical voting power tracker.
+    /// @return A struct which can push to and find items in block indexed storage.
     function _votingPower()
         internal
         pure
         returns (History.HistoricalBalances memory)
     {
         // This call returns a storage mapping with a unique non overwrite-able storage location
-        // which can be persisted through upgrades, even if they change storage layout
+        // which can be persisted through upgrades, even if they change storage layout.
         return (History.load("votingPower"));
     }
 
-    /// @notice Returns the historical voting power tracker
-    /// @return A struct which can push to and find items in block indexed storage
+    /// @notice Helper that returns the current voting power of a grant
+    /// @dev This is not always the recorded voting power since it uses the latest
+    /// _unvestedMultiplier.
+    /// @param _grant The grant to check for voting power.
+    /// @return The current voting power of the grant.
     function _currentVotingPower(VestingVaultStorage.Grant memory _grant)
         internal
         view
