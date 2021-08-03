@@ -4,6 +4,7 @@ pragma solidity ^0.8.3;
 import "../interfaces/IERC20.sol";
 import "../libraries/History.sol";
 import "../libraries/VestingVaultStorage.sol";
+import "../libraries/Storage.sol";
 import "../interfaces/IVotingVault.sol";
 import "hardhat/console.sol";
 
@@ -11,6 +12,7 @@ contract VestingVault is IVotingVault {
     // Bring our libraries into scope
     using History for *;
     using VestingVaultStorage for *;
+    using Storage for *;
 
     // NOTE: There is no emergency withdrawal, any funds not sent via deposit() are
     // unrecoverable by this version of the VestingVault
@@ -32,18 +34,9 @@ contract VestingVault is IVotingVault {
         address _manager,
         address _timelock
     ) {
-        VestingVaultStorage.set(
-            VestingVaultStorage.addressPtr("manager"),
-            _manager
-        );
-        VestingVaultStorage.set(
-            VestingVaultStorage.addressPtr("timelock"),
-            _timelock
-        );
-        VestingVaultStorage.set(
-            VestingVaultStorage.uint256Ptr("unvestedMultiplier"),
-            100
-        );
+        Storage.set(Storage.addressPtr("manager"), _manager);
+        Storage.set(Storage.addressPtr("timelock"), _timelock);
+        Storage.set(Storage.uint256Ptr("unvestedMultiplier"), 100);
         token = _token;
         staleBlockLag = _stale;
     }
@@ -67,34 +60,22 @@ contract VestingVault is IVotingVault {
     /// @dev The unassigned tokens are not part of any grant and ca be used
     /// for a future grant or withdrawn by the manager.
     /// @return A struct containing the unassigned uint.
-    function _unassigned()
-        internal
-        pure
-        returns (VestingVaultStorage.Uint256 storage)
-    {
-        return VestingVaultStorage.uint256Ptr("unassigned");
+    function _unassigned() internal pure returns (Storage.Uint256 storage) {
+        return Storage.uint256Ptr("unassigned");
     }
 
     /// @notice A function to access the storage of the manager address.
     /// @dev The manager can access all functions with the olyManager modifier.
     /// @return A struct containing the manager address.
-    function _manager()
-        internal
-        pure
-        returns (VestingVaultStorage.Address memory)
-    {
-        return VestingVaultStorage.addressPtr("manager");
+    function _manager() internal pure returns (Storage.Address memory) {
+        return Storage.addressPtr("manager");
     }
 
     /// @notice A function to access the storage of the timelock address
     /// @dev The timelock can access all functions with the onlyTimelock modifier.
     /// @return A struct containing the timelock address.
-    function _timelock()
-        internal
-        pure
-        returns (VestingVaultStorage.Address memory)
-    {
-        return VestingVaultStorage.addressPtr("timelock");
+    function _timelock() internal pure returns (Storage.Address memory) {
+        return Storage.addressPtr("timelock");
     }
 
     /// @notice A function to access the storage of the unvestedMultiplier value
@@ -106,9 +87,9 @@ contract VestingVault is IVotingVault {
     function _unvestedMultiplier()
         internal
         pure
-        returns (VestingVaultStorage.Uint256 memory)
+        returns (Storage.Uint256 memory)
     {
-        return VestingVaultStorage.uint256Ptr("unvestedMultiplier");
+        return Storage.uint256Ptr("unvestedMultiplier");
     }
 
     modifier onlyManager() {
@@ -150,9 +131,8 @@ contract VestingVault is IVotingVault {
         uint128 _cliff,
         address _delegatee
     ) public onlyManager {
-        VestingVaultStorage.Uint256 storage unassigned = _unassigned();
-        VestingVaultStorage.Uint256 memory unvestedMultiplier =
-            _unvestedMultiplier();
+        Storage.Uint256 storage unassigned = _unassigned();
+        Storage.Uint256 memory unvestedMultiplier = _unvestedMultiplier();
 
         require(unassigned.data >= _amount, "Insufficient balance");
         // load the grant.
@@ -205,7 +185,7 @@ contract VestingVault is IVotingVault {
         // to allow withdrawal through claim()
         token.transfer(_who, withdrawable);
 
-        VestingVaultStorage.Uint256 storage unassigned = _unassigned();
+        Storage.Uint256 storage unassigned = _unassigned();
         uint256 locked = grant.allocation - (grant.withdrawn + withdrawable);
 
         // return the unused tokens so they can be used for a different grant
@@ -283,7 +263,7 @@ contract VestingVault is IVotingVault {
     /// via other means are not recoverable by this contract.
     /// @param _amount The amount of tokens to deposit.
     function deposit(uint256 _amount) public onlyManager {
-        VestingVaultStorage.Uint256 storage unassigned = _unassigned();
+        Storage.Uint256 storage unassigned = _unassigned();
         // update unassigned value
         unassigned.data += _amount;
         token.transferFrom(msg.sender, address(this), _amount);
@@ -293,13 +273,12 @@ contract VestingVault is IVotingVault {
     /// @dev The manager can withdraw tokens that are not being used by a grant.
     /// This function cannot be used to recover tokens that were sent to this contract
     /// by any means other than `deposit()`
-    function withdraw(uint256 _amount) public onlyManager {
-        VestingVaultStorage.Uint256 storage unassigned = _unassigned();
+    function withdraw(uint256 _amount, address _recipient) public onlyManager {
+        Storage.Uint256 storage unassigned = _unassigned();
         require(unassigned.data >= _amount, "Insufficient balance");
         // update unassigned value
         unassigned.data -= _amount;
-        address manager = _manager().data;
-        token.transfer(manager, _amount);
+        token.transfer(_recipient, _amount);
     }
 
     /// @notice Update a delegatee's voting power.
@@ -425,9 +404,6 @@ contract VestingVault is IVotingVault {
     /// @dev Allows the timelock to update the unvestedMultiplier.
     /// @param _multiplier The new multiplier.
     function changeUnvestedMultiplier(uint256 _multiplier) public onlyTimelock {
-        VestingVaultStorage.set(
-            VestingVaultStorage.uint256Ptr("unvestedMultiplier"),
-            _multiplier
-        );
+        Storage.set(Storage.uint256Ptr("unvestedMultiplier"), _multiplier);
     }
 }

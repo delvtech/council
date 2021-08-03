@@ -83,13 +83,20 @@ describe("VestingVault", function () {
       await restoreSnapshot(provider);
     });
     it("fails if caller is not the manager", async () => {
-      const tx = vestingVault.connect(signers[1]).withdraw(amount);
+      const tx = vestingVault
+        .connect(signers[1])
+        .withdraw(amount, signers[0].address);
       await expect(tx).to.be.revertedWith("!manager");
     });
-    it("correctly deposits", async () => {
-      await vestingVault.connect(signers[0]).withdraw(amount);
+    it("correctly withdraws", async () => {
+      await vestingVault
+        .connect(signers[0])
+        .withdraw(amount, signers[0].address);
       const unassigned = await vestingVault.unassigned();
+      const balance = await token.balanceOf(signers[0].address);
+
       expect(unassigned).to.be.eq(0);
+      expect(balance).to.be.eq(amount);
     });
   });
   describe("addGrantAndDelegate", async () => {
