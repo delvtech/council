@@ -290,7 +290,7 @@ contract CoreVoting is Authorizable {
 
     /// @notice Updates the default quorum.
     /// @param quorum New base quorum.
-    function setDefaultQuroum(uint256 quorum) external onlyOwner {
+    function setDefaultQuorum(uint256 quorum) external onlyOwner {
         baseQuorum = quorum;
     }
 
