@@ -1,48 +1,120 @@
-// This contract is currently a scaffold, meaning it is unimplemented and
-// just designed to show the shape of future code. The naming and other
-// conventions are 'soft' and more of suggestions that the implementer
-// has full ability to change. Changes which break interface compatibility though
-// should be double checked with the rest of the team.
-
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.3;
 
-// A contract allowing the recipients to claim the the retroactive airdrop
-// Can be a close fork of the one Andy already made.
+// import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "../libraries/Merkle.sol";
+import "../interfaces/IERC20.sol";
+import "../libraries/Authorizable.sol";
+import "../interfaces/ILockingVault.sol";
 
-contract Airdrop {
-    // We store a merkle root of the airdrop state
-    // plus a mapping of who claimed
-    // Plus an expiration timestamp after which the funds can be removed
-    // Immutable token, and expiration
-    // Changeable gov address
+import "hardhat/console.sol";
 
+contract Airdrop is Authorizable {
+    // The merkle root with deposits encoded into it as hash [address, amount]
+    // Assumed to be a node sorted tree
+    bytes32 public immutable merkleRoot;
+    // The token to pay out
+    IERC20 public immutable token;
+    // The time after which the token cannot be claimed
+    uint256 immutable expiration;
+    // The historic user claims
+    mapping(address => uint256) public claimed;
+    // The locking gov vault
+    ILockingVault lockingVault;
+
+    /// @notice Constructs the contract and sets state and immutable variables
+    /// @param _governance The address which can withdraw funds when the drop expires
+    /// @param _merkleRoot The root a keccak256 merkle tree with leaves which are address amount pairs
+    /// @param _token The erc20 contract which will be sent to the people with claims on the contract
+    /// @param _expiration The unix second timestamp when the airdrop expires
     constructor(
-        uint256 totalAmount,
-        address governance,
-        bytes32 merkleRoot,
-        address token,
-        uint256 expiration
+        address _governance,
+        bytes32 _merkleRoot,
+        IERC20 _token,
+        uint256 _expiration,
+        ILockingVault _lockingVault
     ) {
-        // transfers totalAmount of the token to this
-        // sets immutable gov, merkle root, token, and expiration
+        merkleRoot = _merkleRoot;
+        token = _token;
+        expiration = _expiration;
+        lockingVault = _lockingVault;
+        setOwner(_governance);
+        // We approve the locking vault so that it we can deposit on behalf of users
+        _token.approve(address(lockingVault), type(uint256).max);
     }
 
-    function claim(
-        bool toGovernance,
+    /// @notice Claims an amount of tokens which are in the tree and moves them directly into
+    ///         governance
+    /// @param amount The amount of tokens to claim
+    /// @param delegate The address the user will delegate to, WARNING - should not be zero
+    /// @param totalGrant The total amount of tokens the user was granted
+    /// @param merkleProof The merkle de-commitment which proves the user is in the merkle root
+    function claimAndDelegate(
+        uint256 amount,
         address delegate,
+        uint256 totalGrant,
         bytes32[] calldata merkleProof
     ) external {
-        // Checks that this user hasn't claimed yet
-        // Validates that the hash of their amount and address is in the merkle root
-        // via the proof provided.
-        // If they want to send their airdrop to gov send to gov
-        // otherwise send to them
-        // mark them as claimed
+        // Validate the withdraw
+        validateWithdraw(amount, totalGrant, merkleProof);
+        // Deposit for this sender into governance locking vault
+        lockingVault.deposit(msg.sender, amount, delegate);
     }
 
-    function reclaim(address destination) external {
-        // checks that the calling address is gov and that the airdrop is expired
-        // if expired send tokens to the destination
+    /// @notice Claims an amount of tokens which are in the tree and send them to the user
+    /// @param amount The amount of tokens to claim
+    /// @param totalGrant The total amount of tokens the user was granted
+    /// @param merkleProof The merkle de-commitment which proves the user is in the merkle root
+    function claim(
+        uint256 amount,
+        uint256 totalGrant,
+        bytes32[] calldata merkleProof
+    ) external {
+        // Validate the withdraw
+        validateWithdraw(amount, totalGrant, merkleProof);
+        // Transfer to the user
+        token.transfer(msg.sender, amount);
+    }
+
+    /// @notice Validate a withdraw attempt by checking merkle proof and ensuring the user has not
+    ///         previously withdrawn
+    /// @param amount The amount of tokens being claimed
+    /// @param totalGrant The total amount of tokens the user was granted
+    /// @param merkleProof The merkle de-commitment which proves the user is in the merkle root
+    function validateWithdraw(
+        uint256 amount,
+        uint256 totalGrant,
+        bytes32[] memory merkleProof
+    ) internal {
+        // Hash the user plus the total grant amount
+        bytes32 leafHash = keccak256(abi.encodePacked(msg.sender, totalGrant));
+        console.log("Leaf");
+        console.logBytes32(leafHash);
+        console.log("root");
+        console.logBytes32(merkleRoot);
+
+        console.log("proof");
+        for (uint256 i = 0; i < merkleProof.length; i++) {
+            console.logBytes32(merkleProof[i]);
+        }
+        // Verify the proof for this leaf
+        require(
+            MerkleProof.verify(merkleProof, merkleRoot, leafHash),
+            "Invalid Proof"
+        );
+        // Check that this claim won't give them more than the total grant then
+        // increase the stored claim amount
+        require(claimed[msg.sender] + amount < totalGrant, "Claimed too much");
+        claimed[msg.sender] += amount;
+    }
+
+    /// @notice Allows governance to remove the funds in this contract once the airdrop is over.
+    ///         Claims aren't blocked the airdrop ending at expiration is optional and gov has to
+    ///         manually end it.
+    /// @param destination The treasury contract which will hold the freed tokens
+    function reclaim(address destination) external onlyOwner {
+        require(block.timestamp > expiration, "Not expired");
+        uint256 unclaimed = token.balanceOf(address(this));
+        token.transfer(destination, unclaimed);
     }
 }
