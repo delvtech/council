@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.3;
 
-// import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import "../libraries/Merkle.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "../interfaces/IERC20.sol";
 import "../libraries/Authorizable.sol";
 import "../interfaces/ILockingVault.sol";
@@ -88,15 +87,7 @@ contract Airdrop is Authorizable {
     ) internal {
         // Hash the user plus the total grant amount
         bytes32 leafHash = keccak256(abi.encodePacked(msg.sender, totalGrant));
-        console.log("Leaf");
-        console.logBytes32(leafHash);
-        console.log("root");
-        console.logBytes32(merkleRoot);
 
-        console.log("proof");
-        for (uint256 i = 0; i < merkleProof.length; i++) {
-            console.logBytes32(merkleProof[i]);
-        }
         // Verify the proof for this leaf
         require(
             MerkleProof.verify(merkleProof, merkleRoot, leafHash),
@@ -104,7 +95,7 @@ contract Airdrop is Authorizable {
         );
         // Check that this claim won't give them more than the total grant then
         // increase the stored claim amount
-        require(claimed[msg.sender] + amount < totalGrant, "Claimed too much");
+        require(claimed[msg.sender] + amount <= totalGrant, "Claimed too much");
         claimed[msg.sender] += amount;
     }
 

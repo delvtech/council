@@ -23,6 +23,7 @@ describe("Airdrop Feature", function () {
   let merkle: MerkleTree;
   let accounts: Account[];
   const one = ethers.utils.parseEther("1");
+  let expiration: number;
 
   before(async () => {
     // Create a before snapshot
@@ -54,25 +55,20 @@ describe("Airdrop Feature", function () {
         address: signers[2].address,
         value: one,
       },
-      {
-        address: signers[2].address,
-        value: one,
-      },
     ];
     merkle = await getMerkleTree(accounts);
-    console.log(merkle);
 
     const airdropDeployer = await ethers.getContractFactory(
       "Airdrop",
       signers[0]
     );
-    console.log(merkle.getHexRoot());
+    expiration = Math.floor(new Date().getTime() / 1000) + 2629746;
     drop = await airdropDeployer.deploy(
       signers[0].address,
       merkle.getHexRoot(),
       token.address,
       // Current unix stamp + 1 month in seconds
-      Math.floor(new Date().getTime() / 1000) + 2629746,
+      expiration,
       lockingVault.address
     );
 
@@ -101,5 +97,56 @@ describe("Airdrop Feature", function () {
       const balance = await token.balanceOf(signers[i].address);
       expect(balance).to.be.eq(one);
     }
+  });
+
+  it("Allows claiming and delegating the airdrop", async () => {
+    for (let i = 0; i < 3; i++) {
+      const proof = merkle.getHexProof(await hashAccount(accounts[i]));
+      await drop
+        .connect(signers[i])
+        .claimAndDelegate(one, signers[3].address, one, proof);
+
+      const balance = await lockingVault.deposits(signers[i].address);
+      expect(balance).to.be.eq(one);
+      const delegate = await lockingVault.delegation(signers[i].address);
+      expect(delegate).to.be.eq(signers[3].address);
+    }
+  });
+
+  it("Blocks claiming over the airdrop", async () => {
+    const proof = merkle.getHexProof(await hashAccount(accounts[0]));
+    await drop.claim(one, one, proof);
+    let tx = drop.claim(1, one, proof);
+    await expect(tx).to.be.revertedWith("Claimed too much");
+    tx = drop.claimAndDelegate(1, signers[1].address, one, proof);
+    await expect(tx).to.be.revertedWith("Claimed too much");
+  });
+
+  it("Blocks an invalid proof", async () => {
+    const proof = merkle.getHexProof(await hashAccount(accounts[0]));
+    const tx = drop.claim(one, one.mul(2), proof);
+    expect(tx).to.be.revertedWith("Invalid proof");
+  });
+
+  it("Blocks gov withdraw before expiration", async () => {
+    const tx = drop.reclaim(signers[3].address);
+    await expect(tx).to.be.revertedWith("");
+  });
+
+  it("Allows gov to withdraw after expiration", async () => {
+    await provider.send("evm_increaseTime", [expiration + 1]);
+    await provider.send("evm_mine", []);
+    await drop.reclaim(signers[3].address);
+    const reclaimed = await token.balanceOf(signers[3].address);
+    expect(reclaimed).to.be.eq(one.mul(3));
+  });
+
+  it("Blocks non-gov to withdraw", async () => {
+    let tx = drop.connect(signers[1]).reclaim(signers[3].address);
+    await expect(tx).to.be.reverted;
+    await provider.send("evm_increaseTime", [expiration + 1]);
+    await provider.send("evm_mine", []);
+    tx = drop.connect(signers[1]).reclaim(signers[3].address);
+    await expect(tx).to.be.revertedWith("");
   });
 });
