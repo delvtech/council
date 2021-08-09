@@ -6,8 +6,6 @@ import "../interfaces/IERC20.sol";
 import "../libraries/Authorizable.sol";
 import "../interfaces/ILockingVault.sol";
 
-import "hardhat/console.sol";
-
 contract Airdrop is Authorizable {
     // The merkle root with deposits encoded into it as hash [address, amount]
     // Assumed to be a node sorted tree
