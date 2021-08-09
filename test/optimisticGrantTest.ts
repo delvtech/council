@@ -264,6 +264,11 @@ describe("Optimistic Grants", function () {
 
       const balance = await token.balanceOf(signers[1].address);
       await expect(balance).to.eq(amount);
+
+      // make sure that the grant was deleted
+      const map = await grants.grants(signers[1].address);
+      expect(map[0]).to.be.eq(0);
+      expect(map[1]).to.be.eq(0);
     });
   });
 });
