@@ -15,11 +15,11 @@ contract Airdrop is Authorizable {
     // The token to pay out
     IERC20 public immutable token;
     // The time after which the token cannot be claimed
-    uint256 immutable expiration;
+    uint256 public immutable expiration;
     // The historic user claims
     mapping(address => uint256) public claimed;
     // The locking gov vault
-    ILockingVault lockingVault;
+    ILockingVault public lockingVault;
 
     /// @notice Constructs the contract and sets state and immutable variables
     /// @param _governance The address which can withdraw funds when the drop expires
@@ -55,7 +55,7 @@ contract Airdrop is Authorizable {
         bytes32[] calldata merkleProof
     ) external {
         // Validate the withdraw
-        validateWithdraw(amount, totalGrant, merkleProof);
+        _validateWithdraw(amount, totalGrant, merkleProof);
         // Deposit for this sender into governance locking vault
         lockingVault.deposit(msg.sender, amount, delegate);
     }
@@ -70,7 +70,7 @@ contract Airdrop is Authorizable {
         bytes32[] calldata merkleProof
     ) external {
         // Validate the withdraw
-        validateWithdraw(amount, totalGrant, merkleProof);
+        _validateWithdraw(amount, totalGrant, merkleProof);
         // Transfer to the user
         token.transfer(msg.sender, amount);
     }
@@ -80,7 +80,7 @@ contract Airdrop is Authorizable {
     /// @param amount The amount of tokens being claimed
     /// @param totalGrant The total amount of tokens the user was granted
     /// @param merkleProof The merkle de-commitment which proves the user is in the merkle root
-    function validateWithdraw(
+    function _validateWithdraw(
         uint256 amount,
         uint256 totalGrant,
         bytes32[] memory merkleProof
