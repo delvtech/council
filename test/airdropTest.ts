@@ -92,7 +92,7 @@ describe("Airdrop Feature", function () {
   it("Allows claiming the airdrop", async () => {
     for (let i = 0; i < 3; i++) {
       const proof = merkle.getHexProof(await hashAccount(accounts[i]));
-      await drop.connect(signers[i]).claim(one, one, proof);
+      await drop.connect(signers[i]).claim(one, one, proof, signers[i].address);
 
       const balance = await token.balanceOf(signers[i].address);
       expect(balance).to.be.eq(one);
@@ -104,7 +104,13 @@ describe("Airdrop Feature", function () {
       const proof = merkle.getHexProof(await hashAccount(accounts[i]));
       await drop
         .connect(signers[i])
-        .claimAndDelegate(one, signers[3].address, one, proof);
+        .claimAndDelegate(
+          one,
+          signers[3].address,
+          one,
+          proof,
+          signers[i].address
+        );
 
       const balance = await lockingVault.deposits(signers[i].address);
       expect(balance).to.be.eq(one);
@@ -115,16 +121,22 @@ describe("Airdrop Feature", function () {
 
   it("Blocks claiming over the airdrop", async () => {
     const proof = merkle.getHexProof(await hashAccount(accounts[0]));
-    await drop.claim(one, one, proof);
-    let tx = drop.claim(1, one, proof);
+    await drop.claim(one, one, proof, signers[0].address);
+    let tx = drop.claim(1, one, proof, signers[0].address);
     await expect(tx).to.be.revertedWith("Claimed too much");
-    tx = drop.claimAndDelegate(1, signers[1].address, one, proof);
+    tx = drop.claimAndDelegate(
+      1,
+      signers[1].address,
+      one,
+      proof,
+      signers[0].address
+    );
     await expect(tx).to.be.revertedWith("Claimed too much");
   });
 
   it("Blocks an invalid proof", async () => {
     const proof = merkle.getHexProof(await hashAccount(accounts[0]));
-    const tx = drop.claim(one, one.mul(2), proof);
+    const tx = drop.claim(one, one.mul(2), proof, signers[0].address);
     expect(tx).to.be.revertedWith("Invalid proof");
   });
 

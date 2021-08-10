@@ -24,6 +24,7 @@ contract Airdrop is Authorizable {
     /// @param _merkleRoot The root a keccak256 merkle tree with leaves which are address amount pairs
     /// @param _token The erc20 contract which will be sent to the people with claims on the contract
     /// @param _expiration The unix second timestamp when the airdrop expires
+    /// @param _lockingVault The governance vault which this deposits to on behalf of users
     constructor(
         address _governance,
         bytes32 _merkleRoot,
@@ -46,31 +47,35 @@ contract Airdrop is Authorizable {
     /// @param delegate The address the user will delegate to, WARNING - should not be zero
     /// @param totalGrant The total amount of tokens the user was granted
     /// @param merkleProof The merkle de-commitment which proves the user is in the merkle root
+    /// @param destination The address which will be credited with funds
     function claimAndDelegate(
         uint256 amount,
         address delegate,
         uint256 totalGrant,
-        bytes32[] calldata merkleProof
+        bytes32[] calldata merkleProof,
+        address destination
     ) external {
         // Validate the withdraw
         _validateWithdraw(amount, totalGrant, merkleProof);
         // Deposit for this sender into governance locking vault
-        lockingVault.deposit(msg.sender, amount, delegate);
+        lockingVault.deposit(destination, amount, delegate);
     }
 
     /// @notice Claims an amount of tokens which are in the tree and send them to the user
     /// @param amount The amount of tokens to claim
     /// @param totalGrant The total amount of tokens the user was granted
     /// @param merkleProof The merkle de-commitment which proves the user is in the merkle root
+    /// @param destination The address which will be credited with funds
     function claim(
         uint256 amount,
         uint256 totalGrant,
-        bytes32[] calldata merkleProof
+        bytes32[] calldata merkleProof,
+        address destination
     ) external {
         // Validate the withdraw
         _validateWithdraw(amount, totalGrant, merkleProof);
         // Transfer to the user
-        token.transfer(msg.sender, amount);
+        token.transfer(destination, amount);
     }
 
     /// @notice Validate a withdraw attempt by checking merkle proof and ensuring the user has not
