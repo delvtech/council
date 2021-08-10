@@ -12,6 +12,7 @@
         "bytecode",
         "bytecodehash",
         "calldatacopy",
+        "calldata",
         "calldatas",
         "calldatasize",
         "callvalue",
