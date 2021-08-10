@@ -1,9 +1,8 @@
 import "module-alias/register";
 
 import { expect } from "chai";
-import { ethers, network, waffle } from "hardhat";
+import { ethers, waffle } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { BigNumberish, BigNumber } from "ethers";
 import { Spender } from "../typechain/Spender";
 import { MockERC20 } from "../typechain/MockERC20";
 import { MockDoubleSpender } from "../typechain/MockDoubleSpender";

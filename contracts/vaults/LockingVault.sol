@@ -103,6 +103,9 @@ contract LockingVault is IVotingVault {
     /// @dev Note - There's a minor griefing attack on this which sets someones delegation
     ///      address by depositing before them, requiring them to call delegate to reset it.
     ///      Given the gas price required and 0 financial benefit we consider it unlikely.
+    ///      Warning - Users should not set delegation to the zero address as this will allow
+    ///                someone to change their delegation by depositing a small amount to their
+    ///                account.
     function deposit(
         address fundedAccount,
         uint256 amount,
