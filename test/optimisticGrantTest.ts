@@ -249,7 +249,7 @@ describe("Optimistic Grants", function () {
         .connect(signers[0])
         .configureGrant(signers[1].address, amount, now + 10000);
 
-      const tx = grants.connect(signers[1]).claim();
+      const tx = grants.connect(signers[1]).claim(signers[1].address);
       await expect(tx).to.be.revertedWith("not mature");
     });
     it("correctly claims mature grant", async () => {
@@ -260,9 +260,9 @@ describe("Optimistic Grants", function () {
         .configureGrant(signers[1].address, amount, now + 10000);
 
       advanceTime(provider, 10000);
-      await grants.connect(signers[1]).claim();
+      await grants.connect(signers[1]).claim(signers[2].address);
 
-      const balance = await token.balanceOf(signers[1].address);
+      const balance = await token.balanceOf(signers[2].address);
       await expect(balance).to.eq(amount);
 
       // make sure that the grant was deleted

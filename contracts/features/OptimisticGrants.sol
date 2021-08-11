@@ -26,6 +26,9 @@ contract OptimisticGrants {
         _;
     }
 
+    /// @notice Constructs and sets governance and token addresses
+    /// @param _token Address of the ERC20 token the grants will work with
+    /// @param __governance The governance address for ACL.
     constructor(IERC20 _token, address __governance) {
         _governance = __governance;
         token = _token;
@@ -77,14 +80,16 @@ contract OptimisticGrants {
 
     /// @notice Claim a grant.
     /// @dev When a grant expires it can be claimed by the owner.
-    function claim() public {
-        // consider adding a destination address.
+    /// WARNING: A contract _recipient will log msg.sender as this contract's address
+    // and the funds may not be withdrawable.
+    /// @param _destination The address which will receive the grant.
+    function claim(address _destination) public {
         require(block.timestamp >= grants[msg.sender].expiration, "not mature");
 
         // change state before transfer for reentrancy guard.
         uint256 amount = grants[msg.sender].amount;
         delete grants[msg.sender];
 
-        token.transfer(msg.sender, amount);
+        token.transfer(_destination, amount);
     }
 }
