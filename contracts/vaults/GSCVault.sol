@@ -13,19 +13,26 @@ import "../libraries/Authorizable.sol";
 // in the voting period can vote.
 
 contract GSCVault is Authorizable {
-    // Tracks which people are in the GSC and which vaults they use
-    mapping(address => address[]) public memberVaults;
+    // Tracks which people are in the GSC, which vaults they use and when they became members
+    mapping(address => Member) public members;
     // The core voting contract with approved voting vaults
     ICoreVoting public coreVoting;
     // The amount of votes needed to be on the GSC
     uint256 public votingPowerBound;
-    // The challenge duration
-    uint256 public challengeDuration = 1330;
+    // The duration during which a fresh gsc member cannot vote.
+    uint256 public idleDuration = 60 * 60 * 24;
 
     // Event to help tracking members
     event MembershipProved(address indexed who, uint256 when);
     // Event to help tracking kicks
     event Kicked(address indexed who, uint256 when);
+
+    struct Member {
+        // vaults used by the member to gain membership
+        address[] vaults;
+        // timestamp when the member joined
+        uint256 joined;
+    }
 
     /// @notice constructs this contract and initial vars
     /// @param _coreVoting The core voting contract
@@ -76,7 +83,7 @@ contract GSCVault is Authorizable {
         require(totalVotes >= votingPowerBound, "Not enough votes");
         // If that passes we store that the caller is a member
         // This storage will wipe out that the caller has been challenged
-        memberVaults[msg.sender] = votingVaults;
+        members[msg.sender] = Member(votingVaults, block.timestamp);
         // Emit the event tracking this
         emit MembershipProved(msg.sender, block.timestamp);
     }
@@ -85,7 +92,7 @@ contract GSCVault is Authorizable {
     /// @param who The address to challenge.
     function kick(address who) external {
         // Load the vaults into memory
-        address[] memory votingVaults = memberVaults[who];
+        address[] memory votingVaults = members[who].vaults;
         // We verify that they have lost sufficient voting power to be kicked
         uint256 totalVotes = 0;
         // Parse through the list of vaults
@@ -107,7 +114,7 @@ contract GSCVault is Authorizable {
         // Only proceed if the member is currently kick-able
         require(totalVotes < votingPowerBound, "Not kick-able");
         // Delete the member
-        delete memberVaults[who];
+        delete members[who];
         // Emit a challenge event
         emit Kicked(who, block.number);
     }
@@ -128,12 +135,22 @@ contract GSCVault is Authorizable {
         if (who == owner) {
             return 100000;
         }
-        // If the who is in the GSC return 1 and otherwise return 0
-        if (memberVaults[who].length > 0) {
+        // If the who has been in the GSC longer than idleDuration
+        // return 1 and otherwise return 0.
+        if (
+            members[who].joined > 0 &&
+            (members[who].joined + idleDuration) <= block.timestamp
+        ) {
             return 1;
         } else {
             return 0;
         }
+    }
+
+    /// @notice Queries user voting vaults used to gain membership.
+    /// @param who Which address to query
+    function getUserVaults(address who) public view returns (address[] memory) {
+        return members[who].vaults;
     }
 
     /// Functions to allow gov to reset the state vars
@@ -150,9 +167,9 @@ contract GSCVault is Authorizable {
         votingPowerBound = _newBound;
     }
 
-    /// @notice Sets the vote power bound
-    /// @param _newDuration The new challenge duration
-    function setChallengeDuration(uint256 _newDuration) external onlyOwner() {
-        challengeDuration = _newDuration;
+    /// @notice Sets the duration during which new gsc members remain unable to vote
+    /// @param _idleDuration The duration in seconds.
+    function setIdleDuration(uint256 _idleDuration) external onlyOwner() {
+        idleDuration = _idleDuration;
     }
 }
