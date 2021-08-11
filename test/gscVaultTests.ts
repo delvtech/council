@@ -15,7 +15,7 @@ import exp, { EPERM } from "constants";
 
 const { provider } = waffle;
 
-describe.only("GSC Vault", function () {
+describe("GSC Vault", function () {
   // We use the history tracker and signers in each test
   let gscVault: GSCVault;
   let votingVault: MockVotingVault;
