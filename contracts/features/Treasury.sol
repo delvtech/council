@@ -7,29 +7,70 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.3;
 
+import "../interfaces/IERC20.sol";
+
 // This contract is designed to hold the erc20 and eth reserves of the dao
 // and will likely control a large amount of funds. It is designed to be
 // flexible, secure and simple
-
 contract Treasury {
-    // Checks that the caller is the time lock contract
+    // the governance address
+    address _governance;
+
+    // A constant which represents ether
+    address internal constant _ETH_CONSTANT =
+        address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+
+    /// @dev Modifier checks if the msg.sender is the governance contract.
     modifier onlyGovernance() {
+        require(msg.sender == _governance, "!governance");
         _;
     }
 
-    // Sends either erc20 or eth
-    function sendFunds(address token, uint256 amount) external onlyGovernance {}
+    /// @notice constructor.
+    /// @param __governance Governance contract address.
+    constructor(address __governance) {
+        _governance = __governance;
+    }
 
-    // approves an erc20 spender
+    ///@notice Sends funds from the treasury to an address.
+    ///@param _token Either (1) An ERC20 token address
+    /// or (2) the _ETH_CONSTANT to use transfer ETH.
+    ///@param _amount The amount of ETH or ERC20 to send.
+    ///@param _recipient The recipient of this value.
+    function sendFunds(
+        address _token,
+        uint256 _amount,
+        address _recipient
+    ) external onlyGovernance {
+        if (_token == _ETH_CONSTANT) {
+            payable(_recipient).transfer(_amount);
+        } else {
+            // onlyGovernance should protect from reentrancy
+            IERC20(_token).transfer(_recipient, _amount);
+        }
+    }
+
+    ///@notice Sets an ERC20 allowance from this contract to a _spender.
+    ///@param _token The ERC20 token address.
+    ///@param _spender The recipient of the allowance.
+    ///@param _amount The amount of the allowance.
     function approve(
-        address token,
-        address spender,
-        uint256 amount
-    ) external onlyGovernance {}
+        address _token,
+        address _spender,
+        uint256 _amount
+    ) external onlyGovernance {
+        IERC20(_token).approve(_spender, _amount);
+    }
 
-    // preforms a generic pass through call which simply forwards calldata to a new target
-    function genericCall(address toCall, bytes calldata callData)
+    ///@notice Performs a generic call from this contract.
+    ///@param _target The target address where the call will be performed.
+    ///@param _callData The execution calldata to pass.
+    function genericCall(address _target, bytes calldata _callData)
         external
         onlyGovernance
-    {}
+    {
+        _target.call(_callData);
+    }
+
+    fallback() external payable {}
 }
