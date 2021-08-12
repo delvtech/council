@@ -13,7 +13,9 @@ import { Account, getMerkleTree, hashAccount } from "./helpers/merkle";
 
 const { provider } = waffle;
 
-describe("Airdrop Feature", function () {
+// Note tests both the Airdrop and Merkle rewards from one set of tests
+
+describe("Airdrop + Merkle Rewards Feature", function () {
   // We use the history tracker and signers in each test
   let drop: Airdrop;
   let lockingVault: MockLockingVault;

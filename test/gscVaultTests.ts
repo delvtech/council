@@ -22,6 +22,8 @@ describe("GSC Vault", function () {
   let signers: SignerWithAddress[];
   const one = ethers.utils.parseEther("1");
 
+  const zeroExtraData = ["0x", "0x"];
+
   before(async function () {
     // Create a before snapshot
     await createSnapshot(provider);
@@ -100,20 +102,22 @@ describe("GSC Vault", function () {
   it("Allows joins with enough votes", async () => {
     // We set the caller vote power to be one more than limit then call prove membership
     await votingVault.setVotingPower(signers[1].address, one.add(1));
-    await gscVault.connect(signers[1]).proveMembership([votingVault.address]);
+    await gscVault
+      .connect(signers[1])
+      .proveMembership([votingVault.address], zeroExtraData);
     // Check that we have vote power [second arg doesn't matter]
-    const votes = await gscVault.queryVotingPower(signers[1].address, 20);
+    const votes = await gscVault.queryVotingPower(signers[1].address, 20, "0x");
     expect(votes).to.be.eq(1);
   });
 
   it("Gives the owner 10k votes", async () => {
-    const votes = await gscVault.queryVotingPower(signers[0].address, 20);
+    const votes = await gscVault.queryVotingPower(signers[0].address, 20, "0x");
     expect(votes).to.be.eq(100000);
   });
 
   it("Fails to add from unsupported vault", async () => {
     // we pick core voting because it's just some other contract address
-    const tx = gscVault.proveMembership([coreVoting.address]);
+    const tx = gscVault.proveMembership([coreVoting.address], zeroExtraData);
     await expect(tx).to.be.revertedWith("Voting vault not approved");
   });
 
@@ -121,7 +125,7 @@ describe("GSC Vault", function () {
     // We set the caller vote power to be one less than limit then call prove membership
     await votingVault.setVotingPower(signers[1].address, one.sub(1));
     // we pick core voting because it's just some other contract address
-    const tx = gscVault.proveMembership([votingVault.address]);
+    const tx = gscVault.proveMembership([votingVault.address], zeroExtraData);
     await expect(tx).to.be.revertedWith("Not enough votes");
   });
 
@@ -133,8 +137,12 @@ describe("GSC Vault", function () {
       await votingVault.setVotingPower(signers[1].address, one.add(1));
       await votingVault.setVotingPower(signers[2].address, one.add(1));
       // Add the two members
-      await gscVault.connect(signers[1]).proveMembership([votingVault.address]);
-      await gscVault.connect(signers[2]).proveMembership([votingVault.address]);
+      await gscVault
+        .connect(signers[1])
+        .proveMembership([votingVault.address], zeroExtraData);
+      await gscVault
+        .connect(signers[2])
+        .proveMembership([votingVault.address], zeroExtraData);
       // Reduce voting power for signer 1
       await votingVault.setVotingPower(signers[1].address, one.sub(1));
       // We reduce the kick threshold to improve performance of sim which
@@ -153,9 +161,13 @@ describe("GSC Vault", function () {
 
     it("Allows kick for singer with not enough vote", async () => {
       // Kick and then check vaults
-      await gscVault.kick(signers[1].address);
+      await gscVault.kick(signers[1].address, zeroExtraData);
       // Check they have been fully removed
-      const votes = await gscVault.queryVotingPower(signers[1].address, 0);
+      const votes = await gscVault.queryVotingPower(
+        signers[1].address,
+        0,
+        "0x"
+      );
       expect(votes).to.be.eq(0);
     });
 
@@ -163,22 +175,26 @@ describe("GSC Vault", function () {
       // We set the vault to not be approved anymore
       await coreVoting.setVault(votingVault.address, false);
       // Use the otherwise qualified signer 2
-      await gscVault.kick(signers[2].address);
+      await gscVault.kick(signers[2].address, zeroExtraData);
       // Check they have been fully removed
-      const votes = await gscVault.queryVotingPower(signers[2].address, 0);
+      const votes = await gscVault.queryVotingPower(
+        signers[2].address,
+        0,
+        "0x"
+      );
       expect(votes).to.be.eq(0);
     });
 
     it("Blocks kicking for user with enough voting power", async () => {
-      const tx1 = gscVault.kick(signers[2].address);
+      const tx1 = gscVault.kick(signers[2].address, zeroExtraData);
       await expect(tx1).to.be.revertedWith("Not kick-able");
     });
 
     it("Allows member to reprove membership if valid", async () => {
       // Challenge signer 1
-      await gscVault.kick(signers[1].address);
+      await gscVault.kick(signers[1].address, zeroExtraData);
       // check for removal
-      let votes = await gscVault.queryVotingPower(signers[1].address, 0);
+      let votes = await gscVault.queryVotingPower(signers[1].address, 0, "0x");
       expect(votes).to.be.eq(0);
 
       // Increase voting power for signer 1
@@ -187,12 +203,14 @@ describe("GSC Vault", function () {
       // mine a few blocks for good measure
       await increaseBlocknumber(provider, 10);
       // Reprove membership
-      await gscVault.connect(signers[1]).proveMembership([votingVault.address]);
+      await gscVault
+        .connect(signers[1])
+        .proveMembership([votingVault.address], zeroExtraData);
 
       // Check the member status
       const storedVault = await gscVault.memberVaults(signers[1].address, 0);
       expect(storedVault).to.be.eq(votingVault.address);
-      votes = await gscVault.queryVotingPower(signers[1].address, 0);
+      votes = await gscVault.queryVotingPower(signers[1].address, 0, "0x");
       expect(votes).to.be.eq(1);
     });
   });
