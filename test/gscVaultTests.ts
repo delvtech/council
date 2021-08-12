@@ -9,6 +9,8 @@ import { MockERC20 } from "typechain/MockERC20";
 import { MockVotingVault } from "typechain/MockVotingVault";
 import { MockCoreVoting } from "typechain/MockCoreVoting";
 import { createSnapshot, restoreSnapshot } from "./helpers/snapshots";
+import { advanceTime } from "./helpers/time";
+
 import exp, { EPERM } from "constants";
 
 const { provider } = waffle;
@@ -53,6 +55,7 @@ describe("GSC Vault", function () {
       one,
       signers[0].address
     );
+    await gscVault.setIdleDuration(100);
   });
   // After we reset our state in the fork
   after(async () => {
@@ -87,29 +90,41 @@ describe("GSC Vault", function () {
       const tx = gscVault.connect(signers[1]).setCoreVoting(signers[1].address);
       await expect(tx).to.be.revertedWith("Sender not owner");
     });
-
-    it("Allows challenge time reset", async () => {
-      await gscVault.setChallengeDuration(100);
-      const duration = await gscVault.challengeDuration();
+    it("Allows idle time reset", async () => {
+      const duration = await gscVault.idleDuration();
       expect(duration).to.be.eq(100);
     });
-    it("Blocks challenge time reset", async () => {
-      const tx = gscVault.connect(signers[1]).setChallengeDuration(100);
+    it("Blocks idle time reset", async () => {
+      const tx = gscVault.connect(signers[1]).setIdleDuration(100);
       await expect(tx).to.be.revertedWith("Sender not owner");
     });
   });
 
   it("Allows joins with enough votes", async () => {
     // We set the caller vote power to be one more than limit then call prove membership
-    await votingVault.setVotingPower(signers[1].address, one.add(1));
-    await gscVault
-      .connect(signers[1])
-      .proveMembership([votingVault.address], zeroExtraData);
-    // Check that we have vote power [second arg doesn't matter]
-    const votes = await gscVault.queryVotingPower(signers[1].address, 20, "0x");
-    expect(votes).to.be.eq(1);
+    await votingVault.setVotingPower(signers[1].address, one);
+    await gscVault.connect(signers[1]).proveMembership([votingVault.address]);
+    // Check the member status
+    const storedVault = await gscVault.getUserVaults(signers[1].address);
+    expect(storedVault[0]).to.be.eq(votingVault.address);
   });
 
+  it("Gains voting power after the idle period", async () => {
+    // We set the caller vote power to be one more than limit then call prove membership
+    await votingVault.setVotingPower(signers[1].address, one);
+    await gscVault.connect(signers[1]).proveMembership([votingVault.address]);
+
+    // Check that we have no vote power initially [second arg doesn't matter]
+    let votes = await gscVault.queryVotingPower(signers[1].address, 20);
+    expect(votes).to.be.eq(0);
+
+    // advance past the idle duration to gain voting power
+    await advanceTime(provider, 100);
+
+    // Check that we now have vote power [second arg doesn't matter]
+    votes = await gscVault.queryVotingPower(signers[1].address, 20);
+    expect(votes).to.be.eq(1);
+  });
   it("Gives the owner 10k votes", async () => {
     const votes = await gscVault.queryVotingPower(signers[0].address, 20, "0x");
     expect(votes).to.be.eq(100000);
@@ -134,8 +149,8 @@ describe("GSC Vault", function () {
     // Put two members on the council one with enough votes and one
     // with fewer votes.
     before(async () => {
-      await votingVault.setVotingPower(signers[1].address, one.add(1));
-      await votingVault.setVotingPower(signers[2].address, one.add(1));
+      await votingVault.setVotingPower(signers[1].address, one);
+      await votingVault.setVotingPower(signers[2].address, one);
       // Add the two members
       await gscVault
         .connect(signers[1])
@@ -145,9 +160,6 @@ describe("GSC Vault", function () {
         .proveMembership([votingVault.address], zeroExtraData);
       // Reduce voting power for signer 1
       await votingVault.setVotingPower(signers[1].address, one.sub(1));
-      // We reduce the kick threshold to improve performance of sim which
-      // repeatably calls for next block mining
-      await gscVault.setChallengeDuration(100);
     });
 
     // Before each we snapshot
@@ -198,7 +210,7 @@ describe("GSC Vault", function () {
       expect(votes).to.be.eq(0);
 
       // Increase voting power for signer 1
-      await votingVault.setVotingPower(signers[1].address, one.add(1));
+      await votingVault.setVotingPower(signers[1].address, one);
 
       // mine a few blocks for good measure
       await increaseBlocknumber(provider, 10);

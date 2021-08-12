@@ -6,7 +6,6 @@ import "../libraries/History.sol";
 import "../libraries/VestingVaultStorage.sol";
 import "../libraries/Storage.sol";
 import "../interfaces/IVotingVault.sol";
-import "hardhat/console.sol";
 
 contract VestingVault is IVotingVault {
     // Bring our libraries into scope
