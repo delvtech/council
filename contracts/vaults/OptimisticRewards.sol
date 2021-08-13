@@ -16,7 +16,7 @@ import "../libraries/MerkleRewards.sol";
 // which can be run and verified by governance and community members, can be the rewards
 // algorithm followed by this contract.
 
-contract Rewards is MerkleRewards, Authorizable, IVotingVault {
+contract OptimisticRewards is MerkleRewards, Authorizable, IVotingVault {
     // The optional pending root for this rewards contract
     bytes32 public pendingRoot;
     // The time the pending proposal root was proposed. Note always check for 0 here when using.
@@ -24,7 +24,7 @@ contract Rewards is MerkleRewards, Authorizable, IVotingVault {
     // The address with the power to propose new roots.
     address public proposer;
     // Defaults to one week
-    uint256 challengePeriod = 60 * 60 * 24 * 7;
+    uint256 public challengePeriod = 60 * 60 * 24 * 7;
 
     constructor(
         address _governance,
