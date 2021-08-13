@@ -103,7 +103,9 @@ describe("GSC Vault", function () {
   it("Allows joins with enough votes", async () => {
     // We set the caller vote power to be one more than limit then call prove membership
     await votingVault.setVotingPower(signers[1].address, one);
-    await gscVault.connect(signers[1]).proveMembership([votingVault.address]);
+    await gscVault
+      .connect(signers[1])
+      .proveMembership([votingVault.address], zeroExtraData);
     // Check the member status
     const storedVault = await gscVault.getUserVaults(signers[1].address);
     expect(storedVault[0]).to.be.eq(votingVault.address);
@@ -112,17 +114,19 @@ describe("GSC Vault", function () {
   it("Gains voting power after the idle period", async () => {
     // We set the caller vote power to be one more than limit then call prove membership
     await votingVault.setVotingPower(signers[1].address, one);
-    await gscVault.connect(signers[1]).proveMembership([votingVault.address]);
+    await gscVault
+      .connect(signers[1])
+      .proveMembership([votingVault.address], zeroExtraData);
 
     // Check that we have no vote power initially [second arg doesn't matter]
-    let votes = await gscVault.queryVotingPower(signers[1].address, 20);
+    let votes = await gscVault.queryVotingPower(signers[1].address, 20, "0x");
     expect(votes).to.be.eq(0);
 
     // advance past the idle duration to gain voting power
     await advanceTime(provider, 100);
 
     // Check that we now have vote power [second arg doesn't matter]
-    votes = await gscVault.queryVotingPower(signers[1].address, 20);
+    votes = await gscVault.queryVotingPower(signers[1].address, 20, "0x");
     expect(votes).to.be.eq(1);
   });
   it("Gives the owner 10k votes", async () => {
@@ -206,7 +210,11 @@ describe("GSC Vault", function () {
       // Challenge signer 1
       await gscVault.kick(signers[1].address, zeroExtraData);
       // check for removal
-      let votes = await gscVault.queryVotingPower(signers[1].address, 0, "0x");
+      const votes = await gscVault.queryVotingPower(
+        signers[1].address,
+        0,
+        "0x"
+      );
       expect(votes).to.be.eq(0);
 
       // Increase voting power for signer 1
@@ -218,12 +226,6 @@ describe("GSC Vault", function () {
       await gscVault
         .connect(signers[1])
         .proveMembership([votingVault.address], zeroExtraData);
-
-      // Check the member status
-      const storedVault = await gscVault.memberVaults(signers[1].address, 0);
-      expect(storedVault).to.be.eq(votingVault.address);
-      votes = await gscVault.queryVotingPower(signers[1].address, 0, "0x");
-      expect(votes).to.be.eq(1);
     });
   });
 });

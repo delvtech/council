@@ -139,7 +139,7 @@ describe("Airdrop + Merkle Rewards Feature", function () {
   it("Blocks an invalid proof", async () => {
     const proof = merkle.getHexProof(await hashAccount(accounts[0]));
     const tx = drop.claim(one, one.mul(2), proof, signers[0].address);
-    expect(tx).to.be.revertedWith("Invalid proof");
+    await expect(tx).to.be.revertedWith("Invalid Proof");
   });
 
   it("Blocks gov withdraw before expiration", async () => {

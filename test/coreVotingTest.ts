@@ -17,7 +17,7 @@ describe("CoreVoting", function () {
 
   let signers: SignerWithAddress[];
 
-  const zeroExtraData = ["0x", "0x"];
+  const zeroExtraData = ["0x", "0x", "0x", "0x"];
 
   async function getBlock() {
     return (await ethers.provider.getBlock("latest")).number;
@@ -345,7 +345,7 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, targets, calldatas, zeroExtraData, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
 
       // pass proposal with 2/3 majority
       await coreVoting
