@@ -131,6 +131,7 @@ contract GSCVault is Authorizable {
 
     /// @notice Queries voting power, GSC members get one vote and the owner gets 100k
     /// @param who Which address to query
+    /// @return Returns the votes of the queried address
     /// @dev Because this function ignores the when variable it creates a unique voting system
     ///      and should not be plugged in with truly historic ones.
     function queryVotingPower(

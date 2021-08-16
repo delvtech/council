@@ -10,7 +10,6 @@ import { createSnapshot, restoreSnapshot } from "./helpers/snapshots";
 import { MerkleTree } from "merkletreejs";
 import { Account, getMerkleTree, hashAccount } from "./helpers/merkle";
 import { advanceTime } from "./helpers/time";
-import { BigNumber } from "ethers";
 
 const { provider } = waffle;
 
