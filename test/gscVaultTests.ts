@@ -125,7 +125,7 @@ describe("GSC Vault", function () {
     // get the timestamp when the user first joined
     const joinTimestamp = await timestamp();
     await gscVault.connect(signers[1]).proveMembership([votingVault.address]);
-    // advance past the idle duration to gain voting power
+
     await advanceTime(provider, 100);
     await gscVault
       .connect(signers[1])
