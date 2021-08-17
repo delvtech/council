@@ -13,7 +13,9 @@ import { Account, getMerkleTree, hashAccount } from "./helpers/merkle";
 
 const { provider } = waffle;
 
-describe("Airdrop Feature", function () {
+// Note tests both the Airdrop and Merkle rewards from one set of tests
+
+describe("Airdrop + Merkle Rewards Feature", function () {
   // We use the history tracker and signers in each test
   let drop: Airdrop;
   let lockingVault: MockLockingVault;
@@ -137,7 +139,7 @@ describe("Airdrop Feature", function () {
   it("Blocks an invalid proof", async () => {
     const proof = merkle.getHexProof(await hashAccount(accounts[0]));
     const tx = drop.claim(one, one.mul(2), proof, signers[0].address);
-    expect(tx).to.be.revertedWith("Invalid proof");
+    await expect(tx).to.be.revertedWith("Invalid Proof");
   });
 
   it("Blocks gov withdraw before expiration", async () => {

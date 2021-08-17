@@ -52,7 +52,11 @@ contract GSCVault is Authorizable {
 
     /// @notice Called to prove membership in the GSC
     /// @param votingVaults The contracts this person has their voting power in
-    function proveMembership(address[] calldata votingVaults) external {
+    /// @param extraData Extra data given to the vaults to help calculation
+    function proveMembership(
+        address[] calldata votingVaults,
+        bytes[] calldata extraData
+    ) external {
         // Check for call validity
         assert(votingVaults.length > 0);
         // We loop through the voting vaults to check they are authorized
@@ -74,7 +78,8 @@ contract GSCVault is Authorizable {
             uint256 votes =
                 IVotingVault(votingVaults[i]).queryVotePower(
                     msg.sender,
-                    block.number - 1
+                    block.number - 1,
+                    extraData[i]
                 );
             // Add up the votes
             totalVotes += votes;
@@ -97,7 +102,11 @@ contract GSCVault is Authorizable {
 
     /// @notice Removes a GSC member who's registered vaults no longer contain enough votes
     /// @param who The address to challenge.
-    function kick(address who) external {
+    /// @param extraData the extra data the vaults need to load the user's voting power
+    /// @dev NOTE - Because the bytes extra data must be supplied by the kicker vaults must
+    ///             revert if not provided correct extra data [ie merkle proof for total power]
+    ///             or they cannot be relied upon to maintain status in the GSC.
+    function kick(address who, bytes[] calldata extraData) external {
         // Load the vaults into memory
         address[] memory votingVaults = members[who].vaults;
         // We verify that they have lost sufficient voting power to be kicked
@@ -112,7 +121,8 @@ contract GSCVault is Authorizable {
                 uint256 votes =
                     IVotingVault(votingVaults[i]).queryVotePower(
                         who,
-                        block.number - 1
+                        block.number - 1,
+                        extraData[i]
                     );
                 // Add up the votes
                 totalVotes += votes;
@@ -128,13 +138,14 @@ contract GSCVault is Authorizable {
 
     /// @notice Queries voting power, GSC members get one vote and the owner gets 100k
     /// @param who Which address to query
+    /// @return Returns the votes of the queried address
     /// @dev Because this function ignores the when variable it creates a unique voting system
     ///      and should not be plugged in with truly historic ones.
-    function queryVotingPower(address who, uint256)
-        public
-        view
-        returns (uint256)
-    {
+    function queryVotingPower(
+        address who,
+        uint256,
+        bytes calldata
+    ) public view returns (uint256) {
         // If the address queried is the owner they get a huge number of votes
         // This allows the primary governance timelock to take any action the GSC
         // can make or block any action the GSC can make. But takes as many votes as

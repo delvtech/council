@@ -117,11 +117,13 @@ contract CoreVoting is Authorizable {
     /// @notice Create a new proposal
     /// @dev all provided votingVaults must be approved vaults `approvedVaults`.
     /// @param votingVaults voting vaults to draw voting power from.
+    /// @param extraVaultData an encoded list of extra data to provide to vaults
     /// @param targets list of target addresses the timelock contract will interact with.
     /// @param calldatas execution calldata for each target.
     /// @param ballot vote direction (yes, no, maybe)
     function proposal(
         address[] calldata votingVaults,
+        bytes[] calldata extraVaultData,
         address[] calldata targets,
         bytes[] calldata calldatas,
         Ballot ballot
@@ -156,7 +158,8 @@ contract CoreVoting is Authorizable {
             proposals[proposalCount].votingPower
         );
 
-        uint256 votingPower = vote(votingVaults, proposalCount, ballot);
+        uint256 votingPower =
+            vote(votingVaults, extraVaultData, proposalCount, ballot);
 
         // the proposal quorum is the lowest of minProposalPower and the proposal quorum
         // because it is awkward for the proposal to require more voting power than
@@ -183,11 +186,13 @@ contract CoreVoting is Authorizable {
     /// @dev all provided votingVaults must be approved vaults `approvedVaults`.
     /// Addresses can re-vote, but the previous vote's effect will be negated.
     /// @param votingVaults voting vaults to draw voting power from.
+    /// @param extraVaultData extra bytes data to give to each vault
     /// @param proposalId proposal identifier.
     /// @param ballot vote direction (yes, no, maybe)
     /// @return the user's voting power
     function vote(
         address[] memory votingVaults,
+        bytes[] memory extraVaultData,
         uint256 proposalId,
         Ballot ballot
     ) public returns (uint256) {
@@ -205,7 +210,8 @@ contract CoreVoting is Authorizable {
             votingPower += uint128(
                 IVotingVault(votingVaults[i]).queryVotePower(
                     msg.sender,
-                    proposals[proposalId].created
+                    proposals[proposalId].created,
+                    extraVaultData[i]
                 )
             );
         }
