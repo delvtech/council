@@ -81,9 +81,16 @@ contract GSCVault is Authorizable {
         }
         // Require that the caller has proven that they have enough votes
         require(totalVotes >= votingPowerBound, "Not enough votes");
-        // If that passes we store that the caller is a member
-        // This storage will wipe out that the caller has been challenged
-        members[msg.sender] = Member(votingVaults, block.timestamp);
+        // if the caller has already provedMembership, update their votingPower without
+        // resetting their idle duration.
+        if (members[msg.sender].joined != 0) {
+            members[msg.sender] = Member(
+                votingVaults,
+                members[msg.sender].joined
+            );
+        } else {
+            members[msg.sender] = Member(votingVaults, block.timestamp);
+        }
         // Emit the event tracking this
         emit MembershipProved(msg.sender, block.timestamp);
     }
