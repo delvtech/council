@@ -10,12 +10,11 @@ contract MockVotingVault is IVotingVault {
         votingPower[_user] = _amount;
     }
 
-    function queryVotePower(address _user, uint256 blockNumber)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function queryVotePower(
+        address _user,
+        uint256 blockNumber,
+        bytes calldata
+    ) public view override returns (uint256) {
         blockNumber;
         return votingPower[_user];
     }

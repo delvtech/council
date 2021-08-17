@@ -17,6 +17,8 @@ describe("CoreVoting", function () {
 
   let signers: SignerWithAddress[];
 
+  const zeroExtraData = ["0x", "0x", "0x", "0x"];
+
   async function getBlock() {
     return (await ethers.provider.getBlock("latest")).number;
   }
@@ -79,7 +81,7 @@ describe("CoreVoting", function () {
 
       const tx = coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
 
       await expect(tx).to.be.revertedWith("array length mismatch");
     });
@@ -99,7 +101,7 @@ describe("CoreVoting", function () {
 
       const tx = coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
 
       await expect(tx).to.be.revertedWith("insufficient voting power");
     });
@@ -114,7 +116,7 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
 
       const proposal = await coreVoting.getProposalData(0);
 
@@ -151,7 +153,7 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
 
       const proposal = await coreVoting.getProposalData(0);
       expect(proposal[3]).to.be.eq(baseQuorum);
@@ -182,7 +184,7 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
 
       const proposal = await coreVoting.getProposalData(0);
       expect(proposal[3]).to.be.eq(10);
@@ -212,7 +214,7 @@ describe("CoreVoting", function () {
       // the baseQuarum and the proposalQuorum.
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
 
       const proposal = await coreVoting.getProposalData(0);
 
@@ -241,24 +243,30 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
     });
     it("fails to vote with unapproved voting vault", async () => {
       votingVaults.push(ethers.constants.AddressZero);
-      const tx = coreVoting.connect(signers[1]).vote(votingVaults, 0, 0);
+      const tx = coreVoting
+        .connect(signers[1])
+        .vote(votingVaults, zeroExtraData, 0, 0);
       await expect(tx).to.be.revertedWith("unverified vault");
       votingVaults.pop();
     });
     it("fails to vote with duplicate voting vault", async () => {
       votingVaults.push(votingVaults[0]);
-      const tx = coreVoting.connect(signers[1]).vote(votingVaults, 0, 0);
+      const tx = coreVoting
+        .connect(signers[1])
+        .vote(votingVaults, zeroExtraData, 0, 0);
       await expect(tx).to.be.revertedWith("duplicate vault");
       votingVaults.pop();
     });
     it("fails to vote after extra voting time passes", async () => {
       votingVaults.push(votingVaults[0]);
       await increaseBlocknumber(provider, 500);
-      const tx = coreVoting.connect(signers[1]).vote(votingVaults, 0, 0);
+      const tx = coreVoting
+        .connect(signers[1])
+        .vote(votingVaults, zeroExtraData, 0, 0);
       await expect(tx).to.be.revertedWith("Expired");
       votingVaults.pop();
     });
@@ -266,7 +274,9 @@ describe("CoreVoting", function () {
       const block = await getBlock();
 
       // proposal was with a yes vote. Match no votes.
-      await coreVoting.connect(signers[1]).vote(votingVaults, 0, 1);
+      await coreVoting
+        .connect(signers[1])
+        .vote(votingVaults, zeroExtraData, 0, 1);
 
       const proposal = await coreVoting.getProposalData(0);
 
@@ -281,9 +291,13 @@ describe("CoreVoting", function () {
       const block = await getBlock();
 
       // proposal was with a yes vote. Match no votes.
-      await coreVoting.connect(signers[1]).vote(votingVaults, 0, 1);
+      await coreVoting
+        .connect(signers[1])
+        .vote(votingVaults, zeroExtraData, 0, 1);
       // proposal was 50/50. make it full yes vote
-      await coreVoting.connect(signers[1]).vote(votingVaults, 0, 0);
+      await coreVoting
+        .connect(signers[1])
+        .vote(votingVaults, zeroExtraData, 0, 0);
 
       const proposal = await coreVoting.getProposalData(0);
 
@@ -298,7 +312,9 @@ describe("CoreVoting", function () {
       const block = await getBlock();
 
       // proposal was with a yes vote. Match no votes.
-      await coreVoting.connect(signers[0]).vote([votingVaults[0]], 0, 0);
+      await coreVoting
+        .connect(signers[0])
+        .vote([votingVaults[0]], zeroExtraData, 0, 0);
 
       const proposal = await coreVoting.getProposalData(0);
 
@@ -329,11 +345,15 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
 
       // pass proposal with 2/3 majority
-      await coreVoting.connect(signers[1]).vote(votingVaults, 0, 1);
-      await coreVoting.connect(signers[2]).vote(votingVaults, 0, 0);
+      await coreVoting
+        .connect(signers[1])
+        .vote(votingVaults, zeroExtraData, 0, 1);
+      await coreVoting
+        .connect(signers[2])
+        .vote(votingVaults, zeroExtraData, 0, 0);
 
       const tx = coreVoting
         .connect(signers[0])
@@ -362,11 +382,15 @@ describe("CoreVoting", function () {
       await coreVoting.connect(signers[0]).setLockDuration(100);
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
 
       // pass proposal with 2/3 majority
-      await coreVoting.connect(signers[1]).vote(votingVaults, 0, 1);
-      await coreVoting.connect(signers[2]).vote(votingVaults, 0, 0);
+      await coreVoting
+        .connect(signers[1])
+        .vote(votingVaults, zeroExtraData, 0, 1);
+      await coreVoting
+        .connect(signers[2])
+        .vote(votingVaults, zeroExtraData, 0, 0);
 
       const tx = coreVoting
         .connect(signers[0])
@@ -383,11 +407,15 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, targets, [calldata], 0);
+        .proposal(votingVaults, zeroExtraData, targets, [calldata], 0);
 
       // pass proposal with 2/3 majority
-      await coreVoting.connect(signers[1]).vote(votingVaults, 1, 1);
-      await coreVoting.connect(signers[2]).vote(votingVaults, 1, 0);
+      await coreVoting
+        .connect(signers[1])
+        .vote(votingVaults, zeroExtraData, 1, 1);
+      await coreVoting
+        .connect(signers[2])
+        .vote(votingVaults, zeroExtraData, 1, 0);
 
       await coreVoting.connect(signers[0]).execute(1, targets, [calldata]);
 
@@ -407,11 +435,15 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, targets, [calldata], 0);
+        .proposal(votingVaults, zeroExtraData, targets, [calldata], 0);
 
       // pass proposal with 2/3 majority
-      await coreVoting.connect(signers[1]).vote(votingVaults, 1, 1);
-      await coreVoting.connect(signers[2]).vote(votingVaults, 1, 1);
+      await coreVoting
+        .connect(signers[1])
+        .vote(votingVaults, zeroExtraData, 1, 1);
+      await coreVoting
+        .connect(signers[2])
+        .vote(votingVaults, zeroExtraData, 1, 1);
 
       const tx = coreVoting.connect(signers[0]).execute(1, targets, [calldata]);
       await expect(tx).to.be.revertedWith("Cannot execute");
@@ -430,11 +462,15 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, targets, [calldata], 0);
+        .proposal(votingVaults, zeroExtraData, targets, [calldata], 0);
 
       // pass proposal with 2/3 majority
-      await coreVoting.connect(signers[1]).vote(votingVaults, 1, 1);
-      await coreVoting.connect(signers[2]).vote(votingVaults, 1, 1);
+      await coreVoting
+        .connect(signers[1])
+        .vote(votingVaults, zeroExtraData, 1, 1);
+      await coreVoting
+        .connect(signers[2])
+        .vote(votingVaults, zeroExtraData, 1, 1);
 
       const tx = coreVoting.connect(signers[0]).execute(1, targets, [calldata]);
       await expect(tx).to.be.revertedWith("Cannot execute");
