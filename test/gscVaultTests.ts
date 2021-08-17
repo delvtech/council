@@ -23,9 +23,10 @@ describe("GSC Vault", function () {
   const [wallet] = provider.getWallets();
   let signers: SignerWithAddress[];
   const one = ethers.utils.parseEther("1");
-
   const zeroExtraData = ["0x", "0x"];
-
+  async function timestamp() {
+    return (await ethers.provider.getBlock("latest")).timestamp;
+  }
   before(async function () {
     // Create a before snapshot
     await createSnapshot(provider);
@@ -111,6 +112,39 @@ describe("GSC Vault", function () {
     expect(storedVault[0]).to.be.eq(votingVault.address);
   });
 
+  it("Allows member to update voting power", async () => {
+    // deploy another mock vault to update voting with
+    const newMockDeploy = await ethers.getContractFactory(
+      "MockVotingVault",
+      signers[0]
+    );
+    const newVault = await newMockDeploy.deploy();
+    // approve the mock voting vault
+    await coreVoting.setVault(newVault.address, true);
+
+    // We set the caller vote power to be one more than limit then call prove membership
+    await votingVault.setVotingPower(signers[1].address, one);
+
+    // get the timestamp when the user first joined
+    const joinTimestamp = await timestamp();
+    await gscVault
+      .connect(signers[1])
+      .proveMembership([votingVault.address], zeroExtraData);
+
+    await advanceTime(provider, 100);
+    await gscVault
+      .connect(signers[1])
+      .proveMembership([votingVault.address, newVault.address], zeroExtraData);
+
+    const storedVault = await gscVault.getUserVaults(signers[1].address);
+    const joined = await gscVault.members(signers[1].address);
+
+    // check that the timestamp is still the initial join
+    expect(joined).to.be.eq(joinTimestamp + 1);
+    expect(storedVault[0]).to.be.eq(votingVault.address);
+    expect(storedVault[1]).to.be.eq(newVault.address);
+  });
+
   it("Gains voting power after the idle period", async () => {
     // We set the caller vote power to be one more than limit then call prove membership
     await votingVault.setVotingPower(signers[1].address, one);
@@ -129,6 +163,7 @@ describe("GSC Vault", function () {
     votes = await gscVault.queryVotingPower(signers[1].address, 20, "0x");
     expect(votes).to.be.eq(1);
   });
+
   it("Gives the owner 10k votes", async () => {
     const votes = await gscVault.queryVotingPower(signers[0].address, 20, "0x");
     expect(votes).to.be.eq(100000);
