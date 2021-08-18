@@ -68,7 +68,7 @@ contract Timelock is Authorizable {
     }
 
     // Allow a call from this contract to reset the wait time storage variable
-    function setWaitTime(uint256 _waitTime) external onlySelf {
+    function setWaitTime(uint256 _waitTime) external onlyGovernance {
         waitTime = _waitTime;
     }
 
