@@ -16,24 +16,17 @@ contract Timelock is Authorizable {
     uint256 public waitTime;
     address public governance;
     mapping(bytes32 => uint256) public callTimestamps;
-    bool public timeIncreased;
+    mapping(bytes32 => bool) public timeIncreases;
 
     constructor(uint256 _waitTime, address _governance) Authorizable() {
         waitTime = _waitTime;
         governance = _governance;
-        timeIncreased = false;
+        // timeIncreases[callHash] = false; not sure how to iniialize this
     }
 
     // Checks that the caller is the governance contract
     modifier onlyGovernance() {
         require(msg.sender == governance, "contract is not governance");
-        _;
-    }
-
-    // Checks that the caller is making an external call from
-    // this address
-    modifier onlySelf() {
-        require(msg.sender == address(this), "contract must be self");
         _;
     }
 
@@ -47,20 +40,19 @@ contract Timelock is Authorizable {
         delete callTimestamps[callHash];
     }
 
-    function execute(
-        bytes32 callHash,
-        address[] memory targets,
-        bytes[] calldata calldatas
-    ) external onlyGovernance {
+    function execute(address[] memory targets, bytes[] calldata calldatas)
+        public
+    {
         // loads the stored callHash data and checks enough time has passed
         // Hashes the provided data and checks it matches the callHash
         // executes call
-        require(keccak256(abi.encode(calldatas)) == callHash, "hash mismatch");
+        bytes32 callHash =
+            keccak256(abi.encodePacked(targets, abi.encode(calldatas)));
+        require(
+            callTimestamps[callHash] + waitTime > block.timestamp,
+            "not enough time has passed"
+        );
         for (uint256 i = 0; i < targets.length; i++) {
-            require(
-                block.timestamp >= callTimestamps[callHash] + waitTime,
-                "not enough time has passed"
-            );
             (bool success, bytes memory returnData) =
                 targets[i].call(calldatas[i]);
             require(success == true, "call reverted");
@@ -69,7 +61,8 @@ contract Timelock is Authorizable {
 
     // Allow a call from this contract to reset the wait time storage variable
     // TODO: This should be onlySelf modifier, not sure how to replicate that in testing
-    function setWaitTime(uint256 _waitTime) external onlyGovernance {
+    function setWaitTime(uint256 _waitTime) public {
+        require(msg.sender == address(this));
         waitTime = _waitTime;
     }
 
@@ -77,7 +70,11 @@ contract Timelock is Authorizable {
         external
         onlyAuthorized
     {
-        require(timeIncreased == false, "value can only be changed once");
+        require(
+            timeIncreases[callHash] == false,
+            "value can only be changed once"
+        );
         callTimestamps[callHash] += timeValue;
+        timeIncreases[callHash] = true;
     }
 }
