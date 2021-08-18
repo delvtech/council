@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.3;
 
-import "./libraries/History.sol";
-import "./libraries/Storage.sol";
-import "./interfaces/IERC20.sol";
-import "./interfaces/IVotingVault.sol";
+import "../libraries/History.sol";
+import "../libraries/Storage.sol";
+import "../interfaces/IERC20.sol";
+import "../interfaces/IVotingVault.sol";
 
 contract LockingVault is IVotingVault {
     // Bring our libraries into scope
@@ -64,11 +64,11 @@ contract LockingVault is IVotingVault {
     /// @param user The address we want to load the voting power of
     /// @param blockNumber the block number we want the user's voting power at
     /// @return the number of votes
-    function queryVotePower(address user, uint256 blockNumber)
-        external
-        override
-        returns (uint256)
-    {
+    function queryVotePower(
+        address user,
+        uint256 blockNumber,
+        bytes calldata
+    ) external override returns (uint256) {
         // Get our reference to historical data
         History.HistoricalBalances memory votingPower = _votingPower();
         // Find the historical data and clear everything more than 'staleBlockLag' into the past
@@ -91,7 +91,7 @@ contract LockingVault is IVotingVault {
     {
         // Get our reference to historical data
         History.HistoricalBalances memory votingPower = _votingPower();
-        // Find the historical datas
+        // Find the historical datum
         return votingPower.find(user, blockNumber);
     }
 
@@ -103,6 +103,9 @@ contract LockingVault is IVotingVault {
     /// @dev Note - There's a minor griefing attack on this which sets someones delegation
     ///      address by depositing before them, requiring them to call delegate to reset it.
     ///      Given the gas price required and 0 financial benefit we consider it unlikely.
+    ///      Warning - Users should not set delegation to the zero address as this will allow
+    ///                someone to change their delegation by depositing a small amount to their
+    ///                account.
     function deposit(
         address fundedAccount,
         uint256 amount,

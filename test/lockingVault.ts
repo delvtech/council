@@ -218,7 +218,7 @@ describe("Locking Vault", function () {
     let votingPower = await vault.queryVotePowerView(signers[0].address, block);
     expect(votingPower).to.be.eq(one.div(2));
     const queryTx = await (
-      await vault.queryVotePower(signers[0].address, block)
+      await vault.queryVotePower(signers[0].address, block, "0x")
     ).wait();
     // The call to this query voting power method will fail on a length 0 array
     await expect(vault.queryVotePowerView(signers[1].address, block)).to.be

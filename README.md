@@ -1,3 +1,6 @@
+## :warning:WARNING:warning:
+This project is currently being audited and should not be deployed. It is not covered by the formal Element bug bounty program, bug reports are welcome though may not receive bounties. It is also in early access open source so should not be publicized or linked to externally.
+
 # Element Protocol
 
 [![Build Status](https://github.com/element-fi/elf-contracts/workflows/Tests/badge.svg)](https://github.com/element-fi/elf-contracts/actions)
