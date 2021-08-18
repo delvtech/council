@@ -5,7 +5,7 @@
 // should be double checked with the rest of the team.
 
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.3;
+pragma solidity ^0.8.0;
 
 import "../libraries/Authorizable.sol";
 
@@ -26,22 +26,15 @@ contract Timelock is Authorizable {
 
     // Checks that the caller is the governance contract
     modifier onlyGovernance() {
-        require(isGovernance(msg.sender), "Contract is not governance");
+        require(msg.sender == governance, "contract is not governance");
         _;
     }
 
     // Checks that the caller is making an external call from
     // this address
     modifier onlySelf() {
-        require(msg.sender == address(this));
+        require(msg.sender == address(this), "contract must be self");
         _;
-    }
-
-    /// @dev Returns true if an address is authorized
-    /// @param who the address to check
-    /// @return true if authorized false if not
-    function isGovernance(address who) public view returns (bool) {
-        return who == governance;
     }
 
     function registerCall(bytes32 callHash) external onlyGovernance {
