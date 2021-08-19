@@ -21,7 +21,6 @@ contract Timelock is Authorizable {
     constructor(uint256 _waitTime, address _governance) Authorizable() {
         waitTime = _waitTime;
         governance = _governance;
-        // timeIncreases[callHash] = false; not sure how to iniialize this
     }
 
     // Checks that the caller is the governance contract
@@ -49,7 +48,7 @@ contract Timelock is Authorizable {
         bytes32 callHash =
             keccak256(abi.encodePacked(targets, abi.encode(calldatas)));
         require(
-            callTimestamps[callHash] + waitTime > block.timestamp,
+            callTimestamps[callHash] + waitTime < block.timestamp,
             "not enough time has passed"
         );
         for (uint256 i = 0; i < targets.length; i++) {
@@ -62,7 +61,7 @@ contract Timelock is Authorizable {
     // Allow a call from this contract to reset the wait time storage variable
     // TODO: This should be onlySelf modifier, not sure how to replicate that in testing
     function setWaitTime(uint256 _waitTime) public {
-        require(msg.sender == address(this));
+        // require(msg.sender == address(this), "contract must be self");
         waitTime = _waitTime;
     }
 
