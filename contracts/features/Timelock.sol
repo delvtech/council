@@ -60,9 +60,8 @@ contract Timelock is Authorizable {
     }
 
     // Allow a call from this contract to reset the wait time storage variable
-    // TODO: This should be onlySelf modifier, not sure how to replicate that in testing
     function setWaitTime(uint256 _waitTime) public {
-        // require(msg.sender == address(this), "contract must be self");
+        require(msg.sender == address(this), "contract must be self");
         waitTime = _waitTime;
     }
 

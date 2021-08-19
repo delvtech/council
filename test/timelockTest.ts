@@ -5,8 +5,8 @@ import { Bytes, BytesLike, Signer } from "ethers";
 import { ethers, waffle } from "hardhat";
 import { createSnapshot, restoreSnapshot } from "./helpers/snapshots";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { TestTimelock } from "typechain";
-import timelockData from "../artifacts/contracts/mocks/TestTimelock.sol/TestTimelock.json";
+import { Timelock } from "typechain";
+import timelockData from "../artifacts/contracts/features/Timelock.sol/Timelock.json";
 import { BigNumberish } from "ethers";
 
 const { provider } = waffle;
@@ -23,7 +23,7 @@ function delay(ms: number) {
 }
 
 describe("Timelock", () => {
-  let timelock: TestTimelock;
+  let timelock: Timelock;
 
   let signers: SignerWithAddress[];
 
@@ -35,10 +35,7 @@ describe("Timelock", () => {
     await createSnapshot(provider);
     signers = await ethers.getSigners();
 
-    const deployer = await ethers.getContractFactory(
-      "TestTimelock",
-      signers[0]
-    );
+    const deployer = await ethers.getContractFactory("Timelock", signers[0]);
     timelock = await deployer.deploy(0, signers[0].address);
   });
 
@@ -55,41 +52,44 @@ describe("Timelock", () => {
     });
 
     it("fails to execute prematurely", async () => {
-      const newDummyValue = 10000;
+      const newWaitTime = 100000000000000;
       const tInterface = new ethers.utils.Interface(timelockData.abi);
-      const calldata = tInterface.encodeFunctionData("updateDummy", [
-        newDummyValue,
+      const calldata = tInterface.encodeFunctionData("setWaitTime", [
+        newWaitTime,
       ]);
 
       const callHash = await createCallHash([calldata], [timelock.address]);
 
       await timelock.connect(signers[0]).registerCall(callHash);
-      await timelock.connect(signers[0]).setWaitTime(10000000000000);
-
+      // execute once to update wait time through the execute function
+      await timelock
+        .connect(signers[0])
+        .execute([timelock.address], [calldata]);
+      // execute again to check against the new waittime
       const tx = timelock
         .connect(signers[0])
         .execute([timelock.address], [calldata]);
+
       await expect(tx).to.be.revertedWith("not enough time has passed");
     });
 
     it("successful execution", async () => {
-      const newDummyValue = 10000;
+      const newWaitTime = 10000;
       const tInterface = new ethers.utils.Interface(timelockData.abi);
-      const calldata = tInterface.encodeFunctionData("updateDummy", [
-        newDummyValue,
+      const calldata = tInterface.encodeFunctionData("setWaitTime", [
+        newWaitTime,
       ]);
 
       const callHash = await createCallHash([calldata], [timelock.address]);
 
       await timelock.connect(signers[0]).registerCall(callHash);
-      await timelock.connect(signers[0]).setWaitTime(1);
       await delay(1000);
       await timelock
         .connect(signers[0])
         .execute([timelock.address], [calldata]);
 
-      const dummy = await timelock.dummyValue();
-      expect(dummy).to.be.eq(newDummyValue);
+      const w = await timelock.waitTime();
+      expect(w).to.be.eq(newWaitTime);
     });
   });
 
@@ -102,26 +102,16 @@ describe("Timelock", () => {
     });
 
     it("fails if not authorized", async () => {
-      const newDummyValue = 10000;
-      const tInterface = new ethers.utils.Interface(timelockData.abi);
-      const calldata = tInterface.encodeFunctionData("updateDummy", [
-        newDummyValue,
-      ]);
-
-      const callHash = await createCallHash([calldata], [timelock.address]);
+      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
+      const callHash = await createCallHash(calldata, [timelock.address]);
 
       const tx = timelock.connect(signers[1]).increaseTime(1000, callHash);
       await expect(tx).to.be.revertedWith("Sender not Authorized");
     });
 
     it("fails if attempted more than once", async () => {
-      const newDummyValue = 12345;
-      const tInterface = new ethers.utils.Interface(timelockData.abi);
-      const calldata = tInterface.encodeFunctionData("updateDummy", [
-        newDummyValue,
-      ]);
-
-      const callHash = await createCallHash([calldata], [timelock.address]);
+      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
+      const callHash = await createCallHash(calldata, [timelock.address]);
 
       await timelock.connect(signers[0]).increaseTime(1234, callHash);
       const tx = timelock.connect(signers[0]).increaseTime(5678, callHash);
@@ -138,13 +128,8 @@ describe("Timelock", () => {
     });
 
     it("fails if not governance", async () => {
-      const newDummyValue = 10000;
-      const tInterface = new ethers.utils.Interface(timelockData.abi);
-      const calldata = tInterface.encodeFunctionData("updateDummy", [
-        newDummyValue,
-      ]);
-
-      const callHash = await createCallHash([calldata], [timelock.address]);
+      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
+      const callHash = await createCallHash(calldata, [timelock.address]);
 
       const tx = timelock.connect(signers[1]).registerCall(callHash);
       await expect(tx).to.be.revertedWith("contract must be governance");
@@ -160,13 +145,8 @@ describe("Timelock", () => {
     });
 
     it("fails if not governance", async () => {
-      const newDummyValue = 10000;
-      const tInterface = new ethers.utils.Interface(timelockData.abi);
-      const calldata = tInterface.encodeFunctionData("updateDummy", [
-        newDummyValue,
-      ]);
-
-      const callHash = await createCallHash([calldata], [timelock.address]);
+      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
+      const callHash = await createCallHash(calldata, [timelock.address]);
 
       const tx = timelock.connect(signers[1]).stopCall(callHash);
       await expect(tx).to.be.revertedWith("contract must be governance");
