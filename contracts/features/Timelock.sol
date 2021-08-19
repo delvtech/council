@@ -19,13 +19,14 @@ contract Timelock is Authorizable {
     mapping(bytes32 => bool) public timeIncreases;
 
     constructor(uint256 _waitTime, address _governance) Authorizable() {
+        _authorize(_governance); // unsure if this is who should be authorized
         waitTime = _waitTime;
         governance = _governance;
     }
 
     // Checks that the caller is the governance contract
     modifier onlyGovernance() {
-        require(msg.sender == governance, "contract is not governance");
+        require(msg.sender == governance, "contract must be governance");
         _;
     }
 
