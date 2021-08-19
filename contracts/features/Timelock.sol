@@ -24,7 +24,7 @@ contract Timelock is Authorizable {
         governance = _governance;
     }
 
-    // Checks that the caller is the governance contract
+    // Checks that the caller is a governance contract
     modifier onlyGovernance() {
         require(msg.sender == governance, "contract must be governance");
         _;
