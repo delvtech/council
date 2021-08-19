@@ -18,9 +18,14 @@ contract Timelock is Authorizable {
     mapping(bytes32 => uint256) public callTimestamps;
     mapping(bytes32 => bool) public timeIncreases;
 
-    constructor(uint256 _waitTime, address _governance) Authorizable() {
-        _authorize(_governance); // unsure if this is who should be authorized
+    constructor(
+        uint256 _waitTime,
+        address _governance,
+        address _gsc
+    ) Authorizable() {
+        _authorize(_gsc);
         waitTime = _waitTime;
+        setOwner(_governance);
         governance = _governance;
     }
 
@@ -47,7 +52,8 @@ contract Timelock is Authorizable {
         // Hashes the provided data and checks it matches the callHash
         // executes call
         bytes32 callHash =
-            keccak256(abi.encodePacked(targets, abi.encode(calldatas)));
+            keccak256(abi.encode(targets, abi.encode(calldatas)));
+        require(callTimestamps[callHash] != 0, "call has not been initialized");
         require(
             callTimestamps[callHash] + waitTime < block.timestamp,
             "not enough time has passed"
