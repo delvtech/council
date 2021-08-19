@@ -1,13 +1,12 @@
 import "module-alias/register";
 
 import { expect } from "chai";
-import { Bytes, BytesLike, Signer } from "ethers";
+import { BytesLike } from "ethers";
 import { ethers, waffle } from "hardhat";
 import { createSnapshot, restoreSnapshot } from "./helpers/snapshots";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Timelock } from "typechain";
 import timelockData from "../artifacts/contracts/features/Timelock.sol/Timelock.json";
-import { BigNumberish } from "ethers";
 
 const { provider } = waffle;
 
@@ -66,7 +65,8 @@ describe("Timelock", () => {
       await timelock
         .connect(signers[0])
         .execute([timelock.address], [calldata]);
-      // execute again to check against the new waittime
+      // execute again to check against the new wait time
+      await timelock.connect(signers[0]).registerCall(callHash);
       const tx = timelock
         .connect(signers[0])
         .execute([timelock.address], [calldata]);
@@ -83,6 +83,26 @@ describe("Timelock", () => {
       const tx = timelock
         .connect(signers[0])
         .execute([timelock.address], calldata);
+      await expect(tx).to.be.revertedWith("call has not been initialized");
+    });
+
+    it("fail if executed twice", async () => {
+      const newWaitTime = 10000;
+      const tInterface = new ethers.utils.Interface(timelockData.abi);
+      const calldata = tInterface.encodeFunctionData("setWaitTime", [
+        newWaitTime,
+      ]);
+
+      const callHash = await createCallHash([calldata], [timelock.address]);
+
+      await timelock.connect(signers[0]).registerCall(callHash);
+      await delay(1000);
+      await timelock
+        .connect(signers[0])
+        .execute([timelock.address], [calldata]);
+      const tx = timelock
+        .connect(signers[0])
+        .execute([timelock.address], [calldata]);
       await expect(tx).to.be.revertedWith("call has not been initialized");
     });
 
@@ -103,6 +123,10 @@ describe("Timelock", () => {
 
       const w = await timelock.waitTime();
       expect(w).to.be.eq(newWaitTime);
+
+      // Check that state has been restored after successful execute
+      const call = await timelock.callTimestamps(callHash);
+      expect(call).to.be.eq(0);
     });
   });
 
