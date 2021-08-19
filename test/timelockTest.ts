@@ -17,12 +17,6 @@ export async function createCallHash(calldata: BytesLike[], targets: string[]) {
     [targets, calldata]
   );
   return ethers.utils.keccak256(toBeHashed);
-  /*
-  return ethers.utils.solidityKeccak256(
-    ["address[]", "bytes[]"],
-    [targets, calldata]
-  );
-  */
 }
 
 function delay(ms: number) {
@@ -58,27 +52,27 @@ describe("Timelock", () => {
       await restoreSnapshot(provider);
     });
 
-    // it("fails to execute prematurely", async () => {
-    //   const newWaitTime = 100000000000000;
-    //   const tInterface = new ethers.utils.Interface(timelockData.abi);
-    //   const calldata = tInterface.encodeFunctionData("setWaitTime", [
-    //     newWaitTime,
-    //   ]);
+    it("fails to execute prematurely", async () => {
+      const newWaitTime = 100000000000000;
+      const tInterface = new ethers.utils.Interface(timelockData.abi);
+      const calldata = tInterface.encodeFunctionData("setWaitTime", [
+        newWaitTime,
+      ]);
 
-    //   const callHash = await createCallHash([calldata], [timelock.address]);
-    //   await timelock.connect(signers[0]).registerCall(callHash);
+      const callHash = await createCallHash([calldata], [timelock.address]);
+      await timelock.connect(signers[0]).registerCall(callHash);
 
-    //   // execute once to update wait time through the execute function
-    //   await timelock
-    //     .connect(signers[0])
-    //     .execute([timelock.address], [calldata]);
-    //   // execute again to check against the new waittime
-    //   const tx = timelock
-    //     .connect(signers[0])
-    //     .execute([timelock.address], [calldata]);
+      // execute once to update wait time through the execute function
+      await timelock
+        .connect(signers[0])
+        .execute([timelock.address], [calldata]);
+      // execute again to check against the new waittime
+      const tx = timelock
+        .connect(signers[0])
+        .execute([timelock.address], [calldata]);
 
-    //   await expect(tx).to.be.revertedWith("not enough time has passed");
-    // });
+      await expect(tx).to.be.revertedWith("not enough time has passed");
+    });
 
     it("fails if call not registered", async () => {
       const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
@@ -112,31 +106,40 @@ describe("Timelock", () => {
     });
   });
 
-  // describe("increase time", () => {
-  //   beforeEach(async () => {
-  //     await createSnapshot(provider);
-  //   });
-  //   afterEach(async () => {
-  //     await restoreSnapshot(provider);
-  //   });
+  describe("increase time", () => {
+    beforeEach(async () => {
+      await createSnapshot(provider);
+    });
+    afterEach(async () => {
+      await restoreSnapshot(provider);
+    });
 
-  //   it("fails if not authorized", async () => {
-  //     const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
-  //     const callHash = await createCallHash(calldata, [timelock.address]);
+    it("fails if not authorized", async () => {
+      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
+      const callHash = await createCallHash(calldata, [timelock.address]);
 
-  //     const tx = timelock.connect(signers[0]).increaseTime(1000, callHash);
-  //     await expect(tx).to.be.revertedWith("Sender not Authorized");
-  //   });
+      const tx = timelock.connect(signers[0]).increaseTime(1000, callHash);
+      await expect(tx).to.be.revertedWith("Sender not Authorized");
+    });
 
-  //   it("fails if attempted more than once", async () => {
-  //     const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
-  //     const callHash = await createCallHash(calldata, [timelock.address]);
+    it("fails if attempted more than once", async () => {
+      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
+      const callHash = await createCallHash(calldata, [timelock.address]);
 
-  //     await timelock.connect(signers[1]).increaseTime(1234, callHash);
-  //     const tx = timelock.connect(signers[1]).increaseTime(5678, callHash);
-  //     await expect(tx).to.be.revertedWith("value can only be changed once");
-  //   });
-  // });
+      await timelock.connect(signers[1]).increaseTime(1234, callHash);
+      const tx = timelock.connect(signers[1]).increaseTime(5678, callHash);
+      await expect(tx).to.be.revertedWith("value can only be changed once");
+    });
+
+    it("successful time increase", async () => {
+      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
+      const callHash = await createCallHash(calldata, [timelock.address]);
+
+      await timelock.connect(signers[1]).increaseTime(1234, callHash);
+      const call = await timelock.callTimestamps(callHash);
+      expect(call).to.be.eq(1234);
+    });
+  });
 
   describe("register call", () => {
     beforeEach(async () => {
@@ -163,29 +166,29 @@ describe("Timelock", () => {
     });
   });
 
-  // describe("stop call", () => {
-  //   beforeEach(async () => {
-  //     await createSnapshot(provider);
-  //   });
-  //   afterEach(async () => {
-  //     await restoreSnapshot(provider);
-  //   });
+  describe("stop call", () => {
+    beforeEach(async () => {
+      await createSnapshot(provider);
+    });
+    afterEach(async () => {
+      await restoreSnapshot(provider);
+    });
 
-  //   it("fails if not governance", async () => {
-  //     const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
-  //     const callHash = await createCallHash(calldata, [timelock.address]);
+    it("fails if not governance", async () => {
+      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
+      const callHash = await createCallHash(calldata, [timelock.address]);
 
-  //     const tx = timelock.connect(signers[1]).stopCall(callHash);
-  //     await expect(tx).to.be.revertedWith("contract must be governance");
-  //   });
+      const tx = timelock.connect(signers[1]).stopCall(callHash);
+      await expect(tx).to.be.revertedWith("contract must be governance");
+    });
 
-  //   it("successful call stop", async () => {
-  //     const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
-  //     const callHash = await createCallHash(calldata, [timelock.address]);
-  //     await timelock.connect(signers[0]).registerCall(callHash);
-  //     await timelock.connect(signers[0]).stopCall(callHash);
-  //     const call = await timelock.callTimestamps(callHash);
-  //     expect(call).to.be.eq(0);
-  //   });
-  // });
+    it("successful call stop", async () => {
+      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
+      const callHash = await createCallHash(calldata, [timelock.address]);
+      await timelock.connect(signers[0]).registerCall(callHash);
+      await timelock.connect(signers[0]).stopCall(callHash);
+      const call = await timelock.callTimestamps(callHash);
+      expect(call).to.be.eq(0);
+    });
+  });
 });

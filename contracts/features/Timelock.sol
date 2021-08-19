@@ -51,8 +51,7 @@ contract Timelock is Authorizable {
         // loads the stored callHash data and checks enough time has passed
         // Hashes the provided data and checks it matches the callHash
         // executes call
-        bytes32 callHash =
-            keccak256(abi.encode(targets, abi.encode(calldatas)));
+        bytes32 callHash = keccak256(abi.encode(targets, calldatas));
         require(callTimestamps[callHash] != 0, "call has not been initialized");
         require(
             callTimestamps[callHash] + waitTime < block.timestamp,
