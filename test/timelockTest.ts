@@ -12,10 +12,17 @@ import { BigNumberish } from "ethers";
 const { provider } = waffle;
 
 export async function createCallHash(calldata: BytesLike[], targets: string[]) {
+  const toBeHashed = ethers.utils.defaultAbiCoder.encode(
+    ["address[]", "bytes[]"],
+    [targets, calldata]
+  );
+  return ethers.utils.keccak256(toBeHashed);
+  /*
   return ethers.utils.solidityKeccak256(
     ["address[]", "bytes[]"],
     [targets, calldata]
   );
+  */
 }
 
 function delay(ms: number) {
@@ -36,7 +43,7 @@ describe("Timelock", () => {
     signers = await ethers.getSigners();
 
     const deployer = await ethers.getContractFactory("Timelock", signers[0]);
-    timelock = await deployer.deploy(0, signers[0].address);
+    timelock = await deployer.deploy(0, signers[0].address, signers[1].address);
   });
 
   after(async () => {
@@ -51,26 +58,38 @@ describe("Timelock", () => {
       await restoreSnapshot(provider);
     });
 
-    it("fails to execute prematurely", async () => {
-      const newWaitTime = 100000000000000;
-      const tInterface = new ethers.utils.Interface(timelockData.abi);
-      const calldata = tInterface.encodeFunctionData("setWaitTime", [
-        newWaitTime,
-      ]);
+    // it("fails to execute prematurely", async () => {
+    //   const newWaitTime = 100000000000000;
+    //   const tInterface = new ethers.utils.Interface(timelockData.abi);
+    //   const calldata = tInterface.encodeFunctionData("setWaitTime", [
+    //     newWaitTime,
+    //   ]);
 
-      const callHash = await createCallHash([calldata], [timelock.address]);
+    //   const callHash = await createCallHash([calldata], [timelock.address]);
+    //   await timelock.connect(signers[0]).registerCall(callHash);
 
-      await timelock.connect(signers[0]).registerCall(callHash);
-      // execute once to update wait time through the execute function
-      await timelock
-        .connect(signers[0])
-        .execute([timelock.address], [calldata]);
-      // execute again to check against the new waittime
+    //   // execute once to update wait time through the execute function
+    //   await timelock
+    //     .connect(signers[0])
+    //     .execute([timelock.address], [calldata]);
+    //   // execute again to check against the new waittime
+    //   const tx = timelock
+    //     .connect(signers[0])
+    //     .execute([timelock.address], [calldata]);
+
+    //   await expect(tx).to.be.revertedWith("not enough time has passed");
+    // });
+
+    it("fails if call not registered", async () => {
+      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
+      const callHash = await createCallHash(calldata, [timelock.address]);
+
+      const call = await timelock.callTimestamps(callHash);
+      expect(call).to.be.eq(0);
       const tx = timelock
         .connect(signers[0])
-        .execute([timelock.address], [calldata]);
-
-      await expect(tx).to.be.revertedWith("not enough time has passed");
+        .execute([timelock.address], calldata);
+      await expect(tx).to.be.revertedWith("call has not been initialized");
     });
 
     it("successful execution", async () => {
@@ -93,31 +112,31 @@ describe("Timelock", () => {
     });
   });
 
-  describe("increase time", () => {
-    beforeEach(async () => {
-      await createSnapshot(provider);
-    });
-    afterEach(async () => {
-      await restoreSnapshot(provider);
-    });
+  // describe("increase time", () => {
+  //   beforeEach(async () => {
+  //     await createSnapshot(provider);
+  //   });
+  //   afterEach(async () => {
+  //     await restoreSnapshot(provider);
+  //   });
 
-    it("fails if not authorized", async () => {
-      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
-      const callHash = await createCallHash(calldata, [timelock.address]);
+  //   it("fails if not authorized", async () => {
+  //     const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
+  //     const callHash = await createCallHash(calldata, [timelock.address]);
 
-      const tx = timelock.connect(signers[1]).increaseTime(1000, callHash);
-      await expect(tx).to.be.revertedWith("Sender not Authorized");
-    });
+  //     const tx = timelock.connect(signers[0]).increaseTime(1000, callHash);
+  //     await expect(tx).to.be.revertedWith("Sender not Authorized");
+  //   });
 
-    it("fails if attempted more than once", async () => {
-      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
-      const callHash = await createCallHash(calldata, [timelock.address]);
+  //   it("fails if attempted more than once", async () => {
+  //     const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
+  //     const callHash = await createCallHash(calldata, [timelock.address]);
 
-      await timelock.connect(signers[0]).increaseTime(1234, callHash);
-      const tx = timelock.connect(signers[0]).increaseTime(5678, callHash);
-      await expect(tx).to.be.revertedWith("value can only be changed once");
-    });
-  });
+  //     await timelock.connect(signers[1]).increaseTime(1234, callHash);
+  //     const tx = timelock.connect(signers[1]).increaseTime(5678, callHash);
+  //     await expect(tx).to.be.revertedWith("value can only be changed once");
+  //   });
+  // });
 
   describe("register call", () => {
     beforeEach(async () => {
@@ -134,22 +153,39 @@ describe("Timelock", () => {
       const tx = timelock.connect(signers[1]).registerCall(callHash);
       await expect(tx).to.be.revertedWith("contract must be governance");
     });
-  });
 
-  describe("stop call", () => {
-    beforeEach(async () => {
-      await createSnapshot(provider);
-    });
-    afterEach(async () => {
-      await restoreSnapshot(provider);
-    });
-
-    it("fails if not governance", async () => {
+    it("successful call register", async () => {
       const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
       const callHash = await createCallHash(calldata, [timelock.address]);
-
-      const tx = timelock.connect(signers[1]).stopCall(callHash);
-      await expect(tx).to.be.revertedWith("contract must be governance");
+      await timelock.connect(signers[0]).registerCall(callHash);
+      const call = await timelock.callTimestamps(callHash);
+      expect(call).to.not.eq(0);
     });
   });
+
+  // describe("stop call", () => {
+  //   beforeEach(async () => {
+  //     await createSnapshot(provider);
+  //   });
+  //   afterEach(async () => {
+  //     await restoreSnapshot(provider);
+  //   });
+
+  //   it("fails if not governance", async () => {
+  //     const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
+  //     const callHash = await createCallHash(calldata, [timelock.address]);
+
+  //     const tx = timelock.connect(signers[1]).stopCall(callHash);
+  //     await expect(tx).to.be.revertedWith("contract must be governance");
+  //   });
+
+  //   it("successful call stop", async () => {
+  //     const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
+  //     const callHash = await createCallHash(calldata, [timelock.address]);
+  //     await timelock.connect(signers[0]).registerCall(callHash);
+  //     await timelock.connect(signers[0]).stopCall(callHash);
+  //     const call = await timelock.callTimestamps(callHash);
+  //     expect(call).to.be.eq(0);
+  //   });
+  // });
 });
