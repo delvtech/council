@@ -129,10 +129,10 @@ contract CoreVoting is Authorizable {
         Ballot ballot
     ) external {
         require(targets.length == calldatas.length, "array length mismatch");
+        require(targets.length != 0, "empty proposal");
         // the hash is only used to verify the proposal data, proposals are tracked by ID
         // so there is no need to hash with proposalCount nonce.
-        bytes32 proposalHash =
-            keccak256(abi.encodePacked(targets, abi.encode(calldatas)));
+        bytes32 proposalHash = keccak256(abi.encode(targets, calldatas));
 
         // get the quorum requirement for this proposal. The quorum requirement is equal to
         // the greatest quorum item in the proposal
@@ -230,7 +230,6 @@ contract CoreVoting is Authorizable {
     }
 
     /// @notice Execute a proposal.
-    /// @dev Can be called on mature under-quorum proposals to deactivate them.
     /// @param proposalId proposal identifier.
     /// @param targets list of target addresses the timelock contract will interact with.
     /// @param calldatas execution calldata for each target.
@@ -245,7 +244,7 @@ contract CoreVoting is Authorizable {
 
         // ensure the data matches the hash
         require(
-            keccak256(abi.encodePacked(targets, abi.encode(calldatas))) ==
+            keccak256(abi.encode(targets, calldatas)) ==
                 proposals[proposalId].proposalHash,
             "hash mismatch"
         );
