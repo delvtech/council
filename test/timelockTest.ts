@@ -178,7 +178,7 @@ describe("Timelock", () => {
       const callHash = await createCallHash(calldata, [timelock.address]);
 
       const tx = timelock.connect(signers[1]).registerCall(callHash);
-      await expect(tx).to.be.revertedWith("contract must be governance");
+      await expect(tx).to.be.revertedWith("Sender not owner");
     });
 
     it("successful call register", async () => {
@@ -203,7 +203,7 @@ describe("Timelock", () => {
       const callHash = await createCallHash(calldata, [timelock.address]);
 
       const tx = timelock.connect(signers[1]).stopCall(callHash);
-      await expect(tx).to.be.revertedWith("contract must be governance");
+      await expect(tx).to.be.revertedWith("Sender not owner");
     });
 
     it("successful call stop", async () => {

@@ -9,8 +9,7 @@ import "../libraries/Authorizable.sol";
 contract Timelock is Authorizable {
     // Amount of time for the waiting period
     uint256 public waitTime;
-    // the governance address
-    address public governance;
+
     // Mapping of call hashes to block timestamps
     mapping(bytes32 => uint256) public callTimestamps;
     // Mapping from a call hash to its status of once allowed time increase
@@ -28,24 +27,17 @@ contract Timelock is Authorizable {
         _authorize(_gsc);
         waitTime = _waitTime;
         setOwner(_governance);
-        governance = _governance;
-    }
-
-    /// @dev Modifier checks if the msg.sender is the governance contract
-    modifier onlyGovernance() {
-        require(msg.sender == governance, "contract must be governance");
-        _;
     }
 
     /// @notice Stores at the callHash the current block timestamp
     /// @param callHash The hash to map the timestamp to
-    function registerCall(bytes32 callHash) external onlyGovernance {
+    function registerCall(bytes32 callHash) external onlyOwner {
         callTimestamps[callHash] = block.timestamp;
     }
 
     /// @notice Removes stored callHash data
     /// @param callHash Which entry of the mapping to remove
-    function stopCall(bytes32 callHash) external onlyGovernance {
+    function stopCall(bytes32 callHash) external onlyOwner {
         delete callTimestamps[callHash];
     }
 
