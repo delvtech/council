@@ -251,7 +251,8 @@ contract VestingVault is IVotingVault {
             -1 * int256(int128(grant.latestVotingPower))
         );
 
-        // Note - It is important that this is loaded here and not before the previous state change because if _to == grant.delegatee and re-delegation was allowed we could be working with out of date state.
+        // Note - It is important that this is loaded here and not before the previous state change because if
+        // _to == grant.delegatee and re-delegation was allowed we could be working with out of date state.
         uint256 newDelegateeVotes = votingPower.loadTop(_to);
 
         // add voting power to the target delegatee and emit event
