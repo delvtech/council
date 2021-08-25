@@ -17,7 +17,7 @@ abstract contract ERC20PermitWithMint is ERC20Permit, Authorizable {
         string memory symbol_,
         address owner_
     ) ERC20Permit(name_, symbol_) {
-        setOwner(_owner);
+        setOwner(owner_);
     }
 
     // The stored totalSupply, it equals all tokens minted - all tokens burned

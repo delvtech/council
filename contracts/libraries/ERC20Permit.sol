@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copied from https://github.com/element-fi/elf-contracts/blob/a6cb960896301b7562ced70a8b221f3cc964ea0a/contracts/libraries/ERC20Permit.sol
+// Copied from v
 
 pragma solidity ^0.8.0;
+
+import "../interfaces/IERC20Permit.sol";
 
 // This default erc20 library is designed for max efficiency and security.
 // WARNING: By default it does not include totalSupply which breaks the ERC20 standard
 //          to use a fully standard compliant ERC20 use 'ERC20PermitWithSupply"
-abstract contract ERC20Permit {
+abstract contract ERC20Permit is IERC20Permit {
     // --- ERC20 Data ---
     // The name of the erc20 token
     string public name;
