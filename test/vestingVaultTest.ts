@@ -119,6 +119,19 @@ describe("VestingVault", function () {
         );
       await expect(tx).to.be.revertedWith("Insufficient balance");
     });
+    it("fails to add grant if cliff > expiry", async () => {
+      const block = await getBlock();
+      const tx = vestingVault
+        .connect(signers[0])
+        .addGrantAndDelegate(
+          signers[1].address,
+          amount.add(1),
+          block + 100,
+          block + 150,
+          ethers.constants.AddressZero
+        );
+      await expect(tx).to.be.revertedWith("Invalid configuration");
+    });
     it("fails to add grant if the received already has an active grant", async () => {
       const block = await getBlock();
 
@@ -440,6 +453,22 @@ describe("VestingVault", function () {
       expect(votingPowerTo).to.be.eq(amount);
       expect(votingPowerFrom).to.be.eq(0);
     });
+    it("Does not delegate to an address which is already delegated too", async () => {
+      const block = await getBlock();
+
+      await vestingVault
+        .connect(signers[0])
+        .addGrantAndDelegate(
+          signers[1].address,
+          amount,
+          block + 100,
+          block + 50,
+          signers[2].address
+        );
+
+      const tx = vestingVault.connect(signers[1]).delegate(signers[2].address);
+      await expect(tx).to.be.revertedWith("Already delegated");
+    });
   });
   describe("changeUnvestedMultiplier", async () => {
     beforeEach(async () => {
@@ -456,6 +485,10 @@ describe("VestingVault", function () {
       await vestingVault.connect(signers[0]).changeUnvestedMultiplier(50);
       const multiplier = await vestingVault.unvestedMultiplier();
       expect(multiplier).to.be.eq(50);
+    });
+    it("fails if more than 100%", async () => {
+      const tx = vestingVault.connect(signers[0]).changeUnvestedMultiplier(101);
+      await expect(tx).to.be.revertedWith("Above 100%");
     });
   });
   describe("updateVotingPower", async () => {
