@@ -130,6 +130,9 @@ contract VestingVault is IVotingVault {
         uint128 _cliff,
         address _delegatee
     ) public onlyManager {
+        // Consistency check
+        require(_cliff <= _expiration, "Invalid configuration");
+
         Storage.Uint256 storage unassigned = _unassigned();
         Storage.Uint256 memory unvestedMultiplier = _unvestedMultiplier();
 
@@ -230,10 +233,11 @@ contract VestingVault is IVotingVault {
     /// the unvested token multiplier can be updated at any time.
     function delegate(address _to) public {
         VestingVaultStorage.Grant storage grant = _grants()[msg.sender];
+        // If the delegation has already happened we don't want the tx to send
+        require(_to != grant.delegatee, "Already delegated");
         History.HistoricalBalances memory votingPower = _votingPower();
 
         uint256 oldDelegateeVotes = votingPower.loadTop(grant.delegatee);
-        uint256 newDelegateeVotes = votingPower.loadTop(_to);
         uint256 newVotingPower = _currentVotingPower(grant);
 
         // Remove old delegatee's voting power and emit event
@@ -246,6 +250,10 @@ contract VestingVault is IVotingVault {
             msg.sender,
             -1 * int256(int128(grant.latestVotingPower))
         );
+
+        // Note - It is important that this is loaded here and not before the previous state change because if
+        // _to == grant.delegatee and re-delegation was allowed we could be working with out of date state.
+        uint256 newDelegateeVotes = votingPower.loadTop(_to);
 
         // add voting power to the target delegatee and emit event
         emit VoteChange(_to, msg.sender, int256(newVotingPower));
@@ -403,6 +411,7 @@ contract VestingVault is IVotingVault {
     /// @dev Allows the timelock to update the unvestedMultiplier.
     /// @param _multiplier The new multiplier.
     function changeUnvestedMultiplier(uint256 _multiplier) public onlyTimelock {
+        require(_multiplier <= 100, "Above 100%");
         Storage.set(Storage.uint256Ptr("unvestedMultiplier"), _multiplier);
     }
 }
