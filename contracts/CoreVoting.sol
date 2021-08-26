@@ -151,7 +151,8 @@ contract CoreVoting is Authorizable {
 
         proposals[proposalCount] = Proposal(
             proposalHash,
-            uint128(block.number),
+            // Note we use blocknumber - 1 here as a flash loan mitigation.
+            uint128(block.number - 1),
             uint128(block.number + lockDuration),
             uint128(block.number + lockDuration + extraVoteTime),
             uint128(quorum),
