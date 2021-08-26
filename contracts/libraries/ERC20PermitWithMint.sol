@@ -55,7 +55,13 @@ abstract contract ERC20PermitWithMint is ERC20Permit, Authorizable {
     /// @param amount the amount of token to burn
     function _burn(address account, uint256 amount) internal override {
         // Decrease user balance
-        balanceOf[account] = balanceOf[account] - amount;
+        uint256 currentBalance = balanceOf[account];
+        // This logic prevents a reversion if the _burn is frontrun
+        if (currentBalance < amount) {
+            balanceOf[account] = 0;
+        } else {
+            balanceOf[account] = currentBalance - amount;
+        }
         // Decrease total supply
         totalSupply -= amount;
         // Emit an event tracking the burn
