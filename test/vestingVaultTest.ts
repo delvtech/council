@@ -38,12 +38,8 @@ describe("VestingVault", function () {
     );
 
     token = await erc20Deployer.deploy("Ele", "test ele");
-    vestingVault = await vestingVaultDeployer.deploy(
-      token.address,
-      199350,
-      signers[0].address,
-      signers[0].address
-    );
+    vestingVault = await vestingVaultDeployer.deploy(token.address, 199350);
+    await vestingVault.initialize(signers[0].address, signers[0].address);
 
     await token.setBalance(signers[0].address, amount);
     await token.connect(signers[0]).approve(vestingVault.address, amount);
@@ -489,6 +485,45 @@ describe("VestingVault", function () {
     it("fails if more than 100%", async () => {
       const tx = vestingVault.connect(signers[0]).changeUnvestedMultiplier(101);
       await expect(tx).to.be.revertedWith("Above 100%");
+    });
+  });
+  describe("setTimelock", async () => {
+    beforeEach(async () => {
+      await createSnapshot(provider);
+    });
+    afterEach(async () => {
+      await restoreSnapshot(provider);
+    });
+    it("fails if caller is not the timelock", async () => {
+      const tx = vestingVault
+        .connect(signers[1])
+        .setTimelock(signers[0].address);
+      await expect(tx).to.be.revertedWith("!timelock");
+    });
+    it("correctly changes the timelock", async () => {
+      await vestingVault.connect(signers[0]).setTimelock(signers[1].address);
+
+      const timelock = await vestingVault.timelock();
+      expect(timelock).to.be.eq(signers[1].address);
+    });
+  });
+  describe("setManager", async () => {
+    beforeEach(async () => {
+      await createSnapshot(provider);
+    });
+    afterEach(async () => {
+      await restoreSnapshot(provider);
+    });
+    it("fails if caller is not the timelock", async () => {
+      const tx = vestingVault
+        .connect(signers[1])
+        .setManager(signers[1].address);
+      await expect(tx).to.be.revertedWith("!timelock");
+    });
+    it("correctly changes the manager", async () => {
+      await vestingVault.connect(signers[0]).setManager(signers[1].address);
+      const manager = await vestingVault.manager();
+      expect(manager).to.be.eq(signers[1].address);
     });
   });
   describe("updateVotingPower", async () => {

@@ -98,8 +98,7 @@ contract LockingVault is IVotingVault {
     /// @notice Deposits and delegates voting power to an address provided with the call
     /// @param fundedAccount The address to credit this deposit to
     /// @param amount The amount of token which is deposited
-    /// @param firstDelegation An optional param which allows the first deposit to set
-    ///                        a delegation address
+    /// @param firstDelegation First delegation address
     /// @dev Note - There's a minor griefing attack on this which sets someones delegation
     ///      address by depositing before them, requiring them to call delegate to reset it.
     ///      Given the gas price required and 0 financial benefit we consider it unlikely.
