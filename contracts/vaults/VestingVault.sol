@@ -27,11 +27,18 @@ contract VestingVault is IVotingVault {
 
     event VoteChange(address indexed to, address indexed from, int256 amount);
 
+    /// @notice Constructs the contract.
+    /// @param _token The erc20 token to grant.
+    /// @param _stale Stale block used for voting power calculations.
     constructor(IERC20 _token, uint256 _stale) {
         token = _token;
         staleBlockLag = _stale;
     }
 
+    /// @notice initialization function to set initial variables.
+    /// @dev Can only be called once after deployment.
+    /// @param _manager The vault manager can add and remove grants.
+    /// @param _timelock The timelock address can change the unvested multiplier.
     function initialize(address _manager, address _timelock) public {
         require(Storage.uint256Ptr("initialized").data == 0, "initialized");
         Storage.set(Storage.uint256Ptr("initialized"), 1);
