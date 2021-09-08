@@ -183,6 +183,14 @@ describe("GSC Vault", function () {
     await expect(tx).to.be.revertedWith("Not enough votes");
   });
 
+  it("Reverts when vaults are repeated", async () => {
+    const tx = gscVault.proveMembership(
+      [votingVault.address, votingVault.address],
+      zeroExtraData
+    );
+    await expect(tx).to.be.revertedWith("duplicate vault");
+  });
+
   // We group these to be able to replicate the setup between tests
   describe("Kicking Process", async () => {
     // Put two members on the council one with enough votes and one
