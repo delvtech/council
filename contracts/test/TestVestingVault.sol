@@ -12,12 +12,4 @@ contract TestVestingVault is VestingVault {
     function unvestedMultiplier() public view returns (uint256) {
         return _unvestedMultiplier().data;
     }
-
-    function timelock() public view returns (address) {
-        return _timelock().data;
-    }
-
-    function manager() public view returns (address) {
-        return _manager().data;
-    }
 }
