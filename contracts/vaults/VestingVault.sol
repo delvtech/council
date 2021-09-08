@@ -27,18 +27,11 @@ contract VestingVault is IVotingVault {
 
     event VoteChange(address indexed to, address indexed from, int256 amount);
 
-    /// @notice Constructs the contract.
-    /// @param _token The ERC20 token to use.
-    /// @param _stale How far back stale block are.
     constructor(IERC20 _token, uint256 _stale) {
         token = _token;
         staleBlockLag = _stale;
     }
 
-    /// @notice Initialization function for non-immutable values.
-    /// @dev Should be called from the context of the proxy contract.
-    /// @param _manager The manager address.
-    /// @param _timelock The timelock address.
     function initialize(address _manager, address _timelock) public {
         require(Storage.uint256Ptr("initialized").data == 0, "initialized");
         Storage.set(Storage.uint256Ptr("initialized"), 1);
@@ -434,5 +427,19 @@ contract VestingVault is IVotingVault {
     /// @param _manager The new manager.
     function setManager(address _manager) public onlyTimelock {
         Storage.set(Storage.addressPtr("manager"), _manager);
+    }
+
+    /// @notice A function to access the storage of the timelock address
+    /// @dev The timelock can access all functions with the onlyTimelock modifier.
+    /// @return The timelock address.
+    function timelock() public view returns (address) {
+        return _timelock().data;
+    }
+
+    /// @notice A function to access the storage of the manager address.
+    /// @dev The manager can access all functions with the olyManager modifier.
+    /// @return The manager address.
+    function manager() public view returns (address) {
+        return _manager().data;
     }
 }
