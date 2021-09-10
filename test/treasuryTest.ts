@@ -64,7 +64,7 @@ describe("Treasury", function () {
     afterEach(async () => {
       await restoreSnapshot(provider);
     });
-    it("fails if caller is not governance", async () => {
+    it("fails if caller is not owner", async () => {
       const tx = treasury
         .connect(signers[1])
         .sendFunds(token.address, 1000, signers[1].address);
@@ -101,7 +101,7 @@ describe("Treasury", function () {
     afterEach(async () => {
       await restoreSnapshot(provider);
     });
-    it("fails if caller is not governance", async () => {
+    it("fails if caller is not owner", async () => {
       const tx = treasury
         .connect(signers[1])
         .approve(token.address, signers[1].address, 1000);
@@ -127,7 +127,7 @@ describe("Treasury", function () {
     afterEach(async () => {
       await restoreSnapshot(provider);
     });
-    it("fails if caller is not governance", async () => {
+    it("fails if caller is not owner", async () => {
       const tx = treasury
         .connect(signers[1])
         .genericCall(token.address, "0x12341234");
