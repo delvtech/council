@@ -20,7 +20,7 @@ contract GSCVault is Authorizable {
     // The amount of votes needed to be on the GSC
     uint256 public votingPowerBound;
     // The duration during which a fresh gsc member cannot vote.
-    uint256 public idleDuration = 60 * 60 * 24 * 4;
+    uint256 public idleDuration = 4 days;
 
     // Event to help tracking members
     event MembershipProved(address indexed who, uint256 when);
@@ -93,10 +93,7 @@ contract GSCVault is Authorizable {
         // if the caller has already provedMembership, update their votingPower without
         // resetting their idle duration.
         if (members[msg.sender].joined != 0) {
-            members[msg.sender] = Member(
-                votingVaults,
-                members[msg.sender].joined
-            );
+            members[msg.sender].vaults = votingVaults;
         } else {
             members[msg.sender] = Member(votingVaults, block.timestamp);
         }
