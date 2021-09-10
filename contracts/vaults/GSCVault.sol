@@ -62,6 +62,10 @@ contract GSCVault is Authorizable {
         // We loop through the voting vaults to check they are authorized
         // We check all up front to prevent any reentrancy or weird side effects
         for (uint256 i = 0; i < votingVaults.length; i++) {
+            // No repeated vaults in the list
+            for (uint256 j = i + 1; j < votingVaults.length; j++) {
+                require(votingVaults[i] != votingVaults[j], "duplicate vault");
+            }
             // Call the mapping the core voting contract to check that
             // the provided address is in fact approved.
             // Note - Post Berlin hardfork this repeated access is quite cheap.

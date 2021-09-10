@@ -1,12 +1,15 @@
 import "module-alias/register";
 
 import { expect } from "chai";
-import { ethers, waffle } from "hardhat";
+import { ethers, waffle, network } from "hardhat";
 import { createSnapshot, restoreSnapshot } from "./helpers/snapshots";
 
 import { TestCoreVoting } from "../typechain/TestCoreVoting";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import corevotingData from "../artifacts/contracts/mocks/TestCoreVoting.sol/TestCoreVoting.json";
+import { advanceBlocks } from "./helpers/time";
+import { BigNumber } from "@ethersproject/contracts/node_modules/@ethersproject/bignumber";
+import { Reverter } from "../typechain/Reverter";
 
 const { provider } = waffle;
 
@@ -14,6 +17,7 @@ describe("CoreVoting", function () {
   let coreVoting: TestCoreVoting;
   const votingVaults: Array<string> = new Array<string>();
   const baseVotingPower = 1e10;
+  const MAX = ethers.constants.MaxUint256;
 
   let signers: SignerWithAddress[];
 
@@ -81,7 +85,7 @@ describe("CoreVoting", function () {
 
       const tx = coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, MAX, 0);
 
       await expect(tx).to.be.revertedWith("array length mismatch");
     });
@@ -101,9 +105,29 @@ describe("CoreVoting", function () {
 
       const tx = coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, MAX, 0);
 
       await expect(tx).to.be.revertedWith("insufficient voting power");
+    });
+    it("fails to propose with lastCall too low", async () => {
+      const targets = [
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+      ];
+      const calldatas = ["0x12345678ffffffff", "0x12345678ffffffff"];
+
+      const blocknumber = await network.provider.send("eth_blockNumber", []);
+      const tx = coreVoting
+        .connect(signers[0])
+        .proposal(
+          votingVaults,
+          zeroExtraData,
+          targets,
+          calldatas,
+          BigNumber.from(blocknumber).add(499),
+          0
+        );
+      await expect(tx).to.be.revertedWith("expires before voting ends");
     });
     it("creates a new proposal", async () => {
       const block = await getBlock();
@@ -116,7 +140,7 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, MAX, 0);
 
       const proposal = await coreVoting.getProposalData(0);
 
@@ -153,7 +177,7 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, MAX, 0);
 
       const proposal = await coreVoting.getProposalData(0);
       expect(proposal[3]).to.be.eq(baseQuorum);
@@ -184,7 +208,7 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, MAX, 0);
 
       const proposal = await coreVoting.getProposalData(0);
       expect(proposal[3]).to.be.eq(10);
@@ -214,7 +238,7 @@ describe("CoreVoting", function () {
       // the baseQuarum and the proposalQuorum.
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, MAX, 0);
 
       const proposal = await coreVoting.getProposalData(0);
 
@@ -243,7 +267,7 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, MAX, 0);
     });
     it("fails to vote with unapproved voting vault", async () => {
       votingVaults.push(ethers.constants.AddressZero);
@@ -345,7 +369,7 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, MAX, 0);
 
       // pass proposal with 2/3 majority
       await coreVoting
@@ -382,7 +406,7 @@ describe("CoreVoting", function () {
       await coreVoting.connect(signers[0]).setLockDuration(100);
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, zeroExtraData, targets, calldatas, 0);
+        .proposal(votingVaults, zeroExtraData, targets, calldatas, MAX, 0);
 
       // pass proposal with 2/3 majority
       await coreVoting
@@ -397,6 +421,31 @@ describe("CoreVoting", function () {
         .execute(1, targets, badcalldata);
       await expect(tx).to.be.revertedWith("not unlocked");
     });
+    it("fails to execute a proposal after last call blocknumber", async () => {
+      const targets = [
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+      ];
+      const calldatas = ["0x12345678ffffffff", "0x12345678ffffffff"];
+
+      const blocknumber = await network.provider.send("eth_blockNumber", []);
+
+      await coreVoting
+        .connect(signers[0])
+        .proposal(
+          votingVaults,
+          zeroExtraData,
+          targets,
+          calldatas,
+          BigNumber.from(blocknumber).add(600),
+          0
+        );
+
+      await advanceBlocks(provider, 600);
+
+      const tx = coreVoting.connect(signers[0]).execute(1, targets, calldatas);
+      await expect(tx).to.be.revertedWith("past last call timestamp");
+    });
     it("executes a proposal - voted yes", async () => {
       const newDummyValue = 123423123;
       const targets = [coreVoting.address];
@@ -407,7 +456,7 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, zeroExtraData, targets, [calldata], 0);
+        .proposal(votingVaults, zeroExtraData, targets, [calldata], MAX, 0);
 
       // pass proposal with 2/3 majority
       await coreVoting
@@ -435,7 +484,7 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, zeroExtraData, targets, [calldata], 0);
+        .proposal(votingVaults, zeroExtraData, targets, [calldata], MAX, 0);
 
       // pass proposal with 2/3 majority
       await coreVoting
@@ -462,7 +511,7 @@ describe("CoreVoting", function () {
 
       await coreVoting
         .connect(signers[0])
-        .proposal(votingVaults, zeroExtraData, targets, [calldata], 0);
+        .proposal(votingVaults, zeroExtraData, targets, [calldata], MAX, 0);
 
       // pass proposal with 2/3 majority
       await coreVoting
@@ -474,6 +523,28 @@ describe("CoreVoting", function () {
 
       const tx = coreVoting.connect(signers[0]).execute(1, targets, [calldata]);
       await expect(tx).to.be.revertedWith("Cannot execute");
+    });
+    it("reverts if a sub-call reverts", async () => {
+      const reverterDeployer = await ethers.getContractFactory("Reverter");
+      const reverter: Reverter = await reverterDeployer.deploy();
+
+      const targets = [reverter.address];
+      const data = [reverter.interface.encodeFunctionData("fail")];
+
+      await coreVoting
+        .connect(signers[0])
+        .proposal(votingVaults, zeroExtraData, targets, data, MAX, 0);
+
+      // pass proposal with 2/3 majority
+      await coreVoting
+        .connect(signers[1])
+        .vote(votingVaults, zeroExtraData, 1, 1);
+      await coreVoting
+        .connect(signers[2])
+        .vote(votingVaults, zeroExtraData, 1, 0);
+
+      const tx = coreVoting.connect(signers[0]).execute(1, targets, data);
+      await expect(tx).to.be.revertedWith("Call failed");
     });
   });
 
