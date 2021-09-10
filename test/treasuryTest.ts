@@ -11,7 +11,7 @@ import targetData from "../artifacts/contracts/mocks/TestTreasury.sol/TestTreasu
 
 const { provider } = waffle;
 
-describe("Optimistic Grants", function () {
+describe("Treasury", function () {
   // We use the history tracker and signers in each test
   let treasury: TestTreasury;
   let token: MockERC20;
@@ -64,11 +64,11 @@ describe("Optimistic Grants", function () {
     afterEach(async () => {
       await restoreSnapshot(provider);
     });
-    it("fails if caller is not governance", async () => {
+    it("fails if caller is not owner", async () => {
       const tx = treasury
         .connect(signers[1])
         .sendFunds(token.address, 1000, signers[1].address);
-      await expect(tx).to.be.revertedWith("!governance");
+      await expect(tx).to.be.revertedWith("Sender not owner");
     });
     it("correctly transfers ERC20", async () => {
       await treasury
@@ -101,11 +101,11 @@ describe("Optimistic Grants", function () {
     afterEach(async () => {
       await restoreSnapshot(provider);
     });
-    it("fails if caller is not governance", async () => {
+    it("fails if caller is not owner", async () => {
       const tx = treasury
         .connect(signers[1])
         .approve(token.address, signers[1].address, 1000);
-      await expect(tx).to.be.revertedWith("!governance");
+      await expect(tx).to.be.revertedWith("Sender not owner");
     });
     it("correctly approves", async () => {
       await treasury
@@ -127,11 +127,11 @@ describe("Optimistic Grants", function () {
     afterEach(async () => {
       await restoreSnapshot(provider);
     });
-    it("fails if caller is not governance", async () => {
+    it("fails if caller is not owner", async () => {
       const tx = treasury
         .connect(signers[1])
         .genericCall(token.address, "0x12341234");
-      await expect(tx).to.be.revertedWith("!governance");
+      await expect(tx).to.be.revertedWith("Sender not owner");
     });
     it("correctly performs generic call", async () => {
       const newDummyVal = 10000;

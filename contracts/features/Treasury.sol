@@ -7,29 +7,21 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.3;
 
+import "../libraries/Authorizable.sol";
 import "../interfaces/IERC20.sol";
 
 // This contract is designed to hold the erc20 and eth reserves of the dao
 // and will likely control a large amount of funds. It is designed to be
 // flexible, secure and simple
-contract Treasury {
-    // the governance address
-    address _governance;
-
+contract Treasury is Authorizable {
     // A constant which represents ether
     address internal constant _ETH_CONSTANT =
         address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
-    /// @dev Modifier checks if the msg.sender is the governance contract.
-    modifier onlyGovernance() {
-        require(msg.sender == _governance, "!governance");
-        _;
-    }
-
     /// @notice constructor.
     /// @param __governance Governance contract address.
     constructor(address __governance) {
-        _governance = __governance;
+        setOwner(__governance);
     }
 
     ///@notice Sends funds from the treasury to an address.
@@ -41,7 +33,7 @@ contract Treasury {
         address _token,
         uint256 _amount,
         address _recipient
-    ) external onlyGovernance {
+    ) external onlyOwner {
         if (_token == _ETH_CONSTANT) {
             payable(_recipient).transfer(_amount);
         } else {
@@ -58,7 +50,7 @@ contract Treasury {
         address _token,
         address _spender,
         uint256 _amount
-    ) external onlyGovernance {
+    ) external onlyOwner {
         IERC20(_token).approve(_spender, _amount);
     }
 
@@ -67,7 +59,7 @@ contract Treasury {
     ///@param _callData The execution calldata to pass.
     function genericCall(address _target, bytes calldata _callData)
         external
-        onlyGovernance
+        onlyOwner
     {
         _target.call(_callData);
     }
