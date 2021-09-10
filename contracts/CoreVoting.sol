@@ -74,6 +74,8 @@ contract CoreVoting is Authorizable {
         uint128 quorum;
         // [yes, no, maybe] voting power
         uint128[3] votingPower;
+        // Timestamp after which if the call has not been executed it cannot be executed
+        uint128 lastCall;
     }
 
     struct Vote {
@@ -120,12 +122,15 @@ contract CoreVoting is Authorizable {
     /// @param extraVaultData an encoded list of extra data to provide to vaults
     /// @param targets list of target addresses the timelock contract will interact with.
     /// @param calldatas execution calldata for each target.
+    /// @param lastCall timestamp after which this cannot be executed, note should be
+    ///                 more than the voting time period
     /// @param ballot vote direction (yes, no, maybe)
     function proposal(
         address[] calldata votingVaults,
         bytes[] calldata extraVaultData,
         address[] calldata targets,
         bytes[] calldata calldatas,
+        uint256 lastCall,
         Ballot ballot
     ) external {
         require(targets.length == calldatas.length, "array length mismatch");
@@ -149,6 +154,12 @@ contract CoreVoting is Authorizable {
             }
         }
 
+        // We check that the expiration is possibly valid
+        require(
+            lastCall > block.number + lockDuration + extraVoteTime,
+            "expires before voting ends"
+        );
+
         proposals[proposalCount] = Proposal(
             proposalHash,
             // Note we use blocknumber - 1 here as a flash loan mitigation.
@@ -156,7 +167,8 @@ contract CoreVoting is Authorizable {
             uint128(block.number + lockDuration),
             uint128(block.number + lockDuration + extraVoteTime),
             uint128(quorum),
-            proposals[proposalCount].votingPower
+            proposals[proposalCount].votingPower,
+            uint128(lastCall)
         );
 
         uint256 votingPower =
@@ -239,9 +251,15 @@ contract CoreVoting is Authorizable {
         address[] memory targets,
         bytes[] memory calldatas
     ) external {
+        // We have to execute after min voting period
         require(block.number >= proposals[proposalId].unlock, "not unlocked");
         // If executed the proposal will be deleted and this will be zero
         require(proposals[proposalId].unlock != 0, "Previously executed");
+        // We cannot execute if the proposal has expired
+        require(
+            block.number < proposals[proposalId].lastCall,
+            "past last call timestamp"
+        );
 
         // ensure the data matches the hash
         require(
@@ -261,10 +279,10 @@ contract CoreVoting is Authorizable {
         require(passesQuorum && majorityInFavor, "Cannot execute");
 
         // Execute a package of low level calls
-        // SECURITY - WILL NOT REVERT IF A SINGLE CALL FAILS, PROPOSALS MUST BE CONSTRUCTED
-        //            WITH THIS IN MIND
+        // NOTE - All of them must succeed for the package to succeed.
         for (uint256 i = 0; i < targets.length; i++) {
-            targets[i].call(calldatas[i]);
+            (bool success, ) = targets[i].call(calldatas[i]);
+            require(success, "Call failed");
         }
         // Notification of proposal execution
         emit ProposalExecuted(proposalId);
