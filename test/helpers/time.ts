@@ -12,3 +12,9 @@ export const advanceTime = async (provider: MockProvider, time: number) => {
   await provider.send("evm_increaseTime", [time]);
   await provider.send("evm_mine", []);
 };
+export const getBlock = async (provider: MockProvider) => {
+  return (await provider.getBlock("latest")).number;
+};
+export const getTimestamp = async (provider: MockProvider) => {
+  return (await provider.getBlock("latest")).timestamp;
+};

@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "./interfaces/IVotingVault.sol";
 import "./libraries/Authorizable.sol";
+import "hardhat/console.sol";
+import "./features/Timelock.sol";
 
 contract CoreVoting is Authorizable {
     // if a function selector does not have a set quorum we use this default quorum
@@ -10,7 +12,7 @@ contract CoreVoting is Authorizable {
 
     // Assumes avg block time of 13.3 seconds. May be longer or shorter due
     // to ice ages or short term changes in hash power.
-    uint256 public constant DAY_IN_BLOCKS = 6496;
+    uint256 public constant DAY_IN_BLOCKS = 50;
 
     // minimum time a proposal must be active for before executing
     // Default to 3 days, this avoids weekend surprise proposals
@@ -151,8 +153,7 @@ contract CoreVoting is Authorizable {
 
         proposals[proposalCount] = Proposal(
             proposalHash,
-            // Note we use blocknumber - 1 here as a flash loan mitigation.
-            uint128(block.number - 1),
+            uint128(block.number),
             uint128(block.number + lockDuration),
             uint128(block.number + lockDuration + extraVoteTime),
             uint128(quorum),
@@ -264,7 +265,11 @@ contract CoreVoting is Authorizable {
         // SECURITY - WILL NOT REVERT IF A SINGLE CALL FAILS, PROPOSALS MUST BE CONSTRUCTED
         //            WITH THIS IN MIND
         for (uint256 i = 0; i < targets.length; i++) {
-            targets[i].call(calldatas[i]);
+            //targets[i].call(calldatas[i]);
+            (bool success, bytes memory returnData) =
+                targets[i].call(calldatas[i]);
+            // revert if a single call fails
+            require(success == true, "call reverted");
         }
         // Notification of proposal execution
         emit ProposalExecuted(proposalId);
@@ -330,5 +335,11 @@ contract CoreVoting is Authorizable {
                 0xFFFFFFFFF0000000000000000000000000000000000000000000000000000000
             )
         }
+    }
+
+    function getStatus(bytes32 _hash) public view returns (address, uint256) {
+        Timelock timelock = Timelock(owner);
+        uint256 hashdata = timelock.callTimestamps(_hash);
+        return (owner, hashdata);
     }
 }

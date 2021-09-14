@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/Authorizable.sol";
+import "hardhat/console.sol";
 
 // Allows a call to be executed after a waiting period, also allows a call to
 // be canceled within a waiting period.

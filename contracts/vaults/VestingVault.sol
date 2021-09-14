@@ -27,17 +27,17 @@ contract VestingVault is IVotingVault {
 
     event VoteChange(address indexed to, address indexed from, int256 amount);
 
-    constructor(
-        IERC20 _token,
-        uint256 _stale,
-        address _manager,
-        address _timelock
-    ) {
+    constructor(IERC20 _token, uint256 _stale) {
+        token = _token;
+        staleBlockLag = _stale;
+    }
+
+    function initialize(address _manager, address _timelock) public {
+        require(Storage.uint256Ptr("initialized").data == 0, "initialized");
+        Storage.set(Storage.uint256Ptr("initialized"), 1);
         Storage.set(Storage.addressPtr("manager"), _manager);
         Storage.set(Storage.addressPtr("timelock"), _timelock);
         Storage.set(Storage.uint256Ptr("unvestedMultiplier"), 100);
-        token = _token;
-        staleBlockLag = _stale;
     }
 
     // deposits mapping(address => Grant)
@@ -92,13 +92,13 @@ contract VestingVault is IVotingVault {
     }
 
     modifier onlyManager() {
-        _;
         require(msg.sender == _manager().data, "!manager");
+        _;
     }
 
     modifier onlyTimelock() {
-        _;
         require(msg.sender == _timelock().data, "!timelock");
+        _;
     }
 
     /// @notice Getter for the grants mapping
@@ -413,5 +413,33 @@ contract VestingVault is IVotingVault {
     function changeUnvestedMultiplier(uint256 _multiplier) public onlyTimelock {
         require(_multiplier <= 100, "Above 100%");
         Storage.set(Storage.uint256Ptr("unvestedMultiplier"), _multiplier);
+    }
+
+    /// @notice timelock-only timelock update function.
+    /// @dev Allows the timelock to update the timelock address.
+    /// @param _timelock The new timelock.
+    function setTimelock(address _timelock) public onlyTimelock {
+        Storage.set(Storage.addressPtr("timelock"), _timelock);
+    }
+
+    /// @notice timelock-only manager update function.
+    /// @dev Allows the timelock to update the manager address.
+    /// @param _manager The new manager.
+    function setManager(address _manager) public onlyTimelock {
+        Storage.set(Storage.addressPtr("manager"), _manager);
+    }
+
+    /// @notice A function to access the storage of the timelock address
+    /// @dev The timelock can access all functions with the onlyTimelock modifier.
+    /// @return The timelock address.
+    function timelock() public view returns (address) {
+        return _timelock().data;
+    }
+
+    /// @notice A function to access the storage of the manager address.
+    /// @dev The manager can access all functions with the olyManager modifier.
+    /// @return The manager address.
+    function manager() public view returns (address) {
+        return _manager().data;
     }
 }
