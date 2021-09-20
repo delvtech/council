@@ -109,6 +109,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount.add(1),
+          0,
           block + 100,
           block + 50,
           ethers.constants.AddressZero
@@ -122,6 +123,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount.add(1),
+          0,
           block + 100,
           block + 150,
           ethers.constants.AddressZero
@@ -136,6 +138,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount.div(2),
+          0,
           block + 100,
           block + 50,
           ethers.constants.AddressZero
@@ -145,6 +148,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount.div(2),
+          0,
           block + 100,
           block + 50,
           ethers.constants.AddressZero
@@ -159,6 +163,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 100,
           block + 50,
           ethers.constants.AddressZero
@@ -188,6 +193,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 100,
           block + 50,
           signers[0].address
@@ -231,6 +237,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount.div(2),
+          0,
           block + 100,
           block + 50,
           ethers.constants.AddressZero
@@ -268,6 +275,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 11,
           block + 6,
           ethers.constants.AddressZero
@@ -306,6 +314,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 11,
           block + 6,
           ethers.constants.AddressZero
@@ -353,6 +362,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 11,
           block + 6,
           ethers.constants.AddressZero
@@ -371,6 +381,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 11,
           block + 6,
           ethers.constants.AddressZero
@@ -431,6 +442,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 100,
           block + 50,
           ethers.constants.AddressZero
@@ -457,6 +469,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 100,
           block + 50,
           signers[2].address
@@ -541,6 +554,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 11,
           block + 6,
           ethers.constants.AddressZero
@@ -571,6 +585,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 11,
           block + 6,
           ethers.constants.AddressZero
@@ -600,6 +615,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 11,
           block + 6,
           ethers.constants.AddressZero
