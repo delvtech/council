@@ -161,7 +161,7 @@ contract VestingVault is IVotingVault {
         require(grant.allocation == 0, "Has Grant");
 
         // load the delegate. Defaults to the grant owner
-        address _delegatee = _delegatee == address(0) ? _who : _delegatee;
+        _delegatee = _delegatee == address(0) ? _who : _delegatee;
 
         // calculate the voting power. Assumes all voting power is initially locked.
         // Come back to this assumption.

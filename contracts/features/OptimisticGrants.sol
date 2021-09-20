@@ -80,8 +80,6 @@ contract OptimisticGrants {
 
     /// @notice Claim a grant.
     /// @dev When a grant expires it can be claimed by the owner.
-    /// WARNING: A contract _recipient will log msg.sender as this contract's address
-    /// and the funds may not be withdrawable.
     /// @param _destination The address which will receive the grant.
     function claim(address _destination) public {
         require(block.timestamp >= grants[msg.sender].expiration, "not mature");

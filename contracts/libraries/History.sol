@@ -76,7 +76,7 @@ library History {
     ) internal {
         // Check preconditions
         // OoB = Out of Bounds, short for contract bytecode size reduction
-        require(data < uint256(1) << 192, "OoB");
+        require(data <= type(uint192).max, "OoB");
         // Get the storage this is referencing
         mapping(address => uint256[]) storage storageMapping =
             _getMapping(wrapper.cachedPointer);

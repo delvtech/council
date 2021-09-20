@@ -24,7 +24,7 @@ contract OptimisticRewards is MerkleRewards, Authorizable, IVotingVault {
     // The address with the power to propose new roots.
     address public proposer;
     // Defaults to one week
-    uint256 public challengePeriod = 60 * 60 * 24 * 7;
+    uint256 public challengePeriod = 7 days;
 
     /// @notice Constructs this contract and sets state variables
     /// @param _governance The address which owns this contract and can reset other vars
