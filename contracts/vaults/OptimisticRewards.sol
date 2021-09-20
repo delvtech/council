@@ -80,7 +80,7 @@ contract OptimisticRewards is MerkleRewards, Authorizable, IVotingVault {
         address user,
         uint256,
         bytes calldata extraData
-    ) external override returns (uint256) {
+    ) external view override returns (uint256) {
         // Decode the extra data
         (uint256 totalGrant, bytes32[] memory proof) =
             abi.decode(extraData, (uint256, bytes32[]));
