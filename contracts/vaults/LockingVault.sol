@@ -17,7 +17,7 @@ contract LockingVault is IVotingVault {
     uint256 public immutable staleBlockLag;
 
     // Event to track delegation data
-    event VoteChange(address indexed to, address indexed from, int256 amount);
+    event VoteChange(address indexed from, address indexed to, int256 amount);
 
     constructor(IERC20 _token, uint256 _staleBlockLag) {
         token = _token;
@@ -136,7 +136,7 @@ contract LockingVault is IVotingVault {
         History.HistoricalBalances memory votingPower = _votingPower();
         // Load the most recent voter power stamp
         uint256 delegateeVotes = votingPower.loadTop(delegate);
-        // Emit a event to track added votes
+        // Emit an event to track votes
         emit VoteChange(fundedAccount, delegate, int256(amount));
         // Add the newly deposited votes to the delegate
         votingPower.push(delegate, delegateeVotes + amount);
@@ -156,9 +156,9 @@ contract LockingVault is IVotingVault {
         History.HistoricalBalances memory votingPower = _votingPower();
         // Load the most recent voter power stamp
         uint256 delegateeVotes = votingPower.loadTop(delegate);
-        // Add the newly deposited votes to the delegate
+        // remove the votes from the delegate
         votingPower.push(delegate, delegateeVotes - amount);
-        // Emit a event to track added votes
+        // Emit an event to track votes
         emit VoteChange(msg.sender, delegate, -1 * int256(amount));
         // Transfers the result to the sender
         token.transfer(msg.sender, amount);
@@ -181,7 +181,7 @@ contract LockingVault is IVotingVault {
         uint256 oldDelegateVotes = votingPower.loadTop(oldDelegate);
         // Reduce the old voting power
         votingPower.push(oldDelegate, oldDelegateVotes - userBalance);
-        // Emit a event to track added votes
+        // Emit an event to track votes
         emit VoteChange(msg.sender, oldDelegate, -1 * int256(userBalance));
         // Get the new delegate's votes
         uint256 newDelegateVotes = votingPower.loadTop(newDelegate);
