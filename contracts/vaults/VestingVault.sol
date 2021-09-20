@@ -122,9 +122,10 @@ contract VestingVault is IVotingVault {
     /// @notice Adds a new grant.
     /// @dev Manager can set who the voting power will be delegated to initially.
     /// This potentially avoids the need for a delegation transaction by the grant recipient.
-    /// There is currently no block number sanity check. The cliff can be higher than the expiration.
     /// @param _who The Grant recipient.
     /// @param _amount The total grant value.
+    /// @param _startTime Optionally set a non standard start time. If set to zero then the start time
+    ///                   will be made the block this is executed in.
     /// @param _expiration timestamp when the grant ends (all tokens count as unlocked).
     /// @param _cliff Timestamp when the cliff ends. No tokens are unlocked until this
     /// timestamp is reached.
@@ -133,12 +134,20 @@ contract VestingVault is IVotingVault {
     function addGrantAndDelegate(
         address _who,
         uint128 _amount,
+        uint128 _startTime,
         uint128 _expiration,
         uint128 _cliff,
         address _delegatee
     ) public onlyManager {
         // Consistency check
-        require(_cliff <= _expiration, "Invalid configuration");
+        require(
+            _cliff <= _expiration && _startTime <= _expiration,
+            "Invalid configuration"
+        );
+        // If no custom start time is needed we use this block.
+        if (_startTime == 0) {
+            _startTime = uint128(block.number);
+        }
 
         Storage.Uint256 storage unassigned = _unassigned();
         Storage.Uint256 memory unvestedMultiplier = _unvestedMultiplier();
@@ -163,7 +172,7 @@ contract VestingVault is IVotingVault {
         _grants()[_who] = VestingVaultStorage.Grant(
             _amount,
             0,
-            uint128(block.number),
+            _startTime,
             _expiration,
             _cliff,
             newVotingPower,
@@ -375,7 +384,7 @@ contract VestingVault is IVotingVault {
         view
         returns (uint256)
     {
-        if (block.number < _grant.cliff) {
+        if (block.number < _grant.cliff || block.number < _grant.created) {
             return 0;
         }
         if (block.number >= _grant.expiration) {

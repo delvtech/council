@@ -109,6 +109,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount.add(1),
+          0,
           block + 100,
           block + 50,
           ethers.constants.AddressZero
@@ -122,8 +123,23 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount.add(1),
+          0,
           block + 100,
           block + 150,
+          ethers.constants.AddressZero
+        );
+      await expect(tx).to.be.revertedWith("Invalid configuration");
+    });
+    it("fails to add grant if start > expiry", async () => {
+      const block = await getBlock();
+      const tx = vestingVault
+        .connect(signers[0])
+        .addGrantAndDelegate(
+          signers[1].address,
+          amount.add(1),
+          block + 150,
+          block + 100,
+          block + 50,
           ethers.constants.AddressZero
         );
       await expect(tx).to.be.revertedWith("Invalid configuration");
@@ -136,6 +152,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount.div(2),
+          0,
           block + 100,
           block + 50,
           ethers.constants.AddressZero
@@ -145,6 +162,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount.div(2),
+          0,
           block + 100,
           block + 50,
           ethers.constants.AddressZero
@@ -159,6 +177,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 100,
           block + 50,
           ethers.constants.AddressZero
@@ -188,6 +207,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          block + 10,
           block + 100,
           block + 50,
           signers[0].address
@@ -197,7 +217,7 @@ describe("VestingVault", function () {
 
       expect(grant[0]).to.be.eq(amount);
       expect(grant[1]).to.be.eq(0);
-      expect(grant[2]).to.be.eq(block + 1);
+      expect(grant[2]).to.be.eq(block + 10);
       expect(grant[3]).to.be.eq(block + 100);
       expect(grant[4]).to.be.eq(block + 50);
       expect(grant[5]).to.be.eq(amount);
@@ -231,6 +251,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount.div(2),
+          0,
           block + 100,
           block + 50,
           ethers.constants.AddressZero
@@ -268,6 +289,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 11,
           block + 6,
           ethers.constants.AddressZero
@@ -306,6 +328,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 11,
           block + 6,
           ethers.constants.AddressZero
@@ -353,6 +376,45 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
+          block + 11,
+          block + 6,
+          ethers.constants.AddressZero
+        );
+      await vestingVault.connect(signers[1]).claim();
+
+      const grant = await vestingVault.getGrant(signers[1].address);
+      // check that withdrawn is 0
+      expect(grant[1]).to.be.eq(0);
+    });
+    it("fail to claim before start", async () => {
+      const block = await getBlock();
+
+      await vestingVault
+        .connect(signers[0])
+        .addGrantAndDelegate(
+          signers[1].address,
+          amount,
+          block + 6,
+          block + 11,
+          block + 6,
+          ethers.constants.AddressZero
+        );
+      await vestingVault.connect(signers[1]).claim();
+
+      const grant = await vestingVault.getGrant(signers[1].address);
+      // check that withdrawn is 0
+      expect(grant[1]).to.be.eq(0);
+    });
+    it("claims 0 at start", async () => {
+      const block = await getBlock();
+
+      await vestingVault
+        .connect(signers[0])
+        .addGrantAndDelegate(
+          signers[1].address,
+          amount,
+          block + 2,
           block + 11,
           block + 6,
           ethers.constants.AddressZero
@@ -371,6 +433,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 11,
           block + 6,
           ethers.constants.AddressZero
@@ -431,6 +494,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 100,
           block + 50,
           ethers.constants.AddressZero
@@ -457,6 +521,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 100,
           block + 50,
           signers[2].address
@@ -541,6 +606,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 11,
           block + 6,
           ethers.constants.AddressZero
@@ -571,6 +637,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 11,
           block + 6,
           ethers.constants.AddressZero
@@ -600,6 +667,7 @@ describe("VestingVault", function () {
         .addGrantAndDelegate(
           signers[1].address,
           amount,
+          0,
           block + 11,
           block + 6,
           ethers.constants.AddressZero
