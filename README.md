@@ -1,13 +1,17 @@
 ## :warning:WARNING:warning:
 This project is currently being audited and should not be deployed. It is not covered by the formal Element bug bounty program, bug reports are welcome though may not receive bounties. It is also in early access open source so should not be publicized or linked to externally.
 
-# Element Protocol
+# Council
 
-[![Build Status](https://github.com/element-fi/elf-contracts/workflows/Tests/badge.svg)](https://github.com/element-fi/elf-contracts/actions)
-[![Coverage Status](https://coveralls.io/repos/github/element-fi/elf-contracts/badge.svg?branch=main&service=github&t=7FWsvc)](https://coveralls.io/github/element-fi/elf-contracts?branch=main)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/element-fi/elf-contracts/blob/master/LICENSE)
+[![Build Status](https://github.com/element-fi/council/workflows/Tests/badge.svg)](https://github.com/element-fi/council/actions)
+[![Coverage Status](https://coveralls.io/repos/github/element-fi/council/badge.svg?branch=main&service=github&t=7FWsvc)](https://coveralls.io/github/element-fi/council?branch=main)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/element-fi/council/blob/master/LICENSE)
 
-These smart contract are designed to enable governance of the Element protocol.
+Council is a flexiable smart contract governance architecture which allows a community to manage a DAO. 
+
+Council is inspired by and extends several forrunners in the DAO governance space including MakerDAO governance and the Compound governor contracts. Like these systems it is a fully onchain voting architecture which cordinates the process of making permissioned smart contract calls from privlaged addressses. Council contains several architecture choices which make it distinct though: firstly council does not have a single security thereshold to make a call, instead various actions can be given diffrent security threshold requirments; secondly Council abstracts the vote allocation process away from the voting process meaning that multiple complex vote allocation systems can run in parralel in the contracts; finally by default Coucil ships with a governance steering council enabled which can be given diffrent powers than the core voting system. Together these features mean a wide range of voting protocols and security procedures can be seemlessly integrated into one governance system.
+
+Council is a community driven protocol and there are many ways to contribute to it, we encourage you to jump in and improve and use this code.
 
 ## Build and Testing
 
