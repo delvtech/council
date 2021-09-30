@@ -56,6 +56,8 @@ contract Timelock is Authorizable {
             callTimestamps[callHash] + waitTime < block.timestamp,
             "not enough time has passed"
         );
+        // Gives a revert string to a revert that would occur anyway when the array is accessed
+        require(targets.length == calldatas.length, "invalid formatting");
         // execute a package of low level calls
         for (uint256 i = 0; i < targets.length; i++) {
             (bool success, bytes memory returnData) =

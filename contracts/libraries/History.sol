@@ -220,6 +220,8 @@ library History {
         uint256 startingMinIndex,
         uint256 length
     ) private view returns (uint256, uint256) {
+        // We explicitly revert on the reading of memory which is uninitialized
+        require(length != 0, "uninitialized");
         // Load the bounds of our binary search
         uint256 maxIndex = length - 1;
         uint256 minIndex = startingMinIndex;
@@ -235,7 +237,7 @@ library History {
         while (minIndex != maxIndex) {
             // We use the ceil instead of the floor because this guarantees that
             // we pick the highest blocknumber less than or equal the requested one
-            uint256 mid = maxIndex + minIndex - (minIndex + maxIndex) / 2;
+            uint256 mid = (minIndex + maxIndex + 1) / 2;
             // Load and unpack the data in the midpoint index
             (uint256 pastBlock, uint256 loadedData) = _loadAndUnpack(data, mid);
 
