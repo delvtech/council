@@ -3,8 +3,9 @@ pragma solidity ^0.8.0;
 
 import "./interfaces/IVotingVault.sol";
 import "./libraries/Authorizable.sol";
+import "./libraries/ReentrancyBlock.sol";
 
-contract CoreVoting is Authorizable {
+contract CoreVoting is Authorizable, ReentrancyBlock {
     // if a function selector does not have a set quorum we use this default quorum
     uint256 public baseQuorum;
 
@@ -250,7 +251,7 @@ contract CoreVoting is Authorizable {
         uint256 proposalId,
         address[] memory targets,
         bytes[] memory calldatas
-    ) external {
+    ) external nonReentrant {
         // We have to execute after min voting period
         require(block.number >= proposals[proposalId].unlock, "not unlocked");
         // If executed the proposal will be deleted and this will be zero

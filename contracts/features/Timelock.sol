@@ -2,11 +2,12 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/Authorizable.sol";
+import "../libraries/ReentrancyBlock.sol";
 
 // Allows a call to be executed after a waiting period, also allows a call to
 // be canceled within a waiting period.
 
-contract Timelock is Authorizable {
+contract Timelock is Authorizable, ReentrancyBlock {
     // Amount of time for the waiting period
     uint256 public waitTime;
 
@@ -46,6 +47,7 @@ contract Timelock is Authorizable {
     /// @param calldatas Execution calldata for each target
     function execute(address[] memory targets, bytes[] calldata calldatas)
         public
+        nonReentrant
     {
         // hash provided data to access the mapping
         bytes32 callHash = keccak256(abi.encode(targets, calldatas));
