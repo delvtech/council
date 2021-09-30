@@ -60,8 +60,7 @@ contract Timelock is Authorizable {
         require(targets.length == calldatas.length, "invalid formatting");
         // execute a package of low level calls
         for (uint256 i = 0; i < targets.length; i++) {
-            (bool success, bytes memory returnData) =
-                targets[i].call(calldatas[i]);
+            (bool success, ) = targets[i].call(calldatas[i]);
             // revert if a single call fails
             require(success == true, "call reverted");
         }

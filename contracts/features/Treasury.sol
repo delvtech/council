@@ -61,8 +61,9 @@ contract Treasury is Authorizable {
         external
         onlyOwner
     {
-        _target.call(_callData);
+        (bool unused, ) = _target.call(_callData);
     }
 
-    fallback() external payable {}
+    // Receive is fine because we don't want to execute code
+    receive() external payable {}
 }
