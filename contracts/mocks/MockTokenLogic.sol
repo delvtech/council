@@ -48,8 +48,8 @@ contract MockTokenLogic is ReadAndWriteAnyStorage {
     }
 
     function totalSupply() external view returns (uint256) {
-        Storage.Uint256 storage totalSupply = _getTotalSupply();
-        return (totalSupply.load());
+        Storage.Uint256 storage _totalSupply = _getTotalSupply();
+        return (_totalSupply.load());
     }
 
     modifier onlyOwner {
@@ -59,21 +59,21 @@ contract MockTokenLogic is ReadAndWriteAnyStorage {
     }
 
     function mint(address to, uint256 amount) external onlyOwner() {
-        Storage.Uint256 storage totalSupply = _getTotalSupply();
+        Storage.Uint256 storage _totalSupply = _getTotalSupply();
         mapping(address => uint256) storage balances = _getBalancesMapping();
 
         balances[to] += amount;
-        uint256 localTotalSupply = totalSupply.load();
-        totalSupply.set(localTotalSupply + amount);
+        uint256 localTotalSupply = _totalSupply.load();
+        _totalSupply.set(localTotalSupply + amount);
     }
 
     // A function purely for testing which is a totally unrestricted mint
     function increaseBalance(address to, uint256 amount) external {
-        Storage.Uint256 storage totalSupply = _getTotalSupply();
+        Storage.Uint256 storage _totalSupply = _getTotalSupply();
         mapping(address => uint256) storage balances = _getBalancesMapping();
 
         balances[to] += amount;
-        uint256 localTotalSupply = totalSupply.load();
-        totalSupply.set(localTotalSupply + amount);
+        uint256 localTotalSupply = _totalSupply.load();
+        _totalSupply.set(localTotalSupply + amount);
     }
 }
