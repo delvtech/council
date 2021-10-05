@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import "../features/Treasury.sol";
 
 pragma solidity ^0.8.3;
