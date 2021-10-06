@@ -95,6 +95,8 @@ contract CoreVoting is Authorizable, ReentrancyBlock {
 
     event ProposalExecuted(uint256 proposalId);
 
+    event Voted(address indexed voter, uint256 indexed proposalId, Vote vote);
+
     /// @notice constructor
     /// @param _timelock Timelock contract.
     /// @param _baseQuorum Default quorum for all functions with no set quorum.
@@ -240,6 +242,10 @@ contract CoreVoting is Authorizable, ReentrancyBlock {
         _votes[msg.sender][proposalId] = Vote(votingPower, ballot);
 
         proposals[proposalId].votingPower[uint256(ballot)] += votingPower;
+
+        // Emit an event to track this info
+        emit Voted(msg.sender, proposalId, _votes[msg.sender][proposalId]);
+
         return votingPower;
     }
 
