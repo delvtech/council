@@ -217,14 +217,15 @@ contract VestingVault is IVotingVault {
             delegateeVotes - grant.latestVotingPower
         );
 
-        // delete the grant
-        delete _grants()[_who];
-
+        // Emit the vote change event
         emit VoteChange(
             grant.delegatee,
             _who,
             -1 * int256(int128(grant.latestVotingPower))
         );
+
+        // delete the grant
+        delete _grants()[_who];
     }
 
     /// @notice Claim all withdrawable value from a grant.
