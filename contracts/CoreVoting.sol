@@ -4,8 +4,9 @@ pragma solidity ^0.8.3;
 import "./interfaces/IVotingVault.sol";
 import "./libraries/Authorizable.sol";
 import "./libraries/ReentrancyBlock.sol";
+import "./interfaces/ICoreVoting.sol";
 
-contract CoreVoting is Authorizable, ReentrancyBlock {
+contract CoreVoting is Authorizable, ReentrancyBlock, ICoreVoting {
     // if a function selector does not have a set quorum we use this default quorum
     uint256 public baseQuorum;
 
@@ -51,7 +52,7 @@ contract CoreVoting is Authorizable, ReentrancyBlock {
     }
 
     // stores approved voting vaults
-    mapping(address => bool) public approvedVaults;
+    mapping(address => bool) public override approvedVaults;
 
     // proposal storage with the proposalID as key
     mapping(uint256 => Proposal) public proposals;
