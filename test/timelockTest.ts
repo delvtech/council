@@ -138,30 +138,34 @@ describe("Timelock", () => {
       await restoreSnapshot(provider);
     });
 
-    it("fails if not authorized", async () => {
-      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
-      const callHash = await createCallHash(calldata, [timelock.address]);
+    let callHash: string;
 
+    before(async () => {
+      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
+      callHash = await createCallHash(calldata, [timelock.address]);
+
+      // Register the call for execution
+      await timelock.registerCall(callHash);
+    });
+
+    it("fails if not authorized", async () => {
       const tx = timelock.connect(signers[0]).increaseTime(1000, callHash);
       await expect(tx).to.be.revertedWith("Sender not Authorized");
     });
 
     it("fails if attempted more than once", async () => {
-      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
-      const callHash = await createCallHash(calldata, [timelock.address]);
-
       await timelock.connect(signers[1]).increaseTime(1234, callHash);
       const tx = timelock.connect(signers[1]).increaseTime(5678, callHash);
       await expect(tx).to.be.revertedWith("value can only be changed once");
     });
 
     it("successful time increase", async () => {
-      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
-      const callHash = await createCallHash(calldata, [timelock.address]);
-
       await timelock.connect(signers[1]).increaseTime(1234, callHash);
+      const blockNum = await provider.getBlockNumber();
+      const block = await provider.getBlock(blockNum);
+      const { timestamp } = block;
       const call = await timelock.callTimestamps(callHash);
-      expect(call).to.be.eq(1234);
+      expect(call).to.be.eq(timestamp + 1234 - 1);
     });
   });
 
