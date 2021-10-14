@@ -40,6 +40,7 @@ contract Timelock is Authorizable, ReentrancyBlock {
     /// @param callHash Which entry of the mapping to remove
     function stopCall(bytes32 callHash) external onlyOwner {
         delete callTimestamps[callHash];
+        delete timeIncreases[callHash];
     }
 
     /// @notice Execute the call if past the waiting period
@@ -68,6 +69,7 @@ contract Timelock is Authorizable, ReentrancyBlock {
         }
         // restore state after successful execution
         delete callTimestamps[callHash];
+        delete timeIncreases[callHash];
     }
 
     /// @notice Allow a call from this contract to reset the wait time storage variable
@@ -89,6 +91,11 @@ contract Timelock is Authorizable, ReentrancyBlock {
             timeIncreases[callHash] == false,
             "value can only be changed once"
         );
+        require(
+            callTimestamps[callHash] != 0,
+            "must have been previously registered"
+        );
+        // Increases the time till the call can be executed
         callTimestamps[callHash] += timeValue;
         // set mapping to indicate call has been changed
         timeIncreases[callHash] = true;
