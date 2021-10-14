@@ -222,6 +222,9 @@ library History {
     ) private view returns (uint256, uint256) {
         // We explicitly revert on the reading of memory which is uninitialized
         require(length != 0, "uninitialized");
+        // Do some correctness checks
+        require(staleBlock <= blocknumber);
+        require(startingMinIndex < length);
         // Load the bounds of our binary search
         uint256 maxIndex = length - 1;
         uint256 minIndex = startingMinIndex;
@@ -281,6 +284,8 @@ library History {
         uint256 newMin,
         uint256[] storage data
     ) private {
+        // Correctness checks on this call
+        require(oldMin <= newMin);
         // This function is private and trusted and should be only called by functions which ensure
         // that oldMin < newMin < length
         assembly {
@@ -333,6 +338,9 @@ library History {
         uint256 minIndex,
         uint256 length
     ) private {
+        // Correctness check
+        require(minIndex < length);
+
         assembly {
             // Ensure data cleanliness
             let clearedLength := and(

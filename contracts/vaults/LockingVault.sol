@@ -110,6 +110,8 @@ contract LockingVault is IVotingVault {
         uint256 amount,
         address firstDelegation
     ) external {
+        // No delegating to zero
+        require(firstDelegation != address(0), "Zero addr delegation");
         // Move the tokens into this contract
         token.transferFrom(msg.sender, address(this), amount);
         // Load our deposits storage
