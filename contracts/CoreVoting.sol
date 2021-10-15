@@ -116,7 +116,7 @@ contract CoreVoting is Authorizable, ReentrancyBlock, ICoreVoting {
         for (uint256 i = 0; i < votingVaults.length; i++) {
             approvedVaults[votingVaults[i]] = true;
         }
-        owner = address(_timelock);
+        setOwner(address(_timelock));
         _authorize(_gsc);
     }
 
