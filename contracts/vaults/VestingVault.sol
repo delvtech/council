@@ -187,7 +187,7 @@ contract VestingVault is IVotingVault {
         uint256 delegateeVotes = votingPower.loadTop(grant.delegatee);
         votingPower.push(grant.delegatee, delegateeVotes + newVotingPower);
 
-        emit VoteChange(grant.delegatee, _who, int256(int128(newVotingPower)));
+        emit VoteChange(grant.delegatee, _who, int256(uint256(newVotingPower)));
     }
 
     /// @notice Removes a grant.
@@ -221,7 +221,7 @@ contract VestingVault is IVotingVault {
         emit VoteChange(
             grant.delegatee,
             _who,
-            -1 * int256(int128(grant.latestVotingPower))
+            -1 * int256(uint256(grant.latestVotingPower))
         );
 
         // delete the grant
@@ -265,7 +265,7 @@ contract VestingVault is IVotingVault {
         emit VoteChange(
             grant.delegatee,
             msg.sender,
-            -1 * int256(int128(grant.latestVotingPower))
+            -1 * int256(uint256(grant.latestVotingPower))
         );
 
         // Note - It is important that this is loaded here and not before the previous state change because if
@@ -326,7 +326,7 @@ contract VestingVault is IVotingVault {
         uint256 newVotingPower = _currentVotingPower(_grant);
         // get the change in voting power. Negative if the voting power is reduced
         int256 change =
-            int256(newVotingPower) - int256(int128(_grant.latestVotingPower));
+            int256(newVotingPower) - int256(uint256(_grant.latestVotingPower));
         // do nothing if there is no change
         if (change == 0) return;
         if (change > 0) {

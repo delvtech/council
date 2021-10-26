@@ -12,7 +12,7 @@ import "../libraries/Authorizable.sol";
 // GSC votes to behave differently than others. Namely, anyone who is a member at any point
 // in the voting period can vote.
 
-contract GSCVault is Authorizable {
+contract GSCVault is Authorizable, IVotingVault {
     // Tracks which people are in the GSC, which vaults they use and when they became members
     mapping(address => Member) public members;
     // The core voting contract with approved voting vaults
@@ -142,11 +142,11 @@ contract GSCVault is Authorizable {
     /// @return Returns the votes of the queried address
     /// @dev Because this function ignores the when variable it creates a unique voting system
     ///      and should not be plugged in with truly historic ones.
-    function queryVotingPower(
+    function queryVotePower(
         address who,
         uint256,
         bytes calldata
-    ) public view returns (uint256) {
+    ) public view override returns (uint256) {
         // If the address queried is the owner they get a huge number of votes
         // This allows the primary governance timelock to take any action the GSC
         // can make or block any action the GSC can make. But takes as many votes as

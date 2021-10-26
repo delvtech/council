@@ -43,6 +43,13 @@ describe("Timelock", () => {
     await restoreSnapshot(provider);
   });
 
+  beforeEach(async () => {
+    await createSnapshot(provider);
+  });
+  afterEach(async () => {
+    await restoreSnapshot(provider);
+  });
+
   describe("execute", () => {
     beforeEach(async () => {
       await createSnapshot(provider);
@@ -186,7 +193,7 @@ describe("Timelock", () => {
     });
 
     it("successful call register", async () => {
-      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
+      const calldata = ["0x12345678ffffffff", "0x12345678fffffffe"];
       const callHash = await createCallHash(calldata, [timelock.address]);
       await timelock.connect(signers[0]).registerCall(callHash);
       const call = await timelock.callTimestamps(callHash);
@@ -211,12 +218,27 @@ describe("Timelock", () => {
     });
 
     it("successful call stop", async () => {
-      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
+      const calldata = ["0x12345678ffffffff", "0x12345678fffffffe"];
       const callHash = await createCallHash(calldata, [timelock.address]);
       await timelock.connect(signers[0]).registerCall(callHash);
       await timelock.connect(signers[0]).stopCall(callHash);
       const call = await timelock.callTimestamps(callHash);
       expect(call).to.be.eq(0);
+    });
+
+    it("doesn't register twice", async () => {
+      const calldata = ["0x12345678ffffffff", "0x12345678fffffffe"];
+      const callHash = await createCallHash(calldata, [timelock.address]);
+      await timelock.connect(signers[0]).registerCall(callHash);
+      const tx = timelock.registerCall(callHash);
+      await expect(tx).to.be.revertedWith("already registered");
+    });
+
+    it("doesn't stop on an already empty call", async () => {
+      const calldata = ["0x12345678ffffffff", "0x12345678fffffffe"];
+      const callHash = await createCallHash(calldata, [timelock.address]);
+      const tx = timelock.stopCall(callHash);
+      await expect(tx).to.be.revertedWith("No call to be removed");
     });
   });
 });

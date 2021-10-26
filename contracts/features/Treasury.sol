@@ -61,7 +61,9 @@ contract Treasury is Authorizable {
         external
         onlyOwner
     {
-        (bool unused, ) = _target.call(_callData);
+        // We do a low level call and insist it succeeds
+        (bool status, ) = _target.call(_callData);
+        require(status, "Call failed");
     }
 
     // Receive is fine because we don't want to execute code
