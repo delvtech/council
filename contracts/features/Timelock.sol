@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.3;
 
 import "../libraries/Authorizable.sol";
 import "../libraries/ReentrancyBlock.sol";
@@ -33,12 +33,19 @@ contract Timelock is Authorizable, ReentrancyBlock {
     /// @notice Stores at the callHash the current block timestamp
     /// @param callHash The hash to map the timestamp to
     function registerCall(bytes32 callHash) external onlyOwner {
+        // We only want to register a call which is not already active
+        require(callTimestamps[callHash] == 0, "already registered");
+        // Set the timestamp for this call package to be the current time
         callTimestamps[callHash] = block.timestamp;
     }
 
     /// @notice Removes stored callHash data
     /// @param callHash Which entry of the mapping to remove
     function stopCall(bytes32 callHash) external onlyOwner {
+        // We only want this to actually execute when a real thing is deleted to
+        // prevent re-ordering attacks
+        require(callTimestamps[callHash] != 0, "No call to be removed");
+        // Do the actual deletion
         delete callTimestamps[callHash];
         delete timeIncreases[callHash];
     }

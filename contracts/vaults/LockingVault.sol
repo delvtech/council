@@ -5,8 +5,9 @@ import "../libraries/History.sol";
 import "../libraries/Storage.sol";
 import "../interfaces/IERC20.sol";
 import "../interfaces/IVotingVault.sol";
+import "../interfaces/ILockingVault.sol";
 
-contract LockingVault is IVotingVault {
+contract LockingVault is IVotingVault, ILockingVault {
     // Bring our libraries into scope
     using History for *;
     using Storage for *;
@@ -109,7 +110,9 @@ contract LockingVault is IVotingVault {
         address fundedAccount,
         uint256 amount,
         address firstDelegation
-    ) external {
+    ) external override {
+        // No delegating to zero
+        require(firstDelegation != address(0), "Zero addr delegation");
         // Move the tokens into this contract
         token.transferFrom(msg.sender, address(this), amount);
         // Load our deposits storage

@@ -153,19 +153,19 @@ describe("GSC Vault", function () {
       .proveMembership([votingVault.address], zeroExtraData);
 
     // Check that we have no vote power initially [second arg doesn't matter]
-    let votes = await gscVault.queryVotingPower(signers[1].address, 20, "0x");
+    let votes = await gscVault.queryVotePower(signers[1].address, 20, "0x");
     expect(votes).to.be.eq(0);
 
     // advance past the idle duration to gain voting power
     await advanceTime(provider, 100);
 
     // Check that we now have vote power [second arg doesn't matter]
-    votes = await gscVault.queryVotingPower(signers[1].address, 20, "0x");
+    votes = await gscVault.queryVotePower(signers[1].address, 20, "0x");
     expect(votes).to.be.eq(1);
   });
 
   it("Gives the owner 10k votes", async () => {
-    const votes = await gscVault.queryVotingPower(signers[0].address, 20, "0x");
+    const votes = await gscVault.queryVotePower(signers[0].address, 20, "0x");
     expect(votes).to.be.eq(100000);
   });
 
@@ -222,11 +222,7 @@ describe("GSC Vault", function () {
       // Kick and then check vaults
       await gscVault.kick(signers[1].address, zeroExtraData);
       // Check they have been fully removed
-      const votes = await gscVault.queryVotingPower(
-        signers[1].address,
-        0,
-        "0x"
-      );
+      const votes = await gscVault.queryVotePower(signers[1].address, 0, "0x");
       expect(votes).to.be.eq(0);
     });
 
@@ -236,11 +232,7 @@ describe("GSC Vault", function () {
       // Use the otherwise qualified signer 2
       await gscVault.kick(signers[2].address, zeroExtraData);
       // Check they have been fully removed
-      const votes = await gscVault.queryVotingPower(
-        signers[2].address,
-        0,
-        "0x"
-      );
+      const votes = await gscVault.queryVotePower(signers[2].address, 0, "0x");
       expect(votes).to.be.eq(0);
     });
 
@@ -253,11 +245,7 @@ describe("GSC Vault", function () {
       // Challenge signer 1
       await gscVault.kick(signers[1].address, zeroExtraData);
       // check for removal
-      const votes = await gscVault.queryVotingPower(
-        signers[1].address,
-        0,
-        "0x"
-      );
+      const votes = await gscVault.queryVotePower(signers[1].address, 0, "0x");
       expect(votes).to.be.eq(0);
 
       // Increase voting power for signer 1

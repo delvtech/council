@@ -46,6 +46,8 @@ contract MerkleRewards {
         bytes32[] calldata merkleProof,
         address destination
     ) external {
+        // No delegating to zero
+        require(delegate != address(0), "Zero addr delegation");
         // Validate the withdraw
         _validateWithdraw(amount, totalGrant, merkleProof);
         // Deposit for this sender into governance locking vault
