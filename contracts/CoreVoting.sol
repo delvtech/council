@@ -175,19 +175,14 @@ contract CoreVoting is Authorizable, ReentrancyBlock, ICoreVoting {
             uint128(lastCall)
         );
 
-        uint256 votingPower = vote(
-            votingVaults,
-            extraVaultData,
-            proposalCount,
-            ballot
-        );
+        uint256 votingPower =
+            vote(votingVaults, extraVaultData, proposalCount, ballot);
 
         // the proposal quorum is the lowest of minProposalPower and the proposal quorum
         // because it is awkward for the proposal to require more voting power than
         // the execution
-        uint256 minPower = quorum <= minProposalPower
-            ? quorum
-            : minProposalPower;
+        uint256 minPower =
+            quorum <= minProposalPower ? quorum : minProposalPower;
         // the GSC (governance steering comity) contract does not have a voting power requirement
         // to submit a proposal
         if (!isAuthorized(msg.sender)) {
@@ -241,9 +236,9 @@ contract CoreVoting is Authorizable, ReentrancyBlock, ICoreVoting {
         // if a user has already voted, undo their previous vote.
         // NOTE: A new vote can have less voting power
         if (_votes[msg.sender][proposalId].votingPower > 0) {
-            proposals[proposalId].votingPower[uint256(
-                _votes[msg.sender][proposalId].castBallot
-            )] -= _votes[msg.sender][proposalId].votingPower;
+            proposals[proposalId].votingPower[
+                uint256(_votes[msg.sender][proposalId].castBallot)
+            ] -= _votes[msg.sender][proposalId].votingPower;
         }
         _votes[msg.sender][proposalId] = Vote(votingPower, ballot);
 
@@ -284,8 +279,9 @@ contract CoreVoting is Authorizable, ReentrancyBlock, ICoreVoting {
         uint128[3] memory results = proposals[proposalId].votingPower;
         // if there are enough votes to meet quorum and there are more yes votes than no votes
         // then the proposal is executed
-        bool passesQuorum = results[0] + results[1] + results[2] >=
-            proposals[proposalId].quorum;
+        bool passesQuorum =
+            results[0] + results[1] + results[2] >=
+                proposals[proposalId].quorum;
         bool majorityInFavor = results[0] > results[1];
 
         require(passesQuorum && majorityInFavor, "Cannot execute");

@@ -165,8 +165,8 @@ contract VestingVault is IVotingVault {
 
         // calculate the voting power. Assumes all voting power is initially locked.
         // Come back to this assumption.
-        uint128 newVotingPower = (_amount * uint128(unvestedMultiplier.data)) /
-            100;
+        uint128 newVotingPower =
+            (_amount * uint128(unvestedMultiplier.data)) / 100;
 
         // set the new grant
         _grants()[_who] = VestingVaultStorage.Grant(
@@ -325,8 +325,8 @@ contract VestingVault is IVotingVault {
 
         uint256 newVotingPower = _currentVotingPower(_grant);
         // get the change in voting power. Negative if the voting power is reduced
-        int256 change = int256(newVotingPower) -
-            int256(uint256(_grant.latestVotingPower));
+        int256 change =
+            int256(newVotingPower) - int256(uint256(_grant.latestVotingPower));
         // do nothing if there is no change
         if (change == 0) return;
         if (change > 0) {
@@ -391,9 +391,9 @@ contract VestingVault is IVotingVault {
         if (block.number >= _grant.expiration) {
             return (_grant.allocation - _grant.withdrawn);
         }
-        uint256 unlocked = (_grant.allocation *
-            (block.number - _grant.created)) /
-            (_grant.expiration - _grant.created);
+        uint256 unlocked =
+            (_grant.allocation * (block.number - _grant.created)) /
+                (_grant.expiration - _grant.created);
         return (unlocked - _grant.withdrawn);
     }
 
