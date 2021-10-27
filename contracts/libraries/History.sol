@@ -39,8 +39,8 @@ library History {
         pure
         returns (HistoricalBalances memory)
     {
-        mapping(address => uint256[]) storage storageData =
-            Storage.mappingAddressToUnit256ArrayPtr(name);
+        mapping(address => uint256[]) storage storageData = Storage
+            .mappingAddressToUnit256ArrayPtr(name);
         bytes32 pointer;
         assembly {
             pointer := storageData.slot
@@ -78,8 +78,9 @@ library History {
         // OoB = Out of Bounds, short for contract bytecode size reduction
         require(data <= type(uint192).max, "OoB");
         // Get the storage this is referencing
-        mapping(address => uint256[]) storage storageMapping =
-            _getMapping(wrapper.cachedPointer);
+        mapping(address => uint256[]) storage storageMapping = _getMapping(
+            wrapper.cachedPointer
+        );
         // Get the array we need to push to
         uint256[] storage storageData = storageMapping[who];
         // We load the block number and then shift it to be in the top 64 bits
@@ -144,7 +145,7 @@ library History {
     }
 
     /// @notice Finds the data stored with the highest block number which is less than or equal to a provided
-    ///         blocknumber user.
+    ///         blocknumber.
     /// @param wrapper The memory struct which we want to search for historical data
     /// @param who The address which indexes the array to be searched
     /// @param blocknumber The blocknumber we want to load the historical data of
@@ -155,15 +156,21 @@ library History {
         uint256 blocknumber
     ) internal view returns (uint256) {
         // Get the storage this is referencing
-        mapping(address => uint256[]) storage storageMapping =
-            _getMapping(wrapper.cachedPointer);
+        mapping(address => uint256[]) storage storageMapping = _getMapping(
+            wrapper.cachedPointer
+        );
         // Get the array we need to push to
         uint256[] storage storageData = storageMapping[who];
         // Pre load the bounds
         (uint256 minIndex, uint256 length) = _loadBounds(storageData);
         // Search for the blocknumber
-        (, uint256 loadedData) =
-            _find(storageData, blocknumber, 0, minIndex, length);
+        (, uint256 loadedData) = _find(
+            storageData,
+            blocknumber,
+            0,
+            minIndex,
+            length
+        );
         // In this function we don't have to change the stored length data
         return (loadedData);
     }
@@ -182,15 +189,21 @@ library History {
         uint256 staleBlock
     ) internal returns (uint256) {
         // Get the storage this is referencing
-        mapping(address => uint256[]) storage storageMapping =
-            _getMapping(wrapper.cachedPointer);
+        mapping(address => uint256[]) storage storageMapping = _getMapping(
+            wrapper.cachedPointer
+        );
         // Get the array we need to push to
         uint256[] storage storageData = storageMapping[who];
         // Pre load the bounds
         (uint256 minIndex, uint256 length) = _loadBounds(storageData);
         // Search for the blocknumber
-        (uint256 staleIndex, uint256 loadedData) =
-            _find(storageData, blocknumber, staleBlock, minIndex, length);
+        (uint256 staleIndex, uint256 loadedData) = _find(
+            storageData,
+            blocknumber,
+            staleBlock,
+            minIndex,
+            length
+        );
         // We clear any data in the stale region
         // Note - Since find returns 0 if no stale data is found and we use > instead of >=
         //        this won't trigger if no stale data is found. Plus it won't trigger on minIndex == staleIndex
@@ -267,8 +280,10 @@ library History {
         }
 
         // We load at the final index of the search
-        (uint256 _pastBlock, uint256 _loadedData) =
-            _loadAndUnpack(data, minIndex);
+        (uint256 _pastBlock, uint256 _loadedData) = _loadAndUnpack(
+            data,
+            minIndex
+        );
         // This will only be hit if a user has misconfigured the stale index and then
         // tried to load father into the past than has been preserved
         require(_pastBlock <= blocknumber, "Search Failure");
@@ -277,7 +292,7 @@ library History {
 
     /// @notice Clears storage between two bounds in array
     /// @param oldMin The first index to set to zero
-    /// @param newMin The new minium filled index, ie clears to index < newMin
+    /// @param newMin The new minimum filled index, ie clears to index < newMin
     /// @param data The storage array pointer
     function _clear(
         uint256 oldMin,

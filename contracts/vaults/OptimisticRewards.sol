@@ -50,7 +50,7 @@ contract OptimisticRewards is MerkleRewards, Authorizable, IVotingVault {
     ///         (2) propose rewards for the next period. By combining into one call we just need one regular maintenance
     ///         call instead of two.
     /// @param newRoot The merkle root of the proposed new rewards
-    /// @dev NOTE - If called before a proposed root would take affect it will overwrite that root AND timestamp. Meaning
+    /// @dev NOTE - If called before a proposed root would take effect it will overwrite that root AND timestamp. Meaning
     ///             valid rewards may be delayed by a sloppy proposer sending a tx even a few minutes ahead of time.
     function proposeRewards(bytes32 newRoot) external {
         // First authorize the call
@@ -80,10 +80,12 @@ contract OptimisticRewards is MerkleRewards, Authorizable, IVotingVault {
         address user,
         uint256,
         bytes calldata extraData
-    ) external view override returns (uint256) {
+    ) external override view returns (uint256) {
         // Decode the extra data
-        (uint256 totalGrant, bytes32[] memory proof) =
-            abi.decode(extraData, (uint256, bytes32[]));
+        (uint256 totalGrant, bytes32[] memory proof) = abi.decode(
+            extraData,
+            (uint256, bytes32[])
+        );
         // Hash the user plus the total grant amount
         bytes32 leafHash = keccak256(abi.encodePacked(user, totalGrant));
 
