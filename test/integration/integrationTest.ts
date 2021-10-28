@@ -6,7 +6,7 @@ import { Runner } from "./helpers/runner";
 import { RunnerMods, RunnerInputs } from "./helpers/runnerInputs";
 
 const { provider } = waffle;
-describe.only("Integration", function () {
+describe("Integration", function () {
   let signers: SignerWithAddress[];
   let governance: Governance;
   before(async function () {
@@ -50,7 +50,7 @@ describe.only("Integration", function () {
     );
   });
 
-  it.only("update timelock wait time from GSC Core Voting", async function () {
+  it("update timelock wait time from GSC Core Voting", async function () {
     const input = await RunnerInputs.increaseWaitTime(governance, signers);
 
     // set voting contract to to the GSC core voting
