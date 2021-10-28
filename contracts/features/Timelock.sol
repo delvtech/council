@@ -107,10 +107,4 @@ contract Timelock is Authorizable, ReentrancyBlock {
         // set mapping to indicate call has been changed
         timeIncreases[callHash] = true;
     }
-
-    function doSomething() public {
-        timeIncreases[
-            0x1234567800000000000000000000000000000000000000000000000000000000
-        ] = true;
-    }
 }
