@@ -11,12 +11,7 @@ import { id } from "ethers/lib/utils";
 import { expect } from "chai";
 import { promises } from "fs";
 import { SimpleProxy } from "../../../typechain/SimpleProxy";
-import {
-  advanceTime,
-  advanceBlocks,
-  getBlock,
-  getTimestamp,
-} from "../../helpers/time";
+import { getBlock } from "../../helpers/time";
 import { Contract } from "ethers";
 import { Timelock } from "../../../typechain/Timelock";
 import { CoreVoting } from "../../../typechain";
@@ -63,6 +58,7 @@ export const RunnerInputs = {
       callHash,
     ]);
 
+    // proof for extraData for the rewards vault
     const proof = governance.merkle.getHexProof(
       await hashAccount({
         address: signers[0].address,
@@ -76,7 +72,7 @@ export const RunnerInputs = {
     );
 
     const checks = [
-      //check wait time
+      // check wait time was successfully updated
       async () => {
         const waittime = (await governance.timelock.waitTime()).toNumber();
         expect(waittime).to.equal(newWaitTime);

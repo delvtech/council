@@ -2,13 +2,11 @@ import { ethers, waffle } from "hardhat";
 import { Governance, loadGovernance } from "./helpers/deploy";
 import { createSnapshot, restoreSnapshot } from "../helpers/snapshots";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-//import { Runner } from "./helpers/runner";
 import { Runner } from "./helpers/runner";
-
 import { RunnerMods, RunnerInputs } from "./helpers/runnerInputs";
 
 const { provider } = waffle;
-describe.only("Integration", function () {
+describe("Integration", function () {
   let signers: SignerWithAddress[];
   let governance: Governance;
   before(async function () {
@@ -35,7 +33,6 @@ describe.only("Integration", function () {
     gscProposalSubmitInput.governance.coreVoting =
       gscProposalSubmitInput.governance.gscCoreVoting;
 
-    // input.votingVaults = [input.governance.gscVault]
     await Runner.runPath(
       Runner.cv_init_success.bind(Runner, gscProposalSubmitInput),
       Runner.cv_pass.bind(Runner, gscProposalSubmitInput)

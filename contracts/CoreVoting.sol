@@ -357,10 +357,4 @@ contract CoreVoting is Authorizable, ReentrancyBlock, ICoreVoting {
             )
         }
     }
-
-    function getStatus(bytes32 _hash) public view returns (address, uint256) {
-        Timelock timelock = Timelock(owner);
-        uint256 hashdata = timelock.callTimestamps(_hash);
-        return (owner, hashdata);
-    }
 }
