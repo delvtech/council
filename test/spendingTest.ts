@@ -96,13 +96,13 @@ describe("Spender Feature", function () {
 
   it("High spend spend up to the high limit", async () => {
     // try to spend up to the high limit
-    await spender.largeSpend(high.sub(1), signers[3].address);
+    await spender.highSpend(high.sub(1), signers[3].address);
     const balance = await token.balanceOf(signers[3].address);
     expect(balance).to.be.eq(high.sub(1));
   });
 
   it("High spend can't spend over the limit", async () => {
-    const tx = spender.largeSpend(high.add(1), signers[3].address);
+    const tx = spender.highSpend(high.add(1), signers[3].address);
     await expect(tx).to.be.revertedWith("Spend Limit Exceeded");
   });
 
@@ -143,7 +143,7 @@ describe("Spender Feature", function () {
   it("Doesn't allow non authorized to spend high", async () => {
     const tx = spender
       .connect(signers[1])
-      .largeSpend(low.sub(1), signers[3].address);
+      .highSpend(low.sub(1), signers[3].address);
     await expect(tx).to.be.revertedWith("Sender not Authorized");
   });
 

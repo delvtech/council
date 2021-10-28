@@ -326,9 +326,9 @@ library History {
 
     /// @notice This function sets our non standard bounds data field where a normal array
     ///         would have length
+    /// @param data the pointer to the storage array
     /// @param minIndex The minimum non stale index
     /// @param length The length of the storage array
-    /// @param data the pointer to the storage array
     function _setBounds(
         uint256[] storage data,
         uint256 minIndex,

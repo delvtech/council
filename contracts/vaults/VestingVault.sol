@@ -248,6 +248,7 @@ contract VestingVault is IVotingVault {
     /// @notice Changes the caller's token grant voting power delegation.
     /// @dev The total voting power is not guaranteed to go up because
     /// the unvested token multiplier can be updated at any time.
+    /// @param _to the address to delegate to
     function delegate(address _to) public {
         VestingVaultStorage.Grant storage grant = _grants()[msg.sender];
         // If the delegation has already happened we don't want the tx to send
@@ -297,6 +298,8 @@ contract VestingVault is IVotingVault {
     /// @dev The manager can withdraw tokens that are not being used by a grant.
     /// This function cannot be used to recover tokens that were sent to this contract
     /// by any means other than `deposit()`
+    /// @param _amount the amount to withdraw
+    /// @param _recipient the address to withdraw to
     function withdraw(uint256 _amount, address _recipient) public onlyManager {
         Storage.Uint256 storage unassigned = _unassigned();
         require(unassigned.data >= _amount, "Insufficient balance");
@@ -309,12 +312,15 @@ contract VestingVault is IVotingVault {
     /// @dev Voting power is only updated for this block onward.
     /// see `History` for more on how voting power is tracked and queried.
     /// Anybody can update a grant's voting power.
+    /// @param _who the address who's voting power this function updates
     function updateVotingPower(address _who) public {
         VestingVaultStorage.Grant storage grant = _grants()[_who];
         _syncVotingPower(_who, grant);
     }
 
     /// @notice Helper to update a delegatee's voting power.
+    /// @param _who the address who's voting power we need to sync
+    /// @param _grant the storage pointer to the grant of that user
     function _syncVotingPower(
         address _who,
         VestingVaultStorage.Grant storage _grant
@@ -348,6 +354,7 @@ contract VestingVault is IVotingVault {
     /// @notice Attempts to load the voting power of a user
     /// @param user The address we want to load the voting power of
     /// @param blockNumber the block number we want the user's voting power at
+    // @param calldata the extra calldata is unused in this contract
     /// @return the number of votes
     function queryVotePower(
         address user,
@@ -380,6 +387,9 @@ contract VestingVault is IVotingVault {
         return votingPower.find(user, blockNumber);
     }
 
+    /// @notice Calculates how much a grantee can withdraw
+    /// @param _grant the memory location of the loaded grant
+    /// @return the amount which can be withdrawn
     function _getWithdrawableAmount(VestingVaultStorage.Grant memory _grant)
         internal
         view

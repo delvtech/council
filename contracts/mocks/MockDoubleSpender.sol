@@ -19,7 +19,7 @@ contract MockDoubleSpender {
     }
 
     function doubleSpendLarge(Spender spender, uint256 amount) external {
-        spender.largeSpend(amount, msg.sender);
-        spender.largeSpend(amount, msg.sender);
+        spender.highSpend(amount, msg.sender);
+        spender.highSpend(amount, msg.sender);
     }
 }

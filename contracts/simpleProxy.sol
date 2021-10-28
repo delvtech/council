@@ -39,6 +39,7 @@ contract SimpleProxy {
 
     /// @notice Sets the address which can upgrade this proxy, only callable
     ///         by the current address which can upgrade this proxy.
+    /// @param _newGovernance The new governance address
     function resetProxyOwner(address _newGovernance) external {
         require(msg.sender == proxyGovernance, "unauthorized");
         proxyGovernance = _newGovernance;

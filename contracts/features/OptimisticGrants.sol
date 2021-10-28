@@ -42,7 +42,7 @@ contract OptimisticGrants {
     }
 
     /// @notice Withdraw from the solvency.
-    /// @param _amount The amount to add to the solvency.
+    /// @param _amount The amount to remove from the solvency.
     /// @param _recipient The address to send the withdrawn funds to.
     function withdraw(uint256 _amount, address _recipient)
         public
