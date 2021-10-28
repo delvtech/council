@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 pragma solidity ^0.8.0;
 
 import "../vaults/VestingVault.sol";
@@ -9,7 +11,7 @@ contract TestVestingVault is VestingVault {
         return _unassigned().data;
     }
 
-    function unvestedMultiplier() public view returns (uint256) {
+    function unvestedMultiplier() public pure returns (uint256) {
         return _unvestedMultiplier().data;
     }
 }

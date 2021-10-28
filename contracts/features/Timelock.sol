@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.3;
 
 import "../libraries/Authorizable.sol";
+import "../libraries/ReentrancyBlock.sol";
 
 // Allows a call to be executed after a waiting period, also allows a call to
 // be canceled within a waiting period.
 
-contract Timelock is Authorizable {
+contract Timelock is Authorizable, ReentrancyBlock {
     // Amount of time for the waiting period
     uint256 public waitTime;
 
@@ -32,13 +33,21 @@ contract Timelock is Authorizable {
     /// @notice Stores at the callHash the current block timestamp
     /// @param callHash The hash to map the timestamp to
     function registerCall(bytes32 callHash) external onlyOwner {
+        // We only want to register a call which is not already active
+        require(callTimestamps[callHash] == 0, "already registered");
+        // Set the timestamp for this call package to be the current time
         callTimestamps[callHash] = block.timestamp;
     }
 
     /// @notice Removes stored callHash data
     /// @param callHash Which entry of the mapping to remove
     function stopCall(bytes32 callHash) external onlyOwner {
+        // We only want this to actually execute when a real thing is deleted to
+        // prevent re-ordering attacks
+        require(callTimestamps[callHash] != 0, "No call to be removed");
+        // Do the actual deletion
         delete callTimestamps[callHash];
+        delete timeIncreases[callHash];
     }
 
     /// @notice Execute the call if past the waiting period
@@ -46,6 +55,7 @@ contract Timelock is Authorizable {
     /// @param calldatas Execution calldata for each target
     function execute(address[] memory targets, bytes[] calldata calldatas)
         public
+        nonReentrant
     {
         // hash provided data to access the mapping
         bytes32 callHash = keccak256(abi.encode(targets, calldatas));
@@ -56,15 +66,17 @@ contract Timelock is Authorizable {
             callTimestamps[callHash] + waitTime < block.timestamp,
             "not enough time has passed"
         );
+        // Gives a revert string to a revert that would occur anyway when the array is accessed
+        require(targets.length == calldatas.length, "invalid formatting");
         // execute a package of low level calls
         for (uint256 i = 0; i < targets.length; i++) {
-            (bool success, bytes memory returnData) =
-                targets[i].call(calldatas[i]);
+            (bool success, ) = targets[i].call(calldatas[i]);
             // revert if a single call fails
             require(success == true, "call reverted");
         }
         // restore state after successful execution
         delete callTimestamps[callHash];
+        delete timeIncreases[callHash];
     }
 
     /// @notice Allow a call from this contract to reset the wait time storage variable
@@ -86,6 +98,11 @@ contract Timelock is Authorizable {
             timeIncreases[callHash] == false,
             "value can only be changed once"
         );
+        require(
+            callTimestamps[callHash] != 0,
+            "must have been previously registered"
+        );
+        // Increases the time till the call can be executed
         callTimestamps[callHash] += timeValue;
         // set mapping to indicate call has been changed
         timeIncreases[callHash] = true;

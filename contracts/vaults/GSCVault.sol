@@ -12,7 +12,7 @@ import "../libraries/Authorizable.sol";
 // GSC votes to behave differently than others. Namely, anyone who is a member at any point
 // in the voting period can vote.
 
-contract GSCVault is Authorizable {
+contract GSCVault is Authorizable, IVotingVault {
     // Tracks which people are in the GSC, which vaults they use and when they became members
     mapping(address => Member) public members;
     // The core voting contract with approved voting vaults
@@ -20,7 +20,7 @@ contract GSCVault is Authorizable {
     // The amount of votes needed to be on the GSC
     uint256 public votingPowerBound;
     // The duration during which a fresh gsc member cannot vote.
-    uint256 public idleDuration = 60 * 60 * 24 * 4;
+    uint256 public idleDuration = 4 days;
 
     // Event to help tracking members
     event MembershipProved(address indexed who, uint256 when);
@@ -62,6 +62,10 @@ contract GSCVault is Authorizable {
         // We loop through the voting vaults to check they are authorized
         // We check all up front to prevent any reentrancy or weird side effects
         for (uint256 i = 0; i < votingVaults.length; i++) {
+            // No repeated vaults in the list
+            for (uint256 j = i + 1; j < votingVaults.length; j++) {
+                require(votingVaults[i] != votingVaults[j], "duplicate vault");
+            }
             // Call the mapping the core voting contract to check that
             // the provided address is in fact approved.
             // Note - Post Berlin hardfork this repeated access is quite cheap.
@@ -89,10 +93,7 @@ contract GSCVault is Authorizable {
         // if the caller has already provedMembership, update their votingPower without
         // resetting their idle duration.
         if (members[msg.sender].joined != 0) {
-            members[msg.sender] = Member(
-                votingVaults,
-                members[msg.sender].joined
-            );
+            members[msg.sender].vaults = votingVaults;
         } else {
             members[msg.sender] = Member(votingVaults, block.timestamp);
         }
@@ -145,7 +146,7 @@ contract GSCVault is Authorizable {
         address who,
         uint256,
         bytes calldata
-    ) public view returns (uint256) {
+    ) public view override returns (uint256) {
         // If the address queried is the owner they get a huge number of votes
         // This allows the primary governance timelock to take any action the GSC
         // can make or block any action the GSC can make. But takes as many votes as

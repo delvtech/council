@@ -24,7 +24,7 @@ contract OptimisticRewards is MerkleRewards, Authorizable, IVotingVault {
     // The address with the power to propose new roots.
     address public proposer;
     // Defaults to one week
-    uint256 public challengePeriod = 60 * 60 * 24 * 7;
+    uint256 public challengePeriod = 7 days;
 
     /// @notice Constructs this contract and sets state variables
     /// @param _governance The address which owns this contract and can reset other vars
@@ -80,7 +80,7 @@ contract OptimisticRewards is MerkleRewards, Authorizable, IVotingVault {
         address user,
         uint256,
         bytes calldata extraData
-    ) external override returns (uint256) {
+    ) external view override returns (uint256) {
         // Decode the extra data
         (uint256 totalGrant, bytes32[] memory proof) =
             abi.decode(extraData, (uint256, bytes32[]));

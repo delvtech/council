@@ -27,16 +27,23 @@ contract VestingVault is IVotingVault {
 
     event VoteChange(address indexed to, address indexed from, int256 amount);
 
+    /// @notice Constructs the contract.
+    /// @param _token The erc20 token to grant.
+    /// @param _stale Stale block used for voting power calculations.
     constructor(IERC20 _token, uint256 _stale) {
         token = _token;
         staleBlockLag = _stale;
     }
 
-    function initialize(address _manager, address _timelock) public {
+    /// @notice initialization function to set initial variables.
+    /// @dev Can only be called once after deployment.
+    /// @param manager_ The vault manager can add and remove grants.
+    /// @param timelock_ The timelock address can change the unvested multiplier.
+    function initialize(address manager_, address timelock_) public {
         require(Storage.uint256Ptr("initialized").data == 0, "initialized");
         Storage.set(Storage.uint256Ptr("initialized"), 1);
-        Storage.set(Storage.addressPtr("manager"), _manager);
-        Storage.set(Storage.addressPtr("timelock"), _timelock);
+        Storage.set(Storage.addressPtr("manager"), manager_);
+        Storage.set(Storage.addressPtr("timelock"), timelock_);
         Storage.set(Storage.uint256Ptr("unvestedMultiplier"), 100);
     }
 
@@ -115,9 +122,10 @@ contract VestingVault is IVotingVault {
     /// @notice Adds a new grant.
     /// @dev Manager can set who the voting power will be delegated to initially.
     /// This potentially avoids the need for a delegation transaction by the grant recipient.
-    /// There is currently no block number sanity check. The cliff can be higher than the expiration.
     /// @param _who The Grant recipient.
     /// @param _amount The total grant value.
+    /// @param _startTime Optionally set a non standard start time. If set to zero then the start time
+    ///                   will be made the block this is executed in.
     /// @param _expiration timestamp when the grant ends (all tokens count as unlocked).
     /// @param _cliff Timestamp when the cliff ends. No tokens are unlocked until this
     /// timestamp is reached.
@@ -126,12 +134,20 @@ contract VestingVault is IVotingVault {
     function addGrantAndDelegate(
         address _who,
         uint128 _amount,
+        uint128 _startTime,
         uint128 _expiration,
         uint128 _cliff,
         address _delegatee
     ) public onlyManager {
         // Consistency check
-        require(_cliff <= _expiration, "Invalid configuration");
+        require(
+            _cliff <= _expiration && _startTime <= _expiration,
+            "Invalid configuration"
+        );
+        // If no custom start time is needed we use this block.
+        if (_startTime == 0) {
+            _startTime = uint128(block.number);
+        }
 
         Storage.Uint256 storage unassigned = _unassigned();
         Storage.Uint256 memory unvestedMultiplier = _unvestedMultiplier();
@@ -145,7 +161,7 @@ contract VestingVault is IVotingVault {
         require(grant.allocation == 0, "Has Grant");
 
         // load the delegate. Defaults to the grant owner
-        address _delegatee = _delegatee == address(0) ? _who : _delegatee;
+        _delegatee = _delegatee == address(0) ? _who : _delegatee;
 
         // calculate the voting power. Assumes all voting power is initially locked.
         // Come back to this assumption.
@@ -156,7 +172,7 @@ contract VestingVault is IVotingVault {
         _grants()[_who] = VestingVaultStorage.Grant(
             _amount,
             0,
-            uint128(block.number),
+            _startTime,
             _expiration,
             _cliff,
             newVotingPower,
@@ -171,7 +187,7 @@ contract VestingVault is IVotingVault {
         uint256 delegateeVotes = votingPower.loadTop(grant.delegatee);
         votingPower.push(grant.delegatee, delegateeVotes + newVotingPower);
 
-        emit VoteChange(grant.delegatee, _who, int256(int128(newVotingPower)));
+        emit VoteChange(grant.delegatee, _who, int256(uint256(newVotingPower)));
     }
 
     /// @notice Removes a grant.
@@ -201,14 +217,15 @@ contract VestingVault is IVotingVault {
             delegateeVotes - grant.latestVotingPower
         );
 
-        // delete the grant
-        delete _grants()[_who];
-
+        // Emit the vote change event
         emit VoteChange(
             grant.delegatee,
             _who,
-            -1 * int256(int128(grant.latestVotingPower))
+            -1 * int256(uint256(grant.latestVotingPower))
         );
+
+        // delete the grant
+        delete _grants()[_who];
     }
 
     /// @notice Claim all withdrawable value from a grant.
@@ -248,7 +265,7 @@ contract VestingVault is IVotingVault {
         emit VoteChange(
             grant.delegatee,
             msg.sender,
-            -1 * int256(int128(grant.latestVotingPower))
+            -1 * int256(uint256(grant.latestVotingPower))
         );
 
         // Note - It is important that this is loaded here and not before the previous state change because if
@@ -309,7 +326,7 @@ contract VestingVault is IVotingVault {
         uint256 newVotingPower = _currentVotingPower(_grant);
         // get the change in voting power. Negative if the voting power is reduced
         int256 change =
-            int256(newVotingPower) - int256(int128(_grant.latestVotingPower));
+            int256(newVotingPower) - int256(uint256(_grant.latestVotingPower));
         // do nothing if there is no change
         if (change == 0) return;
         if (change > 0) {
@@ -368,7 +385,7 @@ contract VestingVault is IVotingVault {
         view
         returns (uint256)
     {
-        if (block.number < _grant.cliff) {
+        if (block.number < _grant.cliff || block.number < _grant.created) {
             return 0;
         }
         if (block.number >= _grant.expiration) {
@@ -417,29 +434,29 @@ contract VestingVault is IVotingVault {
 
     /// @notice timelock-only timelock update function.
     /// @dev Allows the timelock to update the timelock address.
-    /// @param _timelock The new timelock.
-    function setTimelock(address _timelock) public onlyTimelock {
-        Storage.set(Storage.addressPtr("timelock"), _timelock);
+    /// @param timelock_ The new timelock.
+    function setTimelock(address timelock_) public onlyTimelock {
+        Storage.set(Storage.addressPtr("timelock"), timelock_);
     }
 
     /// @notice timelock-only manager update function.
     /// @dev Allows the timelock to update the manager address.
-    /// @param _manager The new manager.
-    function setManager(address _manager) public onlyTimelock {
-        Storage.set(Storage.addressPtr("manager"), _manager);
+    /// @param manager_ The new manager.
+    function setManager(address manager_) public onlyTimelock {
+        Storage.set(Storage.addressPtr("manager"), manager_);
     }
 
     /// @notice A function to access the storage of the timelock address
     /// @dev The timelock can access all functions with the onlyTimelock modifier.
     /// @return The timelock address.
-    function timelock() public view returns (address) {
+    function timelock() public pure returns (address) {
         return _timelock().data;
     }
 
     /// @notice A function to access the storage of the manager address.
     /// @dev The manager can access all functions with the olyManager modifier.
     /// @return The manager address.
-    function manager() public view returns (address) {
+    function manager() public pure returns (address) {
         return _manager().data;
     }
 }

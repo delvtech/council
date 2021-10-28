@@ -76,7 +76,7 @@ library History {
     ) internal {
         // Check preconditions
         // OoB = Out of Bounds, short for contract bytecode size reduction
-        require(data < uint256(1) << 192, "OoB");
+        require(data <= type(uint192).max, "OoB");
         // Get the storage this is referencing
         mapping(address => uint256[]) storage storageMapping =
             _getMapping(wrapper.cachedPointer);
@@ -220,6 +220,11 @@ library History {
         uint256 startingMinIndex,
         uint256 length
     ) private view returns (uint256, uint256) {
+        // We explicitly revert on the reading of memory which is uninitialized
+        require(length != 0, "uninitialized");
+        // Do some correctness checks
+        require(staleBlock <= blocknumber);
+        require(startingMinIndex < length);
         // Load the bounds of our binary search
         uint256 maxIndex = length - 1;
         uint256 minIndex = startingMinIndex;
@@ -235,7 +240,7 @@ library History {
         while (minIndex != maxIndex) {
             // We use the ceil instead of the floor because this guarantees that
             // we pick the highest blocknumber less than or equal the requested one
-            uint256 mid = maxIndex + minIndex - (minIndex + maxIndex) / 2;
+            uint256 mid = (minIndex + maxIndex + 1) / 2;
             // Load and unpack the data in the midpoint index
             (uint256 pastBlock, uint256 loadedData) = _loadAndUnpack(data, mid);
 
@@ -279,6 +284,8 @@ library History {
         uint256 newMin,
         uint256[] storage data
     ) private {
+        // Correctness checks on this call
+        require(oldMin <= newMin);
         // This function is private and trusted and should be only called by functions which ensure
         // that oldMin < newMin < length
         assembly {
@@ -331,6 +338,9 @@ library History {
         uint256 minIndex,
         uint256 length
     ) private {
+        // Correctness check
+        require(minIndex < length);
+
         assembly {
             // Ensure data cleanliness
             let clearedLength := and(

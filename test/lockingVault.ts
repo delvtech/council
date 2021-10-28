@@ -189,8 +189,9 @@ describe("Locking Vault", function () {
     let votingPower = await vault.queryVotePowerView(signers[0].address, block);
     expect(votingPower).to.be.eq(one.div(2));
     // The call to this query voting power method will fail on a length 0 array
-    await expect(vault.queryVotePowerView(signers[1].address, block)).to.be
-      .reverted;
+    await expect(
+      vault.queryVotePowerView(signers[1].address, block)
+    ).to.be.revertedWith("uninitialized");
     votingPower = await vault.queryVotePowerView(signers[2].address, block);
     expect(votingPower).to.be.eq(one.mul(3));
   });
@@ -232,8 +233,9 @@ describe("Locking Vault", function () {
       await vault.queryVotePower(signers[0].address, block, "0x")
     ).wait();
     // The call to this query voting power method will fail on a length 0 array
-    await expect(vault.queryVotePowerView(signers[1].address, block)).to.be
-      .reverted;
+    await expect(
+      vault.queryVotePowerView(signers[1].address, block)
+    ).to.be.revertedWith("uninitialized");
     votingPower = await vault.queryVotePowerView(signers[2].address, block);
     expect(votingPower).to.be.eq(one.mul(2).add(one.div(2)));
   });

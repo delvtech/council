@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.3;
 
 import "./interfaces/IVotingVault.sol";
 import "./libraries/Authorizable.sol";
+import "./libraries/ReentrancyBlock.sol";
+import "./interfaces/ICoreVoting.sol";
 
-contract CoreVoting is Authorizable {
+contract CoreVoting is Authorizable, ReentrancyBlock, ICoreVoting {
     // if a function selector does not have a set quorum we use this default quorum
     uint256 public baseQuorum;
 
@@ -50,7 +52,7 @@ contract CoreVoting is Authorizable {
     }
 
     // stores approved voting vaults
-    mapping(address => bool) public approvedVaults;
+    mapping(address => bool) public override approvedVaults;
 
     // proposal storage with the proposalID as key
     mapping(uint256 => Proposal) public proposals;
@@ -74,6 +76,8 @@ contract CoreVoting is Authorizable {
         uint128 quorum;
         // [yes, no, maybe] voting power
         uint128[3] votingPower;
+        // Timestamp after which if the call has not been executed it cannot be executed
+        uint128 lastCall;
     }
 
     struct Vote {
@@ -91,6 +95,8 @@ contract CoreVoting is Authorizable {
     );
 
     event ProposalExecuted(uint256 proposalId);
+
+    event Voted(address indexed voter, uint256 indexed proposalId, Vote vote);
 
     /// @notice constructor
     /// @param _timelock Timelock contract.
@@ -110,7 +116,7 @@ contract CoreVoting is Authorizable {
         for (uint256 i = 0; i < votingVaults.length; i++) {
             approvedVaults[votingVaults[i]] = true;
         }
-        owner = address(_timelock);
+        setOwner(address(_timelock));
         _authorize(_gsc);
     }
 
@@ -120,12 +126,15 @@ contract CoreVoting is Authorizable {
     /// @param extraVaultData an encoded list of extra data to provide to vaults
     /// @param targets list of target addresses the timelock contract will interact with.
     /// @param calldatas execution calldata for each target.
+    /// @param lastCall timestamp after which this cannot be executed, note should be
+    ///                 more than the voting time period
     /// @param ballot vote direction (yes, no, maybe)
     function proposal(
         address[] calldata votingVaults,
         bytes[] calldata extraVaultData,
         address[] calldata targets,
         bytes[] calldata calldatas,
+        uint256 lastCall,
         Ballot ballot
     ) external {
         require(targets.length == calldatas.length, "array length mismatch");
@@ -149,13 +158,20 @@ contract CoreVoting is Authorizable {
             }
         }
 
+        // We check that the expiration is possibly valid
+        require(
+            lastCall > block.number + lockDuration + extraVoteTime,
+            "expires before voting ends"
+        );
+
         proposals[proposalCount] = Proposal(
             proposalHash,
             uint128(block.number),
             uint128(block.number + lockDuration),
             uint128(block.number + lockDuration + extraVoteTime),
             uint128(quorum),
-            proposals[proposalCount].votingPower
+            proposals[proposalCount].votingPower,
+            uint128(lastCall)
         );
 
         uint256 votingPower =
@@ -227,6 +243,10 @@ contract CoreVoting is Authorizable {
         _votes[msg.sender][proposalId] = Vote(votingPower, ballot);
 
         proposals[proposalId].votingPower[uint256(ballot)] += votingPower;
+
+        // Emit an event to track this info
+        emit Voted(msg.sender, proposalId, _votes[msg.sender][proposalId]);
+
         return votingPower;
     }
 
@@ -238,10 +258,16 @@ contract CoreVoting is Authorizable {
         uint256 proposalId,
         address[] memory targets,
         bytes[] memory calldatas
-    ) external {
+    ) external nonReentrant {
+        // We have to execute after min voting period
         require(block.number >= proposals[proposalId].unlock, "not unlocked");
         // If executed the proposal will be deleted and this will be zero
         require(proposals[proposalId].unlock != 0, "Previously executed");
+        // We cannot execute if the proposal has expired
+        require(
+            block.number < proposals[proposalId].lastCall,
+            "past last call timestamp"
+        );
 
         // ensure the data matches the hash
         require(
@@ -261,14 +287,10 @@ contract CoreVoting is Authorizable {
         require(passesQuorum && majorityInFavor, "Cannot execute");
 
         // Execute a package of low level calls
-        // SECURITY - WILL NOT REVERT IF A SINGLE CALL FAILS, PROPOSALS MUST BE CONSTRUCTED
-        //            WITH THIS IN MIND
+        // NOTE - All of them must succeed for the package to succeed.
         for (uint256 i = 0; i < targets.length; i++) {
-            //targets[i].call(calldatas[i]);
-            (bool success, bytes memory returnData) =
-                targets[i].call(calldatas[i]);
-            // revert if a single call fails
-            require(success == true, "call reverted");
+            (bool success, ) = targets[i].call(calldatas[i]);
+            require(success, "Call failed");
         }
         // Notification of proposal execution
         emit ProposalExecuted(proposalId);

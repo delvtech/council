@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.3;
-import "./Storage.sol";
 
 // Copy of `Storage` with modified scope to match the VestingVault requirements
 // This library allows for secure storage pointers across proxy implementations
