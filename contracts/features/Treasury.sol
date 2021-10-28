@@ -1,9 +1,3 @@
-// This contract is currently a scaffold, meaning it is unimplemented and
-// just designed to show the shape of future code. The naming and other
-// conventions are 'soft' and more of suggestions that the implementer
-// has full ability to change. Changes which break interface compatibility though
-// should be double checked with the rest of the team.
-
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.3;
 

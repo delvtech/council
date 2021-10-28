@@ -1,6 +1,3 @@
-## :warning:WARNING:warning:
-The Council governance codebase is currently being audited and should **not** be deployed. The project is currently in the early stages of being open-sourced and should therefore not be publicized or linked to externally. It is important to note that this codebase is not covered by the [formal Element bug bounty program](https://immunefi.com/bounty/elementfinance/). However, bug reports are welcome though may not receive bounties. 
-
 # Council
 
 [![Build Status](https://github.com/element-fi/council/workflows/Tests/badge.svg)](https://github.com/element-fi/council/actions)
