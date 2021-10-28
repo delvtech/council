@@ -144,7 +144,7 @@ describe("CoreVoting", function () {
 
       const proposal = await coreVoting.getProposalData(0);
 
-      expect(proposal[1]).to.be.eq(block + 1);
+      expect(proposal[1]).to.be.eq(block);
       expect(proposal[2]).to.be.eq(block + 1);
       expect(proposal[3]).to.be.eq(0);
       expect(proposal[4][0]).to.be.eq(baseVotingPower * 3);
@@ -242,7 +242,7 @@ describe("CoreVoting", function () {
 
       const proposal = await coreVoting.getProposalData(0);
 
-      expect(proposal[1]).to.be.eq(block + 1);
+      expect(proposal[1]).to.be.eq(block);
       expect(proposal[2]).to.be.eq(block + 1);
       expect(proposal[3]).to.be.eq(baseVotingPower);
       expect(proposal[4][0]).to.be.eq(baseVotingPower * 3);
@@ -304,7 +304,7 @@ describe("CoreVoting", function () {
 
       const proposal = await coreVoting.getProposalData(0);
 
-      expect(proposal[1]).to.be.eq(block);
+      expect(proposal[1]).to.be.eq(block - 1);
       expect(proposal[2]).to.be.eq(block);
       expect(proposal[3]).to.be.eq(0);
       expect(proposal[4][0]).to.be.eq(baseVotingPower * 3);
@@ -325,7 +325,7 @@ describe("CoreVoting", function () {
 
       const proposal = await coreVoting.getProposalData(0);
 
-      expect(proposal[1]).to.be.eq(block);
+      expect(proposal[1]).to.be.eq(block - 1);
       expect(proposal[2]).to.be.eq(block);
       expect(proposal[3]).to.be.eq(0);
       expect(proposal[4][0]).to.be.eq(baseVotingPower * 6);
@@ -342,7 +342,7 @@ describe("CoreVoting", function () {
 
       const proposal = await coreVoting.getProposalData(0);
 
-      expect(proposal[1]).to.be.eq(block);
+      expect(proposal[1]).to.be.eq(block - 1);
       expect(proposal[2]).to.be.eq(block);
       expect(proposal[3]).to.be.eq(0);
       expect(proposal[4][0]).to.be.eq(baseVotingPower);

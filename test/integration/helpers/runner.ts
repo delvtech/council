@@ -26,9 +26,10 @@ export const Runner = {
         .connect(input.signers[0])
         .proposal(
           input.votingVaults,
-          input.cvExtraData,
-          input.cvTargets,
-          input.cvCalldatas,
+          input.coreVotingExtraData,
+          input.coreVotingTargets,
+          input.coreVotingCalldatas,
+          1000000000000,
           input.ballot
         );
       const proposals = await input.governance.coreVoting.proposals(id);
@@ -72,7 +73,7 @@ export const Runner = {
         await input.governance.coreVoting.connect(input.signers[i]).vote(
           //slice to create copy
           input.votingVaults,
-          input.cvExtraData.slice(0, 2).concat(extraData),
+          input.coreVotingExtraData.slice(0, 2).concat(extraData),
           input.proposalID,
           0
         );
@@ -84,7 +85,11 @@ export const Runner = {
 
       await input.governance.coreVoting
         .connect(input.signers[0])
-        .execute(input.proposalID, input.cvTargets, input.cvCalldatas);
+        .execute(
+          input.proposalID,
+          input.coreVotingTargets,
+          input.coreVotingCalldatas
+        );
       proposal = await input.governance.coreVoting.proposals(input.proposalID);
       expect(proposal[input.proposalID]).to.equal(ethers.constants.HashZero);
       console.log(`success: cv_pass - "${input.description}"`);
@@ -103,7 +108,7 @@ export const Runner = {
     return new Promise(async function (resolve) {
       const tx = input.governance.timelock
         .connect(input.signers[0])
-        .execute(input.tLTargets, input.tlCalldatas);
+        .execute(input.timelockTargets, input.timelockCalldatas);
       await expect(tx).to.be.revertedWith("not enough time has passed");
       console.log(`success: tl_fail_premature - "${input.description}"`);
       resolve(null);
@@ -123,7 +128,7 @@ export const Runner = {
       const timeNow = await getTimestamp(provider);
       const waittime = (await input.governance.timelock.waitTime()).toNumber();
       let calltimestamp = (
-        await input.governance.timelock.callTimestamps(input.tlCallHash)
+        await input.governance.timelock.callTimestamps(input.timelockCallHash)
       ).toNumber();
 
       // advance time only if needed to make the proposal executable
@@ -132,10 +137,10 @@ export const Runner = {
       }
       await input.governance.timelock
         .connect(input.signers[0])
-        .execute(input.tLTargets, input.tlCalldatas);
+        .execute(input.timelockTargets, input.timelockCalldatas);
 
       calltimestamp = (
-        await input.governance.timelock.callTimestamps(input.tlCallHash)
+        await input.governance.timelock.callTimestamps(input.timelockCallHash)
       ).toNumber();
       expect(calltimestamp).to.equal(0);
       console.log(`success: tl_pass - "${input.description}"`);
@@ -156,7 +161,7 @@ export const Runner = {
       const timeNow = await getTimestamp(provider);
       const waittime = (await input.governance.timelock.waitTime()).toNumber();
       let calltimestamp = (
-        await input.governance.timelock.callTimestamps(input.tlCallHash)
+        await input.governance.timelock.callTimestamps(input.timelockCallHash)
       ).toNumber();
 
       // advance time only if needed to make the proposal executable
@@ -165,9 +170,9 @@ export const Runner = {
       }
       await input.governance.timelock
         .connect(input.signers[0])
-        .execute(input.tLTargets, input.tlCalldatas);
+        .execute(input.timelockTargets, input.timelockCalldatas);
       calltimestamp = (
-        await input.governance.timelock.callTimestamps(input.tlCallHash)
+        await input.governance.timelock.callTimestamps(input.timelockCallHash)
       ).toNumber();
       expect(calltimestamp).to.equal(0);
       console.log(`success: tl_pass - "${input.description}"`);

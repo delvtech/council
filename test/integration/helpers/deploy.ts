@@ -216,6 +216,7 @@ export async function loadGovernance(signers: SignerWithAddress[]) {
       .addGrantAndDelegate(
         signers[i].address,
         one,
+        now,
         now + 31000000,
         1000000,
         signers[i].address

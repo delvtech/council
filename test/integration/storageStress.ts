@@ -19,18 +19,18 @@ describe("Storage stress test", function () {
     signers: SignerWithAddress[],
     governance: Governance
   ) {
-    const lvupgrade = await RunnerMods.upgradeLockingVault(
+    const lockingVaultUpgrade = await RunnerMods.upgradeLockingVault(
       governance,
       signers,
       input
     );
     const upgradeLocking = Runner.runPath.bind(
       Runner,
-      Runner.cv_init_success.bind(Runner, lvupgrade),
-      Runner.cv_pass.bind(Runner, lvupgrade),
-      Runner.tl_fail_premature.bind(Runner, lvupgrade),
-      Runner.tl_pass.bind(Runner, lvupgrade),
-      Runner.run_checks.bind(Runner, lvupgrade)
+      Runner.cv_init_success.bind(Runner, lockingVaultUpgrade),
+      Runner.cv_pass.bind(Runner, lockingVaultUpgrade),
+      Runner.tl_fail_premature.bind(Runner, lockingVaultUpgrade),
+      Runner.tl_pass.bind(Runner, lockingVaultUpgrade),
+      Runner.run_checks.bind(Runner, lockingVaultUpgrade)
     );
     await Runner.runPath(upgradeLocking);
   }

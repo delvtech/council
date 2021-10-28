@@ -139,6 +139,7 @@ contract CoreVoting is Authorizable, ReentrancyBlock, ICoreVoting {
     ) external {
         require(targets.length == calldatas.length, "array length mismatch");
         require(targets.length != 0, "empty proposal");
+
         // the hash is only used to verify the proposal data, proposals are tracked by ID
         // so there is no need to hash with proposalCount nonce.
         bytes32 proposalHash = keccak256(abi.encode(targets, calldatas));
@@ -166,7 +167,8 @@ contract CoreVoting is Authorizable, ReentrancyBlock, ICoreVoting {
 
         proposals[proposalCount] = Proposal(
             proposalHash,
-            uint128(block.number),
+            // Note we use blocknumber - 1 here as a flash loan mitigation.
+            uint128(block.number - 1),
             uint128(block.number + lockDuration),
             uint128(block.number + lockDuration + extraVoteTime),
             uint128(quorum),

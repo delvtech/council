@@ -6,7 +6,7 @@ import { Runner } from "./helpers/runner";
 import { RunnerMods, RunnerInputs } from "./helpers/runnerInputs";
 
 const { provider } = waffle;
-describe("Integration", function () {
+describe.only("Integration", function () {
   let signers: SignerWithAddress[];
   let governance: Governance;
   before(async function () {
@@ -28,7 +28,7 @@ describe("Integration", function () {
       signers
     );
 
-    // sest voting contract to to the GSC core voting
+    // set voting contract to to the GSC core voting
     const { coreVoting } = gscProposalSubmitInput.governance;
     gscProposalSubmitInput.governance.coreVoting =
       gscProposalSubmitInput.governance.gscCoreVoting;
@@ -50,10 +50,10 @@ describe("Integration", function () {
     );
   });
 
-  it("update timelock wait time from GSC Core Voting", async function () {
+  it.only("update timelock wait time from GSC Core Voting", async function () {
     const input = await RunnerInputs.increaseWaitTime(governance, signers);
 
-    // sest voting contract to to the GSC core voting
+    // set voting contract to to the GSC core voting
     const { coreVoting } = input.governance;
     input.governance.coreVoting = input.governance.gscCoreVoting;
 
@@ -67,30 +67,30 @@ describe("Integration", function () {
   });
   it("Upgrades vaults and core", async function () {
     let input = await RunnerInputs.updateWaitTimeInput(governance, signers);
-    const vvupgrade = await RunnerMods.upgradeVestingVault(
+    const vestingVaultUpgrade = await RunnerMods.upgradeVestingVault(
       governance,
       signers,
       input
     );
     // runs the vesting vault upgrade
     await Runner.runPath(
-      Runner.cv_init_success.bind(Runner, vvupgrade),
-      Runner.cv_pass.bind(Runner, vvupgrade),
-      Runner.tl_pass.bind(Runner, vvupgrade),
-      Runner.run_checks.bind(Runner, vvupgrade)
+      Runner.cv_init_success.bind(Runner, vestingVaultUpgrade),
+      Runner.cv_pass.bind(Runner, vestingVaultUpgrade),
+      Runner.tl_pass.bind(Runner, vestingVaultUpgrade),
+      Runner.run_checks.bind(Runner, vestingVaultUpgrade)
     );
 
-    const lvupgrade = await RunnerMods.upgradeLockingVault(
+    const lockingVaultUpgrade = await RunnerMods.upgradeLockingVault(
       governance,
       signers,
       input
     );
     // runs the locking vault upgrade
     await Runner.runPath(
-      Runner.cv_init_success.bind(Runner, lvupgrade),
-      Runner.cv_pass.bind(Runner, lvupgrade),
-      Runner.tl_pass.bind(Runner, lvupgrade),
-      Runner.run_checks.bind(Runner, lvupgrade)
+      Runner.cv_init_success.bind(Runner, lockingVaultUpgrade),
+      Runner.cv_pass.bind(Runner, lockingVaultUpgrade),
+      Runner.tl_pass.bind(Runner, lockingVaultUpgrade),
+      Runner.run_checks.bind(Runner, lockingVaultUpgrade)
     );
 
     const cvUpgrade = await RunnerMods.upgradeCoreVoting(
@@ -106,7 +106,7 @@ describe("Integration", function () {
     );
 
     // timelock upgrade passing the previous timelock address so it is not redeployed
-    // upgradeing the timelock is a little bit more involved given that it is a very central component.
+    // upgrading the timelock is a little bit more involved given that it is a very central component.
     // The upgradeTimelock Runner Mod implements logic to update ownership from both the GSC and coreVoting vaults
     // using separate calls.
 

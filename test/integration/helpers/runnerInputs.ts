@@ -1,32 +1,27 @@
 import { createCallHash } from "../../timelockTest";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { Governance, loadGovernance } from "./deploy";
+import { Governance } from "./deploy";
 import { ethers, waffle } from "hardhat";
 import coreVotingData from "../../../artifacts/contracts/CoreVoting.sol/CoreVoting.json";
 import gscVaultData from "../../../artifacts/contracts/vaults/GSCVault.sol/GSCVault.json";
 import timelockData from "../../../artifacts/contracts/features/Timelock.sol/Timelock.json";
 import proxyData from "../../../artifacts/contracts/simpleProxy.sol/SimpleProxy.json";
-import { Account, getMerkleTree, hashAccount } from "../../helpers/merkle";
-import { id } from "ethers/lib/utils";
+import { hashAccount } from "../../helpers/merkle";
 import { expect } from "chai";
-import { promises } from "fs";
-import { SimpleProxy } from "../../../typechain/SimpleProxy";
 import { getBlock } from "../../helpers/time";
-import { Contract } from "ethers";
 import { Timelock } from "../../../typechain/Timelock";
 import { CoreVoting } from "../../../typechain";
-import { inputFile } from "hardhat/internal/core/params/argumentTypes";
 
 export interface RunnerInput {
   governance: Governance; // holds governance core contracts
   signers: SignerWithAddress[]; // signers to use
   votingVaults: string[]; // voting vaults the coreVoting contract uses
-  cvExtraData: string[]; // extra data for the coreVoting contract
-  cvTargets: string[]; // targets for the CoreVoting contract
-  cvCalldatas: string[]; // calldatas for the CoreVoting contract
-  tlCallHash: string; // callhash for the timelock contract
-  tlCalldatas: string[]; // calldatas for the timelock contract
-  tLTargets: string[]; // targets for the timelock contract
+  coreVotingExtraData: string[]; // extra data for the coreVoting contract
+  coreVotingTargets: string[]; // targets for the CoreVoting contract
+  coreVotingCalldatas: string[]; // calldatas for the CoreVoting contract
+  timelockCallHash: string; // callhash for the timelock contract
+  timelockCalldatas: string[]; // calldatas for the timelock contract
+  timelockTargets: string[]; // targets for the timelock contract
   ballot: number; // vote direction
   proposalID: number; // holds the ID fo the proposal. Does not need to be set on input creation
   description: string; // description of the input
@@ -86,12 +81,12 @@ export const RunnerInputs = {
         governance.vestingVault.address,
         governance.rewards.address,
       ],
-      cvExtraData: ["0x00", "0x00", extraData],
-      cvTargets: [governance.timelock.address],
-      cvCalldatas: [calldataCv],
-      tlCallHash: callHash,
-      tlCalldatas: [calldataTl],
-      tLTargets: [governance.timelock.address],
+      coreVotingExtraData: ["0x00", "0x00", extraData],
+      coreVotingTargets: [governance.timelock.address],
+      coreVotingCalldatas: [calldataCv],
+      timelockCallHash: callHash,
+      timelockCalldatas: [calldataTl],
+      timelockTargets: [governance.timelock.address],
       ballot: 0,
       proposalID: 0,
       description: "update timelock wait time",
@@ -135,12 +130,12 @@ export const RunnerInputs = {
       governance: governance,
       signers: signers,
       votingVaults: [governance.gscVault.address],
-      cvExtraData: ["0x00"],
-      cvTargets: [governance.coreVoting.address],
-      cvCalldatas: [calldataPropose],
-      tlCallHash: callHash,
-      tlCalldatas: [calldataTl],
-      tLTargets: [governance.timelock.address],
+      coreVotingExtraData: ["0x00"],
+      coreVotingTargets: [governance.coreVoting.address],
+      coreVotingCalldatas: [calldataPropose],
+      timelockCallHash: callHash,
+      timelockCalldatas: [calldataTl],
+      timelockTargets: [governance.timelock.address],
       ballot: 0,
       proposalID: 1,
       description: "submit coreVoting proposal from gscCoreVoting",
@@ -199,12 +194,12 @@ export const RunnerInputs = {
         governance.vestingVault.address,
         governance.rewards.address,
       ],
-      cvExtraData: ["0x00", "0x00", extraData],
-      cvTargets: [governance.timelock.address],
-      cvCalldatas: [calldataCv],
-      tlCallHash: callHash,
-      tlCalldatas: [calldataTl],
-      tLTargets: [governance.gscVault.address],
+      coreVotingExtraData: ["0x00", "0x00", extraData],
+      coreVotingTargets: [governance.timelock.address],
+      coreVotingCalldatas: [calldataCv],
+      timelockCallHash: callHash,
+      timelockCalldatas: [calldataTl],
+      timelockTargets: [governance.gscVault.address],
       ballot: 0,
       proposalID: 2,
       description: "pass coreVoting proposal from gscCoreVoting",
@@ -238,12 +233,12 @@ export const RunnerInputs = {
       governance: governance,
       signers: signers,
       votingVaults: [governance.gscVault.address],
-      cvExtraData: ["0x00"],
-      cvTargets: [governance.timelock.address],
-      cvCalldatas: [calldataCv],
-      tlCallHash: callHash,
-      tlCalldatas: ["0x00"],
-      tLTargets: [ethers.constants.AddressZero],
+      coreVotingExtraData: ["0x00"],
+      coreVotingTargets: [governance.timelock.address],
+      coreVotingCalldatas: [calldataCv],
+      timelockCallHash: callHash,
+      timelockCalldatas: ["0x00"],
+      timelockTargets: [ethers.constants.AddressZero],
       ballot: 0,
       proposalID: 0,
       description: "increase timelock time value from GSC Core Voting",
@@ -315,12 +310,12 @@ export const RunnerMods = {
         governance.vestingVault.address,
         governance.rewards.address,
       ],
-      cvExtraData: inputs.cvExtraData,
-      cvTargets: [governance.timelock.address],
-      cvCalldatas: [calldataCv],
-      tlCallHash: callHash,
-      tlCalldatas: [calldataTl],
-      tLTargets: targets,
+      coreVotingExtraData: inputs.coreVotingExtraData,
+      coreVotingTargets: [governance.timelock.address],
+      coreVotingCalldatas: [calldataCv],
+      timelockCallHash: callHash,
+      timelockCalldatas: [calldataTl],
+      timelockTargets: targets,
       ballot: 0,
       proposalID: 0,
       description: "upgradeVestigVault",
@@ -388,12 +383,12 @@ export const RunnerMods = {
         governance.vestingVault.address,
         governance.rewards.address,
       ],
-      cvExtraData: inputs.cvExtraData,
-      cvTargets: [governance.timelock.address],
-      cvCalldatas: [calldataCv],
-      tlCallHash: callHash,
-      tlCalldatas: [calldataTl],
-      tLTargets: targets,
+      coreVotingExtraData: inputs.coreVotingExtraData,
+      coreVotingTargets: [governance.timelock.address],
+      coreVotingCalldatas: [calldataCv],
+      timelockCallHash: callHash,
+      timelockCalldatas: [calldataTl],
+      timelockTargets: targets,
       ballot: 0,
       proposalID: 0,
       description: "upgradeLockingVault",
@@ -443,12 +438,12 @@ export const RunnerMods = {
         governance.vestingVault.address,
         governance.rewards.address,
       ],
-      cvExtraData: inputs.cvExtraData,
-      cvTargets: [governance.timelock.address],
-      cvCalldatas: [calldataCv],
-      tlCallHash: "0x00",
-      tlCalldatas: ["0x00"],
-      tLTargets: [ethers.constants.AddressZero],
+      coreVotingExtraData: inputs.coreVotingExtraData,
+      coreVotingTargets: [governance.timelock.address],
+      coreVotingCalldatas: [calldataCv],
+      timelockCallHash: "0x00",
+      timelockCalldatas: ["0x00"],
+      timelockTargets: [ethers.constants.AddressZero],
       ballot: 0,
       proposalID: 0,
       description: "upgrade CoreVoting contract",
@@ -493,11 +488,14 @@ export const RunnerMods = {
       timelockValue.address,
     ]);
     // get the callhash
-    const tlCallHash = await createCallHash([calldataTl], [cvTarget.address]);
+    const timelockCallHash = await createCallHash(
+      [calldataTl],
+      [cvTarget.address]
+    );
 
     // CoreVoting should register the call with Timelock
     const calldataCv = tInterface.encodeFunctionData("registerCall", [
-      tlCallHash,
+      timelockCallHash,
     ]);
     const checks = [
       // successful if the new voting vault is the owner of the timelock
@@ -511,12 +509,12 @@ export const RunnerMods = {
       governance: governance,
       signers: signers,
       votingVaults: inputs.votingVaults,
-      cvExtraData: inputs.cvExtraData,
-      cvTargets: [governance.timelock.address],
-      cvCalldatas: [calldataCv],
-      tlCallHash,
-      tlCalldatas: [calldataTl],
-      tLTargets: [cvTarget.address],
+      coreVotingExtraData: inputs.coreVotingExtraData,
+      coreVotingTargets: [governance.timelock.address],
+      coreVotingCalldatas: [calldataCv],
+      timelockCallHash,
+      timelockCalldatas: [calldataTl],
+      timelockTargets: [cvTarget.address],
       ballot: 0,
       proposalID: 0,
       description: "upgrade Timelock contract",
