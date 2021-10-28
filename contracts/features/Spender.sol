@@ -29,7 +29,7 @@ contract Spender is Authorizable {
     /// @param _token the immutable token this contract has a balance of
     /// @param _smallSpendLimit The limit on how much spending a small spend proposal can do
     /// @param _mediumSpendLimit The limit on how much spending a medium spend proposal can do
-    /// @param _highSpendLimit The limit on how much spending a large spend proposal can do
+    /// @param _highSpendLimit The limit on how much spending a high spend proposal can do
     constructor(
         address _owner,
         address _spender,
@@ -68,10 +68,10 @@ contract Spender is Authorizable {
         _spend(amount, destination, mediumSpendLimit);
     }
 
-    /// @notice Spends up to the large spend limit
+    /// @notice Spends up to the high spend limit
     /// @param amount the amount to spend
     /// @param destination the destination to send the token to
-    function largeSpend(uint256 amount, address destination)
+    function highSpend(uint256 amount, address destination)
         external
         onlyAuthorized
     {
