@@ -19,7 +19,7 @@ contract Timelock is Authorizable, ReentrancyBlock {
     /// @notice Constructs this contract and sets state variables
     /// @param _waitTime amount of time for the waiting period
     /// @param _governance governance
-    /// @param _gsc governance steering comity contract.
+    /// @param _gsc governance steering committee contract.
     constructor(
         uint256 _waitTime,
         address _governance,

@@ -102,7 +102,7 @@ contract CoreVoting is Authorizable, ReentrancyBlock, ICoreVoting {
     /// @param _timelock Timelock contract.
     /// @param _baseQuorum Default quorum for all functions with no set quorum.
     /// @param _minProposalPower Minimum voting power needed to submit a proposal.
-    /// @param _gsc governance steering comity contract.
+    /// @param _gsc governance steering committee contract.
     /// @param votingVaults Initial voting vaults to approve.
     constructor(
         address _timelock,

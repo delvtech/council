@@ -50,7 +50,7 @@ contract OptimisticRewards is MerkleRewards, Authorizable, IVotingVault {
     ///         (2) propose rewards for the next period. By combining into one call we just need one regular maintenance
     ///         call instead of two.
     /// @param newRoot The merkle root of the proposed new rewards
-    /// @dev NOTE - If called before a proposed root would take affect it will overwrite that root AND timestamp. Meaning
+    /// @dev NOTE - If called before a proposed root would take effect it will overwrite that root AND timestamp. Meaning
     ///             valid rewards may be delayed by a sloppy proposer sending a tx even a few minutes ahead of time.
     function proposeRewards(bytes32 newRoot) external {
         // First authorize the call

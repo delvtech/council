@@ -71,7 +71,7 @@ contract VestingVault is IVotingVault {
     }
 
     /// @notice A function to access the storage of the manager address.
-    /// @dev The manager can access all functions with the olyManager modifier.
+    /// @dev The manager can access all functions with the onlyManager modifier.
     /// @return A struct containing the manager address.
     function _manager() internal pure returns (Storage.Address memory) {
         return Storage.addressPtr("manager");

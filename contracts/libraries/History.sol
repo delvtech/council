@@ -143,7 +143,7 @@ library History {
     }
 
     /// @notice Finds the data stored with the highest block number which is less than or equal to a provided
-    ///         blocknumber user.
+    ///         blocknumber.
     /// @param wrapper The memory struct which we want to search for historical data
     /// @param who The address which indexes the array to be searched
     /// @param blocknumber The blocknumber we want to load the historical data of
@@ -273,7 +273,7 @@ library History {
 
     /// @notice Clears storage between two bounds in array
     /// @param oldMin The first index to set to zero
-    /// @param newMin The new minium filled index, ie clears to index < newMin
+    /// @param newMin The new minimum filled index, ie clears to index < newMin
     /// @param data The storage array pointer
     function _clear(
         uint256 oldMin,
