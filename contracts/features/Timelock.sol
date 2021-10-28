@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/Authorizable.sol";
-import "hardhat/console.sol";
 
 // Allows a call to be executed after a waiting period, also allows a call to
 // be canceled within a waiting period.
@@ -90,5 +89,11 @@ contract Timelock is Authorizable {
         callTimestamps[callHash] += timeValue;
         // set mapping to indicate call has been changed
         timeIncreases[callHash] = true;
+    }
+
+    function doSomething() public {
+        timeIncreases[
+            0x1234567800000000000000000000000000000000000000000000000000000000
+        ] = true;
     }
 }

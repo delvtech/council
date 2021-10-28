@@ -174,6 +174,11 @@ export async function loadGovernance(signers: SignerWithAddress[]) {
     .changeVaultStatus(lockingVault.address, true);
   await coreVoting.connect(signers[0]).changeVaultStatus(rewards.address, true);
 
+  // add approved governance vault for the GSC core voting. Just the GSC vault in this case
+  await gscCoreVoting
+    .connect(signers[0])
+    .changeVaultStatus(gscVault.address, true);
+
   // deploy spender
   const spender = await spenderDeployer.deploy(
     timelock.address,
@@ -231,7 +236,7 @@ export async function loadGovernance(signers: SignerWithAddress[]) {
   for (const i in signers) {
     const powerGsc = await gscVault
       .connect(signers[i])
-      .queryVotingPower(signers[i].address, 1234, "0x00");
+      .queryVotePower(signers[i].address, 1234, "0x00");
     if (powerGsc.toNumber() != 1) {
       throw new Error("GSC member not added");
     }
@@ -257,7 +262,6 @@ export async function loadGovernance(signers: SignerWithAddress[]) {
   await timelock.connect(signers[0]).setOwner(coreVoting.address);
 
   // authorize gsc vault and set timelock address to the real timelock
-  await gscCoreVoting.connect(signers[0]).authorize(gscVault.address);
   await gscCoreVoting.connect(signers[0]).setOwner(timelock.address);
 
   return {

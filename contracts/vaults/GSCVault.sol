@@ -141,7 +141,7 @@ contract GSCVault is Authorizable {
     /// @return Returns the votes of the queried address
     /// @dev Because this function ignores the when variable it creates a unique voting system
     ///      and should not be plugged in with truly historic ones.
-    function queryVotingPower(
+    function queryVotePower(
         address who,
         uint256,
         bytes calldata

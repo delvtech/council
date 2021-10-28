@@ -3,8 +3,6 @@ pragma solidity ^0.8.0;
 
 import "./interfaces/IVotingVault.sol";
 import "./libraries/Authorizable.sol";
-import "hardhat/console.sol";
-import "./features/Timelock.sol";
 
 contract CoreVoting is Authorizable {
     // if a function selector does not have a set quorum we use this default quorum
@@ -12,7 +10,7 @@ contract CoreVoting is Authorizable {
 
     // Assumes avg block time of 13.3 seconds. May be longer or shorter due
     // to ice ages or short term changes in hash power.
-    uint256 public constant DAY_IN_BLOCKS = 50;
+    uint256 public constant DAY_IN_BLOCKS = 6496;
 
     // minimum time a proposal must be active for before executing
     // Default to 3 days, this avoids weekend surprise proposals
@@ -199,6 +197,7 @@ contract CoreVoting is Authorizable {
         Ballot ballot
     ) public returns (uint256) {
         // No votes after the vote period is over
+        require(proposals[proposalId].created != 0, "proposal does not exist");
         require(block.number <= proposals[proposalId].expiration, "Expired");
 
         uint128 votingPower;

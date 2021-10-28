@@ -13,8 +13,6 @@ import {
 import "module-alias/register";
 
 import { ethers, waffle } from "hardhat";
-import { Z_BLOCK } from "zlib";
-import { IVotingVault } from "../../../typechain";
 
 const { provider } = waffle;
 const one = ethers.utils.parseEther("1");
@@ -56,17 +54,21 @@ export const Runner = {
       const blockNow = await getBlock(provider);
 
       // vote to pass quorum
+      let extraData = "0x00";
       for (const i in input.signers) {
-        const proof = input.governance.merkle.getHexProof(
-          await hashAccount({
-            address: input.signers[i].address,
-            value: one,
-          })
-        );
-        const extraData = ethers.utils.defaultAbiCoder.encode(
-          ["uint256", "bytes32[]"],
-          [one, proof]
-        );
+        // if this is the GSC vault don't calculate extra data
+        if (input.votingVaults.length > 1) {
+          const proof = input.governance.merkle.getHexProof(
+            await hashAccount({
+              address: input.signers[i].address,
+              value: one,
+            })
+          );
+          extraData = ethers.utils.defaultAbiCoder.encode(
+            ["uint256", "bytes32[]"],
+            [one, proof]
+          );
+        }
         await input.governance.coreVoting.connect(input.signers[i]).vote(
           //slice to create copy
           input.votingVaults,
@@ -79,6 +81,7 @@ export const Runner = {
       if (blockNow < proposal.unlock.toNumber()) {
         await advanceBlocks(provider, proposal.unlock.toNumber() - blockNow);
       }
+
       await input.governance.coreVoting
         .connect(input.signers[0])
         .execute(input.proposalID, input.cvTargets, input.cvCalldatas);
@@ -108,7 +111,7 @@ export const Runner = {
   },
   /**
    * Executes a timelock call.
-   * @dev Validates execution bu checking if the call timestamp was deleted.
+   * @dev Validates execution by checking if the call timestamp was deleted.
    * This should also validate execution since timelock reverts on call() fail
    *
    * @param {RunnerInput} input Object
@@ -130,6 +133,7 @@ export const Runner = {
       await input.governance.timelock
         .connect(input.signers[0])
         .execute(input.tLTargets, input.tlCalldatas);
+
       calltimestamp = (
         await input.governance.timelock.callTimestamps(input.tlCallHash)
       ).toNumber();
