@@ -23,7 +23,6 @@ library History {
     // A struct which wraps a memory pointer to a string and the pointer to storage
     // derived from that name string by the storage library
     // WARNING - For security purposes never directly construct this object always use load
-    // TODO - Consider moving away from this caching model to reduce risk profile
     struct HistoricalBalances {
         string name;
         // Note - We use bytes32 to reduce how easy this is to manipulate in high level sol
@@ -229,9 +228,6 @@ library History {
         uint256 maxIndex = length - 1;
         uint256 minIndex = startingMinIndex;
         uint256 staleIndex = 0;
-
-        // TODO - consider an optional short circuit which loads the top index and then returns purely that
-        //        this might optimize for normal operating conditions.
 
         // We run a binary search on the block number fields in the array between
         // the minIndex and maxIndex. If we find indexes with blocknumber < staleBlock
