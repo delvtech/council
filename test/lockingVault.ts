@@ -28,7 +28,7 @@ describe("Locking Vault", function () {
       "MockERC20",
       signers[0]
     );
-    token = await erc20Deployer.deploy("Ele", "test ele");
+    token = await erc20Deployer.deploy("Ele", "test ele", signers[0].address);
 
     // deploy the contract
     const deployer = await ethers.getContractFactory(
