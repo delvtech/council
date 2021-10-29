@@ -139,6 +139,7 @@ contract CoreVoting is Authorizable, ReentrancyBlock, ICoreVoting {
     ) external {
         require(targets.length == calldatas.length, "array length mismatch");
         require(targets.length != 0, "empty proposal");
+
         // the hash is only used to verify the proposal data, proposals are tracked by ID
         // so there is no need to hash with proposalCount nonce.
         bytes32 proposalHash = keccak256(abi.encode(targets, calldatas));
@@ -214,6 +215,7 @@ contract CoreVoting is Authorizable, ReentrancyBlock, ICoreVoting {
         Ballot ballot
     ) public returns (uint256) {
         // No votes after the vote period is over
+        require(proposals[proposalId].created != 0, "proposal does not exist");
         require(block.number <= proposals[proposalId].expiration, "Expired");
 
         uint128 votingPower;

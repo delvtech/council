@@ -10,6 +10,8 @@
     "lint": "npm run solhint & npm run style-check & npm run spell-check",
     "build": "npx hardhat compile",
     "test": "npx hardhat test --config hardhat.config.test.ts ./test/*.ts",
+    "test:integration": "npx hardhat test --config hardhat.config.test.ts ./test/integration/*.ts",
+    "test:integration:quick": "npx hardhat test --config hardhat.config.test.ts ./test/integration/*.ts --no-compile",
     "coverage": "COVERAGE=true npx hardhat coverage --solcoverjs \".solcover.js\" --testfiles \"./test/*.ts\"",
     "test:quick": "npx hardhat test --config hardhat.config.test.ts ./test/*.ts --no-compile"
   },

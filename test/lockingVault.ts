@@ -92,6 +92,17 @@ describe("Locking Vault", function () {
       expect(userData[0]).to.be.eq(zeroAddress);
       expect(userData[1]).to.be.eq(0);
     });
+    it("Allows a user's first deposit to set their own power", async () => {
+      // Deposit by calling from address 0 and delegating to address 1
+      const tx = await (
+        await vault.deposit(signers[0].address, one, signers[0].address)
+      ).wait();
+      const votingPower = await vault.queryVotePowerView(
+        signers[0].address,
+        tx.blockNumber
+      );
+      expect(votingPower).to.be.eq(one);
+    });
     // Test the deposit by user not for user
     it("Allows someone else to add voting power on behalf of user", async () => {
       // Deposit by calling from address 2 to fund address 0 and delegate to address 1
