@@ -37,7 +37,7 @@ describe("VestingVault", function () {
       signers[0]
     );
 
-    token = await erc20Deployer.deploy("Ele", "test ele");
+    token = await erc20Deployer.deploy("Ele", "test ele", signers[0].address);
     vestingVault = await vestingVaultDeployer.deploy(token.address, 199350);
     await vestingVault.initialize(signers[0].address, signers[0].address);
 

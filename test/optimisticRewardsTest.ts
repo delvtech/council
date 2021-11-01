@@ -38,7 +38,7 @@ describe("Optimistic Rewards", function () {
       "MockERC20",
       signers[0]
     );
-    token = await erc20Deployer.deploy("Ele", "test ele");
+    token = await erc20Deployer.deploy("Ele", "test ele", signers[0].address);
 
     const mockLockDeployer = await ethers.getContractFactory(
       "MockLockingVault",
