@@ -1,7 +1,7 @@
 # Council
 
 [![Build Status](https://github.com/element-fi/council/workflows/Tests/badge.svg)](https://github.com/element-fi/council/actions)
-[![Coverage Status](https://coveralls.io/repos/github/element-fi/council/badge.svg?branch=main&service=github&t=7FWsvc)](https://coveralls.io/github/element-fi/council?branch=main)
+[![Coverage Status](https://coveralls.io/repos/github/element-fi/council/badge.svg?branch=main&t=ry86JL)](https://coveralls.io/github/element-fi/council?branch=main)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/element-fi/council/blob/master/LICENSE)
   
 Council is a decentralized governance system that allows a community to manage a DAO. The governance system is designed to enable flexibility, improvements, and experimentation while successfully maintaining the security and robustness of the governed protocol.
