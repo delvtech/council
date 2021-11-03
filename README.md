@@ -14,9 +14,22 @@ Council is inspired by and extends several forerunners in the DAO governance spa
 - By default, Council ships with a Governance Steering Council (GSC) enabled which can be assigned different powers than the core voting system. 
 Together, these features allow a wide range of voting processes and security procedures can be seamlessly integrated into one governance system.
 
+## Bug Reporting
+
+For both non-security-critical bugs and security-related critical bugs please follow the rules and instructions highlighted in the Element Finance Bug Bounty program on the [Immunefi platform](https://immunefi.com/bounty/elementfinance/).
+
+## Contributing to Council
+
+Council is a community-driven governance protocol and there are many ways to contribute to it. We encourage you to jump in and improve and use this code whether that be contributing to Council directly, forking the governance framework for your own use, or just taking bits and pieces from it. We want everyone to build with us!
+
+If you have a suggestion for a new feature, extension, or cool use case and want to help the community, drop by the dev channel in our [discord](element.fi/discord) to discuss and you will have a warm welcome!
+
+When contributing, please be sure to follow our contribution [guidelines](https://github.com/element-fi/elf-contracts/blob/master/CONTRIBUTING.md) when proposing any new code. Lastly, because Council is a community-driven governance protocol, any new code contributions are more likely to be accepted into future deployments of the protocol if they have been openly discussed within the community first.
+
+For a technical overview of Council's smart contracts, please read our documentation [here](https://docs.element.fi/governance-council/council-protocol-smart-contracts).
+
 ### Architecture Overview Diagram
 ![image](https://user-images.githubusercontent.com/32653033/135169921-9a295182-88fc-4b53-b6c4-3d29cf41f71c.png)
-
 
 ## Build and Testing
 
