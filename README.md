@@ -22,7 +22,7 @@ For both non-security-critical bugs and security-related critical bugs please fo
 
 Council is a community-driven governance protocol and there are many ways to contribute to it. We encourage you to jump in and improve and use this code whether that be contributing to Council directly, forking the governance framework for your own use, or just taking bits and pieces from it. We want everyone to build with us!
 
-If you have a suggestion for a new feature, extension, or cool use case and want to help the community, drop by the dev channel in our [discord](element.fi/discord) to discuss and you will have a warm welcome!
+If you have a suggestion for a new feature, extension, or cool use case and want to help the community, drop by the #developers channel in our [discord](https://discord.gg/srgcTGccGe) to discuss and you will have a warm welcome!
 
 When contributing, please be sure to follow our contribution [guidelines](https://github.com/element-fi/elf-contracts/blob/master/CONTRIBUTING.md) when proposing any new code. Lastly, because Council is a community-driven governance protocol, any new code contributions are more likely to be accepted into future deployments of the protocol if they have been openly discussed within the community first.
 
