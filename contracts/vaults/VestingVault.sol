@@ -463,6 +463,12 @@ contract VestingVault is IVotingVault {
         return _timelock().data;
     }
 
+    /// @notice A function to access the storage of the unvested token vote power multiplier.
+    /// @return The unvested token multiplier
+    function unvestedMultiplier() external pure returns (uint256) {
+        return _unvestedMultiplier().data;
+    }
+
     /// @notice A function to access the storage of the manager address.
     /// @dev The manager can access all functions with the olyManager modifier.
     /// @return The manager address.

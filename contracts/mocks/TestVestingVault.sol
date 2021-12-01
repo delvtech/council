@@ -10,8 +10,4 @@ contract TestVestingVault is VestingVault {
     function unassigned() public view returns (uint256) {
         return _unassigned().data;
     }
-
-    function unvestedMultiplier() public pure returns (uint256) {
-        return _unvestedMultiplier().data;
-    }
 }
