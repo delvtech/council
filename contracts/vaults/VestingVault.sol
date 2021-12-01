@@ -465,7 +465,7 @@ contract VestingVault is IVotingVault {
 
     /// @notice A function to access the storage of the unvested token vote power multiplier.
     /// @return The unvested token multiplier
-    function unvestedMultiplier() public pure returns (uint256) {
+    function unvestedMultiplier() external pure returns (uint256) {
         return _unvestedMultiplier().data;
     }
 
