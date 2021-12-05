@@ -26,6 +26,7 @@ library VestingVaultStorage {
         uint128 cliff;
         uint128 latestVotingPower;
         address delegatee;
+        uint256[2] range;
     }
 
     /// @notice Returns the storage pointer for a named mapping of address to uint256[]
