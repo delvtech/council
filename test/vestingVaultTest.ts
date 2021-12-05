@@ -690,4 +690,125 @@ describe("VestingVault", function () {
       expect(votingPower).to.be.eq(amount.div(2));
     });
   });
+  describe("acceptGrant", async () => {
+    before(async function () {
+      await token.setBalance(signers[0].address, amount.mul(10));
+      await token
+        .connect(signers[0])
+        .approve(vestingVault.address, amount.mul(10));
+      await vestingVault.connect(signers[0]).deposit(amount.mul(10));
+    });
+    beforeEach(async () => {
+      await createSnapshot(provider);
+    });
+    afterEach(async () => {
+      await restoreSnapshot(provider);
+    });
+    it("fails if the caller's grant is not found", async () => {
+      const tx = vestingVault.connect(signers[0]).acceptGrant();
+      await expect(tx).to.be.revertedWith("no grant available");
+    });
+    it("accepts grant", async () => {
+      const block = await getBlock();
+      const vestingBalanceBefore = await token.balanceOf(signers[1].address);
+      const userBalanceBefore = await token.balanceOf(vestingVault.address);
+      await vestingVault
+        .connect(signers[0])
+        .addGrantAndDelegate(
+          signers[1].address,
+          amount,
+          0,
+          block + 11,
+          block + 6,
+          ethers.constants.AddressZero
+        );
+      await token.connect(signers[1]).approve(vestingVault.address, amount);
+      await vestingVault.connect(signers[1]).acceptGrant();
+
+      const vestingBalanceAfter = await token.balanceOf(signers[1].address);
+      const userBalanceAfter = await token.balanceOf(vestingVault.address);
+
+      const grant = await vestingVault.getGrant(signers[1].address);
+      console.log();
+      expect(grant[7][0]).to.be.eq(0);
+      expect(grant[7][1]).to.be.eq(amount);
+      expect(vestingBalanceBefore).to.be.eq(vestingBalanceAfter);
+      expect(userBalanceBefore).to.be.eq(userBalanceAfter);
+    });
+    it("accepts grant after initial withdrawal", async () => {
+      const vestingBalanceBefore = await token.balanceOf(signers[1].address);
+      const userBalanceBefore = await token.balanceOf(vestingVault.address);
+      const block = await getBlock();
+      await vestingVault
+        .connect(signers[0])
+        .addGrantAndDelegate(
+          signers[1].address,
+          amount,
+          0,
+          block + 7,
+          block + 2,
+          ethers.constants.AddressZero
+        );
+
+      await token.connect(signers[1]).approve(vestingVault.address, amount);
+      //await vestingVault.connect(signers[1]).acceptGrant();
+
+      // withdraw some non-zero amount
+      await vestingVault.connect(signers[1]).claim();
+      const withdrawn = await token.balanceOf(signers[1].address);
+      expect(withdrawn).to.be.gt(0);
+
+      // accept grant
+      await token.connect(signers[1]).approve(vestingVault.address, amount);
+      await vestingVault.connect(signers[1]).acceptGrant();
+
+      // make sure the bound excludes withdrawn value
+      let grant = await vestingVault.getGrant(signers[1].address);
+      expect(grant[7][0]).to.be.eq(0);
+      expect(grant[7][1]).to.be.eq(amount.sub(withdrawn));
+
+      await advanceBlocks(provider, 3);
+
+      await vestingVault.connect(signers[1]).claim();
+
+      // check that the bound has moved down to 0 after the full grant is claimed
+      grant = await vestingVault.getGrant(signers[1].address);
+      expect(grant[7][0]).to.be.eq(0);
+      expect(grant[7][1]).to.be.eq(0);
+    });
+    it("accept grant and withdraw correctly moves bound", async () => {
+      for (let i = 0; i <= 2; i++) {
+        const block = await getBlock();
+        await vestingVault
+          .connect(signers[0])
+          .addGrantAndDelegate(
+            signers[i].address,
+            amount,
+            0,
+            block + 7,
+            block + 2,
+            ethers.constants.AddressZero
+          );
+
+        await token.connect(signers[i]).approve(vestingVault.address, amount);
+        await vestingVault.connect(signers[i]).acceptGrant();
+
+        let grant = await vestingVault.getGrant(signers[i].address);
+        expect(grant[7][0]).to.be.eq(amount.mul(i));
+
+        // loop to incrementally reach a full claim
+        for (let q = 0; q < 4; q++) {
+          await vestingVault.connect(signers[i]).claim();
+
+          grant = await vestingVault.getGrant(signers[i].address);
+
+          const userBalance = await token.balanceOf(signers[i].address);
+          const expected = grant[0].sub(grant[7][1].sub(grant[7][0]));
+
+          // validate the bound for each incremental withdraw
+          expect(expected).to.be.eq(userBalance);
+        }
+      }
+    });
+  });
 });
