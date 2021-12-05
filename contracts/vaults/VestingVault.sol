@@ -130,10 +130,10 @@ contract VestingVault is IVotingVault {
     }
 
     /// @notice Accepts a grant
-    /// @dev sends token from the contract to the sender and back to the contract
+    /// @dev Sends token from the contract to the sender and back to the contract
     /// while assigning a numerical range to the unwithdrawn granted tokens.
     function acceptGrant() public {
-        // load the grant.
+        // load the grant
         VestingVaultStorage.Grant storage grant = _grants()[msg.sender];
         uint256 availableTokens = grant.allocation - grant.withdrawn;
 
