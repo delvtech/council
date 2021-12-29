@@ -303,6 +303,20 @@ contract CoreVoting is Authorizable, ReentrancyBlock, ICoreVoting {
         delete proposals[proposalId];
     }
 
+    /// @notice gets the current voting power for a proposal
+    /// @param proposalId The proposal's ID.
+    function getProposalVotingPower(uint256 proposalId)
+        external
+        returns (
+            uint128,
+            uint128,
+            uint128
+        )
+    {
+        uint128[3] memory votingPower = proposals[proposalId].votingPower;
+        return (votingPower[0], votingPower[1], votingPower[2]);
+    }
+
     /// @notice Sets a quorum for a specific address and selector.
     /// @param target Target contract address.
     /// @param selector Function selector.
