@@ -307,6 +307,7 @@ contract CoreVoting is Authorizable, ReentrancyBlock, ICoreVoting {
     /// @param proposalId The proposal's ID.
     function getProposalVotingPower(uint256 proposalId)
         external
+        view
         returns (uint128[3] memory)
     {
         return proposals[proposalId].votingPower;
