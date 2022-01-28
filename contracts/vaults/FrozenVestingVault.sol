@@ -16,7 +16,7 @@ contract FrozenVestingVault is AbstractVestingVault {
     // Therefore they now revert
 
     /// @notice Does nothing, always reverts
-    function removeGrant(address) public view override onlyManager {
+    function removeGrant(address) public pure override {
         revert("Frozen");
     }
 
@@ -26,7 +26,7 @@ contract FrozenVestingVault is AbstractVestingVault {
     }
 
     /// @notice Does nothing, always reverts
-    function withdraw(uint256, address) public view override onlyManager {
+    function withdraw(uint256, address) public pure override {
         revert("Frozen");
     }
 }
