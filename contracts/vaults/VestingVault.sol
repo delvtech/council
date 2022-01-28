@@ -7,7 +7,7 @@ import "../libraries/VestingVaultStorage.sol";
 import "../libraries/Storage.sol";
 import "../interfaces/IVotingVault.sol";
 
-contract VestingVault is IVotingVault {
+abstract contract AbstractVestingVault is IVotingVault {
     // Bring our libraries into scope
     using History for *;
     using VestingVaultStorage for *;
@@ -226,7 +226,7 @@ contract VestingVault is IVotingVault {
     /// @dev The manager has the power to remove a grant at any time. Any withdrawable tokens will be
     /// sent to the grant owner.
     /// @param _who The Grant owner.
-    function removeGrant(address _who) public onlyManager {
+    function removeGrant(address _who) public virtual onlyManager {
         // load the grant
         VestingVaultStorage.Grant storage grant = _grants()[_who];
         // get the amount of withdrawable tokens
@@ -263,7 +263,7 @@ contract VestingVault is IVotingVault {
     /// @notice Claim all withdrawable value from a grant.
     /// @dev claiming value resets the voting power, This could either increase or reduce the
     /// total voting power associated with the caller's grant.
-    function claim() public {
+    function claim() public virtual {
         // load the grant
         VestingVaultStorage.Grant storage grant = _grants()[msg.sender];
         // get the withdrawable amount
@@ -337,7 +337,11 @@ contract VestingVault is IVotingVault {
     /// by any means other than `deposit()`
     /// @param _amount the amount to withdraw
     /// @param _recipient the address to withdraw to
-    function withdraw(uint256 _amount, address _recipient) public onlyManager {
+    function withdraw(uint256 _amount, address _recipient)
+        public
+        virtual
+        onlyManager
+    {
         Storage.Uint256 storage unassigned = _unassigned();
         require(unassigned.data >= _amount, "Insufficient balance");
         // update unassigned value
@@ -512,4 +516,14 @@ contract VestingVault is IVotingVault {
     function manager() public pure returns (address) {
         return _manager().data;
     }
+}
+
+// Deployable version of the abstract contract
+contract VestingVault is AbstractVestingVault {
+    /// @notice Constructs the contract.
+    /// @param _token The erc20 token to grant.
+    /// @param _stale Stale block used for voting power calculations.
+    constructor(IERC20 _token, uint256 _stale)
+        AbstractVestingVault(_token, _stale)
+    {}
 }
