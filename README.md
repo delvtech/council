@@ -40,11 +40,11 @@ For a technical overview of Council's smart contracts, please read our documenta
 ### 2. Setup
 
 ```
-git clone git@github.com:element-fi/elf-contracts.git
+git clone git@github.com:element-fi/council.git
 ```
 
 ```
-cd elf-contracts
+cd council
 npm install
 ```
 
