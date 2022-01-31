@@ -6,7 +6,7 @@ import { createSnapshot, restoreSnapshot } from "./helpers/snapshots";
 
 const { provider } = waffle;
 
-describe.only("Nonvoting Vault", function () {
+describe("Nonvoting Vault", function () {
   let vault: NonvotingVault;
   let signers: SignerWithAddress[];
 
@@ -38,7 +38,11 @@ describe.only("Nonvoting Vault", function () {
       "NonvotingVault",
       signers[0]
     );
-    vault = await deployer.deploy(signers[0].address, lockingVault.address);
+    vault = await deployer.deploy(
+      signers[0].address,
+      token.address,
+      lockingVault.address
+    );
 
     // Give user some balance and set their allowance
     await token.setBalance(
@@ -51,19 +55,6 @@ describe.only("Nonvoting Vault", function () {
       ethers.constants.MaxUint256
     );
   });
-  // After we reset our state in the fork
-  after(async () => {
-    await restoreSnapshot(provider);
-  });
-  // Before each we snapshot
-  beforeEach(async () => {
-    await createSnapshot(provider);
-  });
-  // After we reset our state in the fork
-  afterEach(async () => {
-    await restoreSnapshot(provider);
-  });
-
   describe("Withdraw", async () => {
     beforeEach(async () => {
       await createSnapshot(provider);
@@ -73,17 +64,19 @@ describe.only("Nonvoting Vault", function () {
     });
     it("withdraws properly", async () => {
       // Set up the locking vault
-      // Setup a user and give account some voting power
-      await lockingVault.deposit(signers[0].address, one, signers[2].address);
+      await lockingVault.deposit(vault.address, one, signers[1].address);
       const balanceBefore = await token.balanceOf(signers[0].address);
-      const tx = await (await vault.withdraw(one.div(2))).wait();
+      // Withdraw from the vault and check the account balance
+      const tx = await (
+        await vault.withdraw(one.div(2), signers[0].address)
+      ).wait();
       const balanceAfter = await token.balanceOf(signers[0].address);
       expect(balanceAfter.sub(balanceBefore)).to.be.eq(one.div(2));
     });
     it("fails if not authorized", async () => {
       // attempts a withdraw as a non authorized user
-      const tx = vault.connect(signers[1]).withdraw(one);
-      await expect(tx).to.be.revertedWith("Sender not Authorized");
+      const tx = vault.connect(signers[1]).withdraw(one, signers[1].address);
+      await expect(tx).to.be.revertedWith("Sender not owner");
     });
   });
 });
