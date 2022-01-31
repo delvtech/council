@@ -145,7 +145,7 @@ contract LockingVault is IVotingVault, ILockingVault {
 
     /// @notice Removes tokens from this contract and the voting power they represent
     /// @param amount The amount of token to withdraw
-    function withdraw(uint256 amount) external {
+    function withdraw(uint256 amount) external override {
         // Load our deposits storage
         Storage.AddressUint storage userData = _deposits()[msg.sender];
         // Reduce the user's stored balance

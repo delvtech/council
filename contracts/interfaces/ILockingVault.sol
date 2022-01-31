@@ -11,4 +11,8 @@ interface ILockingVault {
         uint256 amount,
         address firstDelegation
     ) external;
+
+    /// @notice Removes tokens from this contract and the voting power they represent
+    /// @param amount The amount of token to withdraw
+    function withdraw(uint256 amount) external;
 }
