@@ -7,7 +7,7 @@ import "../interfaces/IERC20.sol";
 import "../interfaces/IVotingVault.sol";
 import "../interfaces/ILockingVault.sol";
 
-contract LockingVault is IVotingVault, ILockingVault {
+abstract contract AbstractLockingVault is IVotingVault, ILockingVault {
     // Bring our libraries into scope
     using History for *;
     using Storage for *;
@@ -20,6 +20,9 @@ contract LockingVault is IVotingVault, ILockingVault {
     // Event to track delegation data
     event VoteChange(address indexed from, address indexed to, int256 amount);
 
+    /// @notice Constructs the contract by setting immutables
+    /// @param _token The external erc20 token contract
+    /// @param _staleBlockLag The number of blocks before the delegation history is forgotten
     constructor(IERC20 _token, uint256 _staleBlockLag) {
         token = _token;
         staleBlockLag = _staleBlockLag;
@@ -145,7 +148,7 @@ contract LockingVault is IVotingVault, ILockingVault {
 
     /// @notice Removes tokens from this contract and the voting power they represent
     /// @param amount The amount of token to withdraw
-    function withdraw(uint256 amount) external {
+    function withdraw(uint256 amount) external virtual {
         // Load our deposits storage
         Storage.AddressUint storage userData = _deposits()[msg.sender];
         // Reduce the user's stored balance
@@ -191,4 +194,13 @@ contract LockingVault is IVotingVault, ILockingVault {
         // Emit an event tracking this voting power change
         emit VoteChange(msg.sender, newDelegate, int256(userBalance));
     }
+}
+
+contract LockingVault is AbstractLockingVault {
+    /// @notice Constructs the contract by setting immutables
+    /// @param _token The external erc20 token contract
+    /// @param _staleBlockLag The number of blocks before the delegation history is forgotten
+    constructor(IERC20 _token, uint256 _staleBlockLag)
+        AbstractLockingVault(_token, _staleBlockLag)
+    {}
 }
