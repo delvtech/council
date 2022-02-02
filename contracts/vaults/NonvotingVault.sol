@@ -4,8 +4,13 @@ pragma solidity ^0.8.3;
 import "../libraries/Authorizable.sol";
 import "../interfaces/ILockingVault.sol";
 import "../interfaces/IERC20.sol";
+import {
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract NonVotingVault is Authorizable {
+    using SafeERC20 for IERC20;
+
     // The locking gov vault
     ILockingVault public lockingVault;
     IERC20 public immutable token;
@@ -17,7 +22,10 @@ contract NonVotingVault is Authorizable {
         setOwner(_owner);
         lockingVault = _lockingVault;
         token = lockingVault.token();
-        lockingVault.token().approve(address(lockingVault), type(uint256).max);
+        lockingVault.token().safeApprove(
+            address(lockingVault),
+            type(uint256).max
+        );
     }
 
     /// @notice Withdraws from the locking vault
@@ -25,6 +33,6 @@ contract NonVotingVault is Authorizable {
     /// @param destination The location to send the withdrawn tokens
     function withdraw(uint256 amount, address destination) external onlyOwner {
         lockingVault.withdraw(amount);
-        token.transfer(destination, amount);
+        token.safeTransfer(destination, amount);
     }
 }
