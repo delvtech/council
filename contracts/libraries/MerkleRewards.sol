@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "../interfaces/IERC20.sol";
 import "../interfaces/ILockingVault.sol";
 
-contract MerkleRewards {
+abstract contract AbstractMerkleRewards {
     // The merkle root with deposits encoded into it as hash [address, amount]
     // Assumed to be a node sorted tree
     bytes32 public rewardsRoot;
@@ -64,7 +64,7 @@ contract MerkleRewards {
         uint256 totalGrant,
         bytes32[] calldata merkleProof,
         address destination
-    ) external {
+    ) external virtual {
         // Validate the withdraw
         _validateWithdraw(amount, totalGrant, merkleProof);
         // Transfer to the user
@@ -94,4 +94,17 @@ contract MerkleRewards {
         require(claimed[msg.sender] + amount <= totalGrant, "Claimed too much");
         claimed[msg.sender] += amount;
     }
+}
+
+// Deployable version of the abstract
+contract MerkleRewards is AbstractMerkleRewards {
+    /// @notice Constructs the contract and sets state and immutable variables
+    /// @param _rewardsRoot The root a keccak256 merkle tree with leaves which are address amount pairs
+    /// @param _token The erc20 contract which will be sent to the people with claims on the contract
+    /// @param _lockingVault The governance vault which this deposits to on behalf of users
+    constructor(
+        bytes32 _rewardsRoot,
+        IERC20 _token,
+        ILockingVault _lockingVault
+    ) AbstractMerkleRewards(_rewardsRoot, _token, _lockingVault) {}
 }

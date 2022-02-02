@@ -86,7 +86,8 @@
         "Yasset",
         "ytoken",
         "yusdc",
-        "yweth"
+        "yweth",
+        "elfiverse"
     ],
     "enabledLanguageIds": [
         "asciidoc",
