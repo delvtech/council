@@ -13,7 +13,7 @@ contract LockingVault is IVotingVault, ILockingVault {
     using Storage for *;
 
     // Immutables are in bytecode so don't need special storage treatment
-    IERC20 public immutable token;
+    IERC20 public immutable override token;
     // A constant which is how far back stale blocks are
     uint256 public immutable staleBlockLag;
 

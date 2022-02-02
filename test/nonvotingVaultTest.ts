@@ -38,11 +38,7 @@ describe("Nonvoting Vault", function () {
       "NonvotingVault",
       signers[0]
     );
-    vault = await deployer.deploy(
-      signers[0].address,
-      token.address,
-      lockingVault.address
-    );
+    vault = await deployer.deploy(signers[0].address, lockingVault.address);
 
     // Give user some balance and set their allowance
     await token.setBalance(

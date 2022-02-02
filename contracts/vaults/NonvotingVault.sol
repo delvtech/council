@@ -13,15 +13,11 @@ contract NonvotingVault is Authorizable {
     /// @notice Constructs this contract
     /// @param _owner The address authorized to withdraw
     /// @param _lockingVault The governance vault which this withdraws from
-    constructor(
-        address _owner,
-        IERC20 _token,
-        ILockingVault _lockingVault
-    ) Authorizable() {
+    constructor(address _owner, ILockingVault _lockingVault) Authorizable() {
         setOwner(_owner);
         lockingVault = _lockingVault;
-        token = _token;
-        _token.approve(address(lockingVault), type(uint256).max);
+        token = lockingVault.token();
+        lockingVault.token().approve(address(lockingVault), type(uint256).max);
     }
 
     /// @notice Withdraws from the locking vault
