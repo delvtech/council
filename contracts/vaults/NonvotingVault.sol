@@ -2,10 +2,10 @@
 pragma solidity ^0.8.3;
 
 import "../libraries/Authorizable.sol";
-import "../interfaces/ILockingVault.sol";
-import "../interfaces/IERC20.sol";
+import { ILockingVault } from "../interfaces/ILockingVault.sol";
 import {
-    SafeERC20
+    SafeERC20,
+    IERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract NonVotingVault is Authorizable {
@@ -21,11 +21,9 @@ contract NonVotingVault is Authorizable {
     constructor(address _owner, ILockingVault _lockingVault) {
         setOwner(_owner);
         lockingVault = _lockingVault;
-        token = lockingVault.token();
-        lockingVault.token().safeApprove(
-            address(lockingVault),
-            type(uint256).max
-        );
+        address _token = address(lockingVault.token());
+        token = IERC20(_token);
+        IERC20(_token).safeApprove(address(lockingVault), type(uint256).max);
     }
 
     /// @notice Withdraws from the locking vault
