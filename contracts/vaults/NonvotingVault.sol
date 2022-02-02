@@ -5,7 +5,7 @@ import "../libraries/Authorizable.sol";
 import "../interfaces/ILockingVault.sol";
 import "../interfaces/IERC20.sol";
 
-contract NonvotingVault is Authorizable {
+contract NonVotingVault is Authorizable {
     // The locking gov vault
     ILockingVault public lockingVault;
     IERC20 public immutable token;

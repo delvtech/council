@@ -1,13 +1,13 @@
 import { expect } from "chai";
 import { ethers, waffle } from "hardhat";
-import { LockingVault, MockERC20, NonvotingVault } from "typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { createSnapshot, restoreSnapshot } from "./helpers/snapshots";
+import { LockingVault, MockERC20, NonVotingVault } from "typechain";
 
 const { provider } = waffle;
 
 describe("Nonvoting Vault", function () {
-  let vault: NonvotingVault;
+  let vault: NonVotingVault;
   let signers: SignerWithAddress[];
 
   let lockingVault: LockingVault;
@@ -35,7 +35,7 @@ describe("Nonvoting Vault", function () {
 
     // deploy the nonvoting vault contract
     const deployer = await ethers.getContractFactory(
-      "NonvotingVault",
+      "NonVotingVault",
       signers[0]
     );
     vault = await deployer.deploy(signers[0].address, lockingVault.address);
