@@ -406,7 +406,7 @@ abstract contract AbstractCompoundVault is IVotingVault {
                     (10**18));
 
         // Because of annual borrow rate is an estimate there is a (very unlikely) chance that the first subtraction expression is negative
-        // if the borrow rate is extremeley (close to 100%) for a prolonged period of time
+        // if the borrow rate is extremely (close to 100%) for a prolonged period of time
         // we prevent a revert in this extreme edge case via the ternary expression below
         uint256 newMultiplier =
             (10**18 - weightedAnnualBorrowRate) > 0
