@@ -14,6 +14,9 @@ const testConfig: HardhatUserConfig = {
       ...config?.networks?.hardhat,
       allowUnlimitedContractSize: true,
     },
+    mainnet: {
+      url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_MAINNET_API_KEY}`,
+    },
   },
 };
 
