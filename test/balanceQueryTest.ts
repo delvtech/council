@@ -2,18 +2,35 @@ import { expect } from "chai";
 import { ethers, waffle } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { createSnapshot, restoreSnapshot } from "./helpers/snapshots";
-import { BalanceQuery } from "typechain";
+import { BalanceQuery, LockingVault, VestingVault, MockERC20 } from "typechain";
 
 const { provider } = waffle;
 
 describe.only("Balance Query", function () {
   let balanceQuery: BalanceQuery;
   let signers: SignerWithAddress[];
+  let vault: LockingVault;
+  let token: MockERC20;
+  const one = ethers.utils.parseEther("1");
 
   before(async () => {
     // Create a before snapshot
     await createSnapshot(provider);
     signers = await ethers.getSigners();
+
+    // deploy the token;
+    const erc20Deployer = await ethers.getContractFactory(
+      "MockERC20",
+      signers[0]
+    );
+    token = await erc20Deployer.deploy("Ele", "test ele", signers[0].address);
+
+    // deploy the contract
+    const vaultDeployer = await ethers.getContractFactory(
+      "LockingVault",
+      signers[0]
+    );
+    vault = await vaultDeployer.deploy(token.address, 199350);
 
     // deploy the contract
     const deployer = await ethers.getContractFactory(
@@ -21,6 +38,16 @@ describe.only("Balance Query", function () {
       signers[0]
     );
     balanceQuery = await deployer.deploy(signers[0].address);
+
+    // Give users some balance and set their allowance
+    for (const signer of signers) {
+      await token.setBalance(signer.address, ethers.utils.parseEther("100000"));
+      await token.setAllowance(
+        signer.address,
+        vault.address,
+        ethers.constants.MaxUint256
+      );
+    }
   });
   // After we reset our state in the fork
   after(async () => {
@@ -58,4 +85,20 @@ describe.only("Balance Query", function () {
       );
     });
   });
+  //   describe("Check balance of vault", async () => {
+  //     // Before each we snapshot
+  //     beforeEach(async () => {
+  //         await createSnapshot(provider);
+  //       });
+  //       // After we reset our state in the fork
+  //       afterEach(async () => {
+  //         await restoreSnapshot(provider);
+  //       });
+  //     // Deposit by calling from address 0 and delegating to address 1
+  //     const tx = await vault.deposit(signers[0].address, one, signers[1].address);
+  //     const calldatas = "0x12345678ffffffff";
+  //     const votingPower = await balanceQuery.balanceOfVault(signers[1].address, calldatas, vault.address)
+  //     expect(votingPower).to.be.eq(one);
+
+  //   });
 });
