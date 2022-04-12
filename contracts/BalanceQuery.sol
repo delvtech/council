@@ -32,13 +32,8 @@ contract BalanceQuery is Authorizable {
         return votingPower;
     }
 
-    function addVault(address vault) external onlyAuthorized {
-        // ?
-    }
-
-    function removeVault(address vault) external onlyAuthorized {
-        for (uint256 i = 0; i < vaults.length; i++) {
-            delete vault[i];
-        }
+    function updateVaults(address[] memory vaults) external onlyAuthorized {
+        // set the storage array of vaults
+        vaults = new IVotingVault[](votingVaults.length);
     }
 }
