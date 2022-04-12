@@ -6,7 +6,7 @@ import { BalanceQuery, LockingVault, VestingVault, MockERC20 } from "typechain";
 
 const { provider } = waffle;
 
-describe.only("Balance Query", function () {
+describe("Balance Query", function () {
   let balanceQuery: BalanceQuery;
   let signers: SignerWithAddress[];
   let vault: LockingVault;
