@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.8.0;
+
+import "./libraries/Authorizable.sol";
+import "./interfaces/IVotingVault.sol";
+
 contract BalanceQuery is Authorizable {
     // stores approved voting vaults
     IVotingVault[] public vaults;
