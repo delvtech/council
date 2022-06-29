@@ -6,12 +6,11 @@ pragma solidity ^0.8.3;
 // The orginal file was written for solidity version 0.4.1, this is an updated
 // version for 0.8.3
 
-library LibCLLu {
-    bytes32 public constant VERSION = "LibCLLu 0.4.1";
-    uint256 constant NULL = 0;
-    uint256 constant HEAD = 0;
-    bool constant PREV = false;
-    bool constant NEXT = true;
+library CircularLinkedList {
+    uint256 public constant NULL = 0;
+    uint256 public constant HEAD = 0;
+    bool public constant PREV = false;
+    bool public constant NEXT = true;
 
     struct CLL {
         mapping(uint256 => mapping(bool => uint256)) cll;
@@ -21,96 +20,101 @@ library LibCLLu {
 
     // Return existential state of a list.
     function exists(CLL storage self) internal view returns (bool) {
-        if (self.cll[HEAD][PREV] != HEAD || self.cll[HEAD][NEXT] != HEAD)
+        if (self.cll[HEAD][PREV] != HEAD || self.cll[HEAD][NEXT] != HEAD) {
             return true;
+        }
+        return false;
     }
 
     // Returns the number of elements in the list
-    function sizeOf(CLL storage self) internal view returns (uint256 r) {
+    function sizeOf(CLL storage self) internal view returns (uint256 result) {
         uint256 i = step(self, HEAD, NEXT);
         while (i != HEAD) {
             i = step(self, i, NEXT);
-            r++;
+            result++;
         }
-        return;
+        return result;
     }
 
-    // Returns the links of a node as and array
-    function getNode(CLL storage self, uint256 n)
+    // Returns the links of a node as an array
+    function getNode(CLL storage self, uint256 node)
         internal
         view
-        returns (uint256[2])
+        returns (uint256[2] memory)
     {
-        return [self.cll[n][PREV], self.cll[n][NEXT]];
+        return [self.cll[node][PREV], self.cll[node][NEXT]];
     }
 
-    // Returns the link of a node `n` in direction `d`.
+    // Returns the link of a node in a direction
     function step(
         CLL storage self,
-        uint256 n,
-        bool d
+        uint256 node,
+        bool direction
     ) internal view returns (uint256) {
-        return self.cll[n][d];
+        return self.cll[node][direction];
     }
 
     // Can be used before `insert` to build an ordered list
-    // `a` an existing node to search from, e.g. HEAD.
-    // `b` value to seek
-    // `r` first node beyond `b` in direction `d`
+    // `startValue` an existing node to search from, e.g. HEAD.
+    // `value` value to seek
+    // `result` first node beyond `toNode` in direction `direction`
     function seek(
         CLL storage self,
-        uint256 a,
-        uint256 b,
-        bool d
-    ) internal view returns (uint256 r) {
-        r = step(self, a, d);
-        while ((b != r) && ((b < r) != d)) r = self.cll[r][d];
-        return;
+        uint256 startNode,
+        uint256 node,
+        bool direction
+    ) internal view returns (uint256 result) {
+        result = step(self, startNode, direction);
+        while ((node != result) && ((node < result) != direction))
+            result = self.cll[result][direction];
+        return result;
     }
 
     // Creates a bidirectional link between two nodes on direction `d`
     function stitch(
         CLL storage self,
-        uint256 a,
-        uint256 b,
-        bool d
+        uint256 firstNode,
+        uint256 secondNode,
+        bool direction
     ) internal {
-        self.cll[b][!d] = a;
-        self.cll[a][d] = b;
+        self.cll[secondNode][!direction] = firstNode;
+        self.cll[firstNode][direction] = secondNode;
     }
 
-    // Insert node `b` beside existing node `a` in direction `d`.
+    // Insert node `newNode` between existing node `node` and 'otherNode' in direction `direction`.
     function insert(
         CLL storage self,
-        uint256 a,
-        uint256 b,
-        bool d
+        uint256 node,
+        uint256 newNode,
+        bool direction
     ) internal {
-        uint256 c = self.cll[a][d];
-        stitch(self, a, b, d);
-        stitch(self, b, c, d);
+        uint256 otherNode = self.cll[node][direction];
+        stitch(self, node, newNode, direction);
+        stitch(self, newNode, otherNode, direction);
     }
 
-    // Remove node
-    function remove(CLL storage self, uint256 n) internal returns (uint256) {
-        if (n == NULL) return;
-        stitch(self, self.cll[n][PREV], self.cll[n][NEXT], NEXT);
-        delete self.cll[n][PREV];
-        delete self.cll[n][NEXT];
-        return n;
+    // Remove node, returns the node that was removed
+    function remove(CLL storage self, uint256 node) internal returns (uint256) {
+        if (node == NULL) {
+            return NULL;
+        }
+        stitch(self, self.cll[node][PREV], self.cll[node][NEXT], NEXT);
+        delete self.cll[node][PREV];
+        delete self.cll[node][NEXT];
+        return node;
     }
 
-    // Push a new node before or after the head
+    // Push a new node before (FALSE) or after (TRUE) the head
     function push(
         CLL storage self,
-        uint256 n,
-        bool d
+        uint256 node,
+        bool direction
     ) internal {
-        insert(self, HEAD, n, d);
+        insert(self, HEAD, node, direction);
     }
 
-    // Pop a new node from before or after the head
-    function pop(CLL storage self, bool d) internal returns (uint256) {
-        return remove(self, step(self, HEAD, d));
+    // Pop a new node from before or after the head, returns
+    function pop(CLL storage self, bool direction) internal returns (uint256) {
+        return remove(self, step(self, HEAD, direction));
     }
 }
