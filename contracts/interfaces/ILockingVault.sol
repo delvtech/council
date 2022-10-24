@@ -20,4 +20,8 @@ interface ILockingVault {
 
     /// @notice The token for this locking vault
     function token() external returns (IERC20);
+    
+    /// @notice Changes a user's voting power
+    /// @param newDelegate The new address which gets voting power
+    function changeDelegation(address newDelegate) external;
 }
