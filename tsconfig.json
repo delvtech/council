@@ -1,12 +1,16 @@
 {
     "compilerOptions": {
-      "target": "es5",
+      "target": "es2020",
       "module": "commonjs",
       "strict": true,
       "esModuleInterop": true,
       "outDir": "dist",
       "resolveJsonModule": true,
       "paths": {
+        "artifacts": ["./artifacts"],
+        "artifacts/*": ["./artifacts/*"],
+        "src": ["./src"],
+        "src/*": ["./src/*"],
         "test": ["./test"],
         "test/*": ["./test/*"],
         "typechain": ["./typechain"],
@@ -14,6 +18,8 @@
       },
     },
     "include": [
+      "./artifacts",
+      "./src",
       "./scripts",
       "./test",
       "./typechain"
