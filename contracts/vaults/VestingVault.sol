@@ -73,7 +73,7 @@ abstract contract AbstractVestingVault is IVotingVault {
     }
 
     /// @notice A function to access the storage of the unassigned token value
-    /// @dev The unassigned tokens are not part of any grant and ca be used
+    /// @dev The unassigned tokens are not part of any grant and can be used
     /// for a future grant or withdrawn by the manager.
     /// @return A struct containing the unassigned uint.
     function _unassigned() internal pure returns (Storage.Uint256 storage) {
