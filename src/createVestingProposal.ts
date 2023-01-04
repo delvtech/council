@@ -161,6 +161,7 @@ export async function createVestingGrantsUpgradeProposal(
   const targets = [timeLockAddress];
   const callDatas = [calldataCoreVoting];
   const currentBlock = await provider.getBlockNumber();
+  const proposalHash = createCallHash(callDatas, targets);
   // last chance to execute to vote is ~14 days from current block
   const lastCall = DAY_IN_BLOCKS * 14 + currentBlock;
 

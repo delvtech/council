@@ -43,7 +43,13 @@ async function main() {
   // give some eth
   await hre.network.provider.send("hardhat_setBalance", [
     "0x0d2026b3EE6eC71FC6746ADb6311F6d3Ba1C000B",
-    parseEther("100").toHexString().replace("0x0", "0x"),
+    parseEther("1000").toHexString().replace("0x0", "0x"),
+  ]);
+
+  // give some eth
+  await hre.network.provider.send("hardhat_setBalance", [
+    signer.address,
+    parseEther("1000").toHexString().replace("0x0", "0x"),
   ]);
 
   // log all the grants
