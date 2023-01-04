@@ -118,27 +118,11 @@ export async function createVestingGrantsUpgradeProposal(
     "upgradeProxy",
     [frozenVaultAddress]
   );
-  const vestingVaultContract = VestingVault__factory.connect(
-    vestingVaultAddress,
-    signer
-  );
-
-  // we also need to set the manager to the timelock address so we can call addGrantAndDelegate
-  const manager = await vestingVaultContract.manager();
-  console.log("original manager", manager);
-  const setNewManager = vestingVaultInterface.encodeFunctionData("setManager", [
-    timeLockAddress,
-  ]);
-  const setOldManager = vestingVaultInterface.encodeFunctionData("setManager", [
-    manager,
-  ]);
 
   const calldatasTimeLock = [
-    setNewManager,
     calldataProxyUpgrade,
     ...callDatasUpdateGrant,
     calldataProxyDowngrade,
-    setOldManager,
   ];
 
   // we are only hitting the vesting vault's proxy address
