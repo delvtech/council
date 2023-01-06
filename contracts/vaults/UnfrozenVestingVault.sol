@@ -11,7 +11,7 @@ contract UnfrozenVestingVault is AbstractVestingVault {
     /// @param _stale Stale block used for voting power calculations.
     constructor(IERC20 _token, uint256 _stale)
         AbstractVestingVault(_token, _stale)
-    {}
+    {} // solhint-disable-line no-empty-blocks
 
     // These functions are the only way for tokens to leave the contract
     // Therefore they now revert
