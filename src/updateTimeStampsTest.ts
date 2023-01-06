@@ -7,13 +7,11 @@ import {
 } from "typechain";
 
 import addressesJson from "./addresses";
-import { createProposalUpdateGrants } from "./createProposalUpdateGrants";
 import { deployVaultUpgrade } from "./deployVaultUpgrade";
-import grants from "./grants";
-import { consoleGrants } from "./helpers/consoleGrants";
 import { fetchGrantsByAddress } from "./helpers/fetchGrantAddresses";
 import { logGrants } from "./helpers/logGrants";
 import { resetFork } from "./helpers/resetFork";
+import { createUpdateTimeStampsProposal } from "src/createProposalUpdateTimestamps";
 
 /**
  *  Performs a mainnet fork test to update grants in the vesting vault.  This is a full runthrough
@@ -33,8 +31,6 @@ async function main() {
   const { coreVoting, timeLock, vestingVault, lockingVault } =
     addressesJson.addresses;
 
-  const granteeAddresses = grants.map((g) => g.who);
-
   // sisyphus.eth
   const signer = await hre.ethers.getImpersonatedSigner(
     "0xC77FA6C05B4e472fEee7c0f9B20E70C5BF33a99B"
@@ -49,15 +45,8 @@ async function main() {
   // log all the grants
   const grantsBeforeProposal = await fetchGrantsByAddress(vestingVault, signer);
   console.log("logging all grants");
-  logGrants(grantsBeforeProposal, "grantsBeforeAddRemove.csv");
-  // console the grants in grants.ts
-  consoleGrants(
-    Object.fromEntries(
-      Object.entries(grantsBeforeProposal).filter(([address]) =>
-        granteeAddresses.includes(address)
-      )
-    )
-  );
+
+  logGrants(grantsBeforeProposal, "grantsBeforeUpdateTimeStamps.csv");
 
   //*************************************************//
   // first, deploy the unfrozen vesting vault
@@ -84,9 +73,9 @@ async function main() {
   ]);
 
   // create propopsal
-  const proposalInfo = await createProposalUpdateGrants(
+  const proposalInfo = await createUpdateTimeStampsProposal(
     signer,
-    grants,
+    grantsBeforeProposal,
     unfrozenVault.address,
     votingVaultAddresses,
     extraVaultDatas
@@ -114,6 +103,7 @@ async function main() {
     console.log("quorum", quorum.toString());
     return;
   }
+
   const lockDuration = await coreVotingContract.lockDuration();
   const lockDurationHexString = lockDuration.toHexString().replace("0x0", "0x");
   await hre.network.provider.send("hardhat_mine", [lockDurationHexString]);
@@ -150,20 +140,15 @@ async function main() {
   const grantAddressesBeforeProposal = Object.entries(grantsBeforeProposal).map(
     ([address]) => address
   );
-  consoleGrants(
-    Object.fromEntries(
-      Object.entries(grantsBeforeProposal).filter(([address]) =>
-        granteeAddresses.includes(address)
-      )
-    )
-  );
 
   const grantsAfterProposal = await fetchGrantsByAddress(
     vestingVault,
     signer,
     grantAddressesBeforeProposal
   );
-  logGrants(grantsAfterProposal, "grantsAfterAddRemove.csv");
+
+  logGrants(grantsAfterProposal, "grantsAfter.csv");
+  logGrants(grantsAfterProposal, "grantsAfterUpdateTimeStamps.csv");
 }
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
