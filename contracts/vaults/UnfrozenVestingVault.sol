@@ -2,6 +2,7 @@
 pragma solidity ^0.8.3;
 
 import "./VestingVault.sol";
+import "../libraries/VestingVaultStorage.sol";
 
 // You can come in but you can never leave
 contract UnfrozenVestingVault is AbstractVestingVault {
@@ -107,6 +108,24 @@ contract UnfrozenVestingVault is AbstractVestingVault {
             _delegatee,
             [uint256(0), uint256(0)]
         );
+    }
+
+    function updateTimeStampsToBlocks(
+        address[] calldata grantees,
+        uint128[] calldata createdAts,
+        uint128[] calldata cliffs,
+        uint128[] calldata expirations
+    ) public {
+        // require(grantees.length == createdAts.length && cliffs.length == expirations.length && grantees.length == cliffs.length, "arrays must be equal length");
+
+        mapping(address => VestingVaultStorage.Grant) storage grants =
+            _grants();
+        for (uint256 i = 0; i < grantees.length; i++) {
+            VestingVaultStorage.Grant storage grant = grants[grantees[i]];
+            grant.created = createdAts[i];
+            grant.cliff = cliffs[i];
+            grant.expiration = expirations[i];
+        }
     }
 
     /// @notice Does nothing, always reverts

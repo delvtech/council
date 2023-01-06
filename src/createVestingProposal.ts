@@ -1,13 +1,11 @@
+import { SECONDS_PER_BLOCK } from "./constants";
+import { VestingVaultStorage } from "typechain/contracts/vaults/VestingVault.sol/AbstractVestingVault";
 import { Provider } from "@ethersproject/providers";
 import timelockInterface from "artifacts/contracts/features/Timelock.sol/Timelock.json";
 import vaultInterface from "artifacts/contracts/vaults/UnfrozenVestingVault.sol/UnfrozenVestingVault.json";
 import { ethers, Signer } from "ethers";
 import hre from "hardhat";
-import {
-  CoreVoting__factory,
-  SimpleProxy__factory,
-  VestingVault__factory,
-} from "typechain";
+import { CoreVoting__factory, SimpleProxy__factory } from "typechain";
 
 import addressesJson from "src/addresses";
 import { DAY_IN_BLOCKS } from "src/constants";
@@ -17,6 +15,7 @@ import { AddGrant, Grant, ProposalInfo, ReduceGrant } from "src/types";
 export async function createVestingProposal(
   signer: Signer,
   grants: Grant[],
+  allGrantsByAddress: Record<string, VestingVaultStorage.GrantStructOutput>,
   unfrozenVaultAddress: string,
   votingVaultAddresses: string[],
   extraVaultDatas: string[]
@@ -40,7 +39,8 @@ export async function createVestingProposal(
     frozenVaultAddress,
     votingVaultAddresses,
     extraVaultDatas,
-    grants
+    grants,
+    allGrantsByAddress
   );
 
   return proposalInfo;
@@ -62,7 +62,9 @@ export async function createVestingGrantsUpgradeProposal(
   // extra data for voting vaults if necessary
   extraVaultData: string[],
   // grants to add/remove
-  grants: Grant[]
+  grants: Grant[],
+  // grants to update time info to blocks
+  allGrantsByAddress: Record<string, VestingVaultStorage.GrantStructOutput>
 ): Promise<ProposalInfo> {
   /********************************************************************************
    * Set up a new proposal.  This proposal will perform 3 actions:
@@ -78,7 +80,7 @@ export async function createVestingGrantsUpgradeProposal(
     [unfrozenVaultAddress]
   );
 
-  // step 2 is to add/remove a bunch of grants
+  // step 2a is to add/remove a bunch of grants
   const vestingVaultInterface = new ethers.utils.Interface(vaultInterface.abi);
   const callDatasUpdateGrant: string[] = [];
 
@@ -97,8 +99,9 @@ export async function createVestingGrantsUpgradeProposal(
 
       const currentBlock = await provider.getBlockNumber();
       const startingBlock = startBlock ?? currentBlock + 10;
-      const expiration = startingBlock + DAY_IN_BLOCKS * expirationInDays;
-      const cliff = startingBlock + DAY_IN_BLOCKS * cliffEndsInDays;
+      const expiration =
+        startingBlock + Math.round(DAY_IN_BLOCKS * expirationInDays);
+      const cliff = startingBlock + Math.round(DAY_IN_BLOCKS * cliffEndsInDays);
 
       const values = [who, amount, startingBlock, expiration, cliff, delegatee];
       const calldata = vestingVaultInterface.encodeFunctionData(method, values);
@@ -112,6 +115,50 @@ export async function createVestingGrantsUpgradeProposal(
       callDatasUpdateGrant.push(calldata);
     }
   }
+
+  // step 2b is to update timestamp info to blocks
+  const addresses: string[] = [];
+  const createds: number[] = [];
+  const cliffs: number[] = [];
+  const expirations: number[] = [];
+
+  for (const address in allGrantsByAddress) {
+    const grant = allGrantsByAddress[address];
+
+    const { created, cliff, expiration } = grant;
+
+    const currentBlockNumber = await provider.getBlockNumber();
+    const currentBlock = await provider.getBlock(currentBlockNumber);
+    const currentTimestamp = currentBlock.timestamp;
+
+    const createdBlockNumber = convertSecondsRemainingToBlockNumber(
+      currentTimestamp,
+      created.toNumber(),
+      currentBlockNumber
+    );
+    const cliffBlockNumber = convertSecondsRemainingToBlockNumber(
+      currentTimestamp,
+      cliff.toNumber(),
+      currentBlockNumber
+    );
+    const expirationBlockNumber = convertSecondsRemainingToBlockNumber(
+      currentTimestamp,
+      expiration.toNumber(),
+      currentBlockNumber
+    );
+
+    addresses.push(address);
+    createds.push(createdBlockNumber);
+    cliffs.push(cliffBlockNumber);
+    expirations.push(expirationBlockNumber);
+  }
+
+  const values = [addresses, createds, cliffs, expirations];
+  const calldata = vestingVaultInterface.encodeFunctionData(
+    "updateTimeStampsToBlocks",
+    values
+  );
+  callDatasUpdateGrant.push(calldata);
 
   // step 3 is to reset the vesting vault implementation address
   const calldataProxyDowngrade = proxyInterface.encodeFunctionData(
@@ -147,7 +194,7 @@ export async function createVestingGrantsUpgradeProposal(
   const currentBlock = await provider.getBlockNumber();
   const proposalHash = createCallHash(callDatas, targets);
   // last chance to execute to vote is ~14 days from current block
-  const lastCall = DAY_IN_BLOCKS * 14 + currentBlock;
+  const lastCall = Math.round(DAY_IN_BLOCKS * 14 + currentBlock);
 
   const ballot = 0; // 0 - YES, 1 - NO, 2 - ABSTAIN
   const tx = await coreVotingContract.proposal(
@@ -194,4 +241,16 @@ function isAddGrant(grant: Grant): grant is AddGrant {
 
 function isReduceGrant(grant: Grant): grant is ReduceGrant {
   return grant.method === "reduceGrant";
+}
+
+function convertSecondsRemainingToBlockNumber(
+  startTime: number,
+  endTime: number,
+  currentBlock: number
+): number {
+  if (endTime < startTime) {
+    throw Error("End time < start time");
+  }
+
+  return Math.floor((endTime - startTime) / SECONDS_PER_BLOCK) + currentBlock;
 }

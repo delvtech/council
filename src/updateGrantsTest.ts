@@ -93,6 +93,7 @@ async function main() {
   const proposalInfo = await createVestingProposal(
     signer,
     grants,
+    grantsBeforeProposal,
     unfrozenVault.address,
     votingVaultAddresses,
     extraVaultDatas
