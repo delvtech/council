@@ -12,8 +12,10 @@ const addressesJson = {
     timeLock: "0x81758f3361A769016eae4844072FA6d7f828a651",
     treasury: "0x82eF450FB7f06E3294F2f19ed1713b255Af0f541",
     vestingVault: "0x6De73946eab234F1EE61256F10067D713aF0e37A",
+    frozenVestingVaultAddress: "0x716D4e863536aC862AD34bC4eCaCBa07d8831bEA",
     unfrozenVestingVaultAddress: "0x7e6C3b228249f24bD3EccD88c97e0bdCfc20fB07",
   },
   chainId: 1,
 };
+
 export default addressesJson;

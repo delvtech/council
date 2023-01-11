@@ -1,5 +1,3 @@
-import { SECONDS_PER_BLOCK } from "./constants";
-import { VestingVaultStorage } from "typechain/contracts/vaults/VestingVault.sol/AbstractVestingVault";
 import { Provider } from "@ethersproject/providers";
 import timelockInterface from "artifacts/contracts/features/Timelock.sol/Timelock.json";
 import vaultInterface from "artifacts/contracts/vaults/UnfrozenVestingVault.sol/UnfrozenVestingVault.json";
@@ -10,7 +8,13 @@ import { CoreVoting__factory, SimpleProxy__factory } from "typechain";
 import addressesJson from "src/addresses";
 import { DAY_IN_BLOCKS } from "src/constants";
 import { createCallHash } from "src/helpers/createCallHash";
-import { AddGrant, Grant, ProposalInfo, ReduceGrant } from "src/types";
+import {
+  AddGrant,
+  Grant,
+  ProposalArgs,
+  ProposalInfo,
+  ReduceGrant,
+} from "src/types";
 
 export async function createProposalUpdateGrants(
   signer: Signer,
@@ -21,9 +25,6 @@ export async function createProposalUpdateGrants(
 ): Promise<ProposalInfo> {
   const provider = hre.ethers.getDefaultProvider();
 
-  //*************************************************//
-  // create the proposoal
-  //*************************************************//
   const { coreVoting, timeLock, vestingVault } = addressesJson.addresses;
   const vestingVaultProxy = SimpleProxy__factory.connect(vestingVault, signer);
   const frozenVaultAddress = await vestingVaultProxy.proxyImplementation();
@@ -70,6 +71,80 @@ export async function createVestingGrantsUpgradeProposal(
    ********************************************************************************/
 
   // step 1 is to update the vesting vault implementation address
+  const {
+    targets,
+    callDatas,
+    proposalHash,
+    targetsTimeLock,
+    calldatasTimeLock,
+    callHashTimelock,
+  } = await getUpdateGrantsProposalArgs(
+    provider,
+    grants,
+    unfrozenVaultAddress,
+    frozenVaultAddress,
+    vestingVaultAddress,
+    timeLockAddress
+  );
+
+  const ballot = 0; // 0 - YES, 1 - NO, 2 - ABSTAIN
+
+  // create the arguments to coreVoting.proposal()
+  const coreVotingContract = CoreVoting__factory.connect(
+    coreVotingAddress,
+    signer
+  );
+
+  // last chance to execute to vote is ~14 days from current block
+  const currentBlock = await provider.getBlockNumber();
+  const lastCall = Math.round(DAY_IN_BLOCKS * 14 + currentBlock);
+
+  const tx = await coreVotingContract.proposal(
+    votingVaultAddresses,
+    extraVaultData,
+    targets,
+    callDatas,
+    lastCall,
+    ballot
+  );
+  await tx.wait(1);
+
+  // just getting the proposalId
+  const proposalCreatedEvents = await coreVotingContract.queryFilter(
+    coreVotingContract.filters.ProposalCreated(),
+    currentBlock
+  );
+  const proposalId = proposalCreatedEvents[0].args[0].toNumber();
+
+  const proposalArgs = [
+    ["proposalId", proposalId],
+    ["votingVaults", votingVaultAddresses],
+    ["extraVaultData", extraVaultData],
+    ["targets", targets],
+    ["callDatas", callDatas],
+    ["proposalHash", proposalHash],
+    ["targetsTimeLock", targetsTimeLock],
+    ["calldatasTimeLock", calldatasTimeLock],
+    ["callHashTimelock", callHashTimelock],
+    ["lastCall", lastCall],
+    ["ballot", ballot],
+  ];
+
+  console.log("Proposal created with:");
+  proposalArgs.forEach(([name, value]) => console.log(name, value));
+
+  const proposalInfo: ProposalInfo = Object.fromEntries(proposalArgs);
+  return proposalInfo;
+}
+
+export async function getUpdateGrantsProposalArgs(
+  provider: Provider,
+  grants: Grant[],
+  unfrozenVaultAddress: string,
+  frozenVaultAddress: string,
+  vestingVaultAddress: string,
+  timeLockAddress: string
+): Promise<ProposalArgs> {
   const proxyInterface = new ethers.utils.Interface(SimpleProxy__factory.abi);
   const calldataProxyUpgrade = proxyInterface.encodeFunctionData(
     "upgradeProxy",
@@ -131,11 +206,6 @@ export async function createVestingGrantsUpgradeProposal(
     targetsTimeLock
   );
 
-  // create the arguments to coreVoting.proposal()
-  const coreVotingContract = CoreVoting__factory.connect(
-    coreVotingAddress,
-    signer
-  );
   const tInterface = new ethers.utils.Interface(timelockInterface.abi);
   const calldataCoreVoting = tInterface.encodeFunctionData("registerCall", [
     callHashTimelock,
@@ -143,48 +213,16 @@ export async function createVestingGrantsUpgradeProposal(
 
   const targets = [timeLockAddress];
   const callDatas = [calldataCoreVoting];
-  const currentBlock = await provider.getBlockNumber();
   const proposalHash = createCallHash(callDatas, targets);
-  // last chance to execute to vote is ~14 days from current block
-  const lastCall = Math.round(DAY_IN_BLOCKS * 14 + currentBlock);
 
-  const ballot = 0; // 0 - YES, 1 - NO, 2 - ABSTAIN
-  const tx = await coreVotingContract.proposal(
-    votingVaultAddresses,
-    extraVaultData,
+  return {
     targets,
     callDatas,
-    lastCall,
-    ballot
-  );
-  await tx.wait(1);
-
-  // just getting the proposalId
-  const proposalCreatedEvents = await coreVotingContract.queryFilter(
-    coreVotingContract.filters.ProposalCreated(),
-    currentBlock
-  );
-  const proposalId = proposalCreatedEvents[0].args[0].toNumber();
-
-  const proposalArgs = [
-    ["proposalId", proposalId],
-    ["votingVaults", votingVaultAddresses],
-    ["extraVaultData", extraVaultData],
-    ["targets", targets],
-    ["callDatas", callDatas],
-    ["proposalHash", proposalHash],
-    ["targetsTimeLock", targetsTimeLock],
-    ["calldatasTimeLock", calldatasTimeLock],
-    ["callHashTimelock", callHashTimelock],
-    ["lastCall", lastCall],
-    ["ballot", ballot],
-  ];
-
-  console.log("Proposal created with:");
-  proposalArgs.forEach(([name, value]) => console.log(name, value));
-
-  const proposalInfo: ProposalInfo = Object.fromEntries(proposalArgs);
-  return proposalInfo;
+    proposalHash,
+    targetsTimeLock,
+    calldatasTimeLock,
+    callHashTimelock,
+  };
 }
 
 function isAddGrant(grant: Grant): grant is AddGrant {

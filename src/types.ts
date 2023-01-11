@@ -33,3 +33,12 @@ export interface ProposalInfo {
   lastCall: string;
   ballot: string;
 }
+
+export interface ProposalArgs {
+  targets: string[];
+  callDatas: string[];
+  proposalHash: Promise<string>;
+  targetsTimeLock: string[];
+  calldatasTimeLock: string[];
+  callHashTimelock: string;
+}
