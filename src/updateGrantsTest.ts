@@ -124,6 +124,7 @@ async function main() {
     targets,
     callDatas
   );
+
   await result.wait(1);
   console.log("executed proposal");
 

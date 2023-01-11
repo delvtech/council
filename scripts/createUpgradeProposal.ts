@@ -8,6 +8,9 @@ import addressesJson from "../src/addresses";
 import { ProposalInfo } from "src/types";
 
 const { PRIVATE_KEY, NUM_DAYS_TO_EXECUTE, BALLOT } = process.env;
+const RPC_HOST = "http://127.0.0.1:8545";
+
+const provider = new hre.ethers.providers.JsonRpcProvider(RPC_HOST);
 
 interface ProposalArgs {
   targets: string[];
@@ -26,10 +29,13 @@ async function main() {
     return;
   }
 
-  const signer = new hre.ethers.Wallet(PRIVATE_KEY);
-  const { lockingVault, coreVoting } = addressesJson.addresses;
+  // const signer = new hre.ethers.Wallet(PRIVATE_KEY, provider);
 
-  const provider = hre.ethers.getDefaultProvider();
+  // sisyphus.eth
+  const signer = await hre.ethers.getImpersonatedSigner(
+    "0xC77FA6C05B4e472fEee7c0f9B20E70C5BF33a99B"
+  );
+  const { lockingVault, coreVoting } = addressesJson.addresses;
 
   console.log("creating the proposal");
 

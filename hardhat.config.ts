@@ -4,8 +4,9 @@ import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "tsconfig-paths/register";
-
+import { config as dotEnvConfig } from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
+dotEnvConfig({ path: __dirname + "/.env" });
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
