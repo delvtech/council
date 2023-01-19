@@ -112,19 +112,17 @@ contract UnfrozenVestingVault is AbstractVestingVault {
 
     function updateTimeStampsToBlocks(
         address[] calldata grantees,
-        uint128[] calldata createdAts,
-        uint128[] calldata cliffs,
-        uint128[] calldata expirations
+        uint128 createdAt,
+        uint128 cliff,
+        uint128 expiration
     ) public {
-        // require(grantees.length == createdAts.length && cliffs.length == expirations.length && grantees.length == cliffs.length, "arrays must be equal length");
-
         mapping(address => VestingVaultStorage.Grant) storage grants =
             _grants();
         for (uint256 i = 0; i < grantees.length; i++) {
             VestingVaultStorage.Grant storage grant = grants[grantees[i]];
-            grant.created = createdAts[i];
-            grant.cliff = cliffs[i];
-            grant.expiration = expirations[i];
+            grant.created = createdAt;
+            grant.cliff = cliff;
+            grant.expiration = expiration;
         }
     }
 
