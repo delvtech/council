@@ -7,6 +7,7 @@ import addressesJson from "../src/addresses";
 import grants from "../src/grants";
 
 const { PRIVATE_KEY } = process.env;
+
 //*************************************************//
 // Returns the arguments needed to create an upgrade
 // grants proposal.

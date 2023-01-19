@@ -80,43 +80,39 @@ export async function createVestingGrantsUpgradeProposal(
   const callDatasUpdateGrant: string[] = [];
 
   // step 2bis to update timestamp info to blocks
-  const addresses: string[] = [];
-  const createds: number[] = [];
-  const cliffs: number[] = [];
-  const expirations: number[] = [];
+  const addresses: string[] = Object.keys(allGrantsByAddress);
 
-  for (const address in allGrantsByAddress) {
-    const grant = allGrantsByAddress[address];
+  const currentBlockNumber = await provider.getBlockNumber();
+  const currentBlock = await provider.getBlock(currentBlockNumber);
+  const grant = allGrantsByAddress[addresses[0]];
 
-    const { created, cliff, expiration } = grant;
+  const { created, cliff, expiration } = grant;
 
-    const currentBlockNumber = await provider.getBlockNumber();
-    const currentBlock = await provider.getBlock(currentBlockNumber);
-    const currentTimestamp = currentBlock.timestamp;
+  const currentTimestamp = currentBlock.timestamp;
 
-    const createdBlockNumber = convertSecondsRemainingToBlockNumber(
-      currentTimestamp,
-      created.toNumber(),
-      currentBlockNumber
-    );
-    const cliffBlockNumber = convertSecondsRemainingToBlockNumber(
-      currentTimestamp,
-      cliff.toNumber(),
-      currentBlockNumber
-    );
-    const expirationBlockNumber = convertSecondsRemainingToBlockNumber(
-      currentTimestamp,
-      expiration.toNumber(),
-      currentBlockNumber
-    );
+  const createdBlockNumber = convertSecondsRemainingToBlockNumber(
+    currentTimestamp,
+    created.toNumber(),
+    currentBlockNumber
+  );
+  const cliffBlockNumber = convertSecondsRemainingToBlockNumber(
+    currentTimestamp,
+    cliff.toNumber(),
+    currentBlockNumber
+  );
+  const expirationBlockNumber = convertSecondsRemainingToBlockNumber(
+    currentTimestamp,
+    expiration.toNumber(),
+    currentBlockNumber
+  );
 
-    addresses.push(address);
-    createds.push(createdBlockNumber);
-    cliffs.push(cliffBlockNumber);
-    expirations.push(expirationBlockNumber);
-  }
+  const values = [
+    addresses,
+    createdBlockNumber,
+    cliffBlockNumber,
+    expirationBlockNumber,
+  ];
 
-  const values = [addresses, createds, cliffs, expirations];
   const calldata = vestingVaultInterface.encodeFunctionData(
     "updateTimeStampsToBlocks",
     values
@@ -154,10 +150,9 @@ export async function createVestingGrantsUpgradeProposal(
 
   const targets = [timeLockAddress];
   const callDatas = [calldataCoreVoting];
-  const currentBlock = await provider.getBlockNumber();
   const proposalHash = createCallHash(callDatas, targets);
   // last chance to execute to vote is ~14 days from current block
-  const lastCall = Math.round(DAY_IN_BLOCKS * 14 + currentBlock);
+  const lastCall = Math.round(DAY_IN_BLOCKS * 14 + currentBlockNumber);
 
   const ballot = 0; // 0 - YES, 1 - NO, 2 - ABSTAIN
   const tx = await coreVotingContract.proposal(
@@ -173,7 +168,7 @@ export async function createVestingGrantsUpgradeProposal(
   // just getting the proposalId
   const proposalCreatedEvents = await coreVotingContract.queryFilter(
     coreVotingContract.filters.ProposalCreated(),
-    currentBlock
+    currentBlockNumber
   );
   const proposalId = proposalCreatedEvents[0].args[0].toNumber();
 
