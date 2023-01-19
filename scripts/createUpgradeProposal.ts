@@ -99,7 +99,7 @@ async function main() {
   proposalArgs.forEach(([name, value]) => console.log(name, value));
 
   const proposalInfo: ProposalInfo = Object.fromEntries(proposalArgs);
-  const data = JSON.stringify(proposalInfo);
+  const data = JSON.stringify(proposalInfo, null, 2);
   fs.writeFileSync("proposalInfo.json", data);
 }
 

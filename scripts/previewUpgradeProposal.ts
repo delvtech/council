@@ -32,14 +32,14 @@ async function main() {
   const proposalArgs = await getUpdateGrantsProposalArgs(
     provider,
     grants,
-    frozenVestingVaultAddress,
     unfrozenVestingVaultAddress,
+    frozenVestingVaultAddress,
     vestingVault,
     timeLock
   );
 
   console.log("proposalArgs", proposalArgs);
-  const data = JSON.stringify(proposalArgs);
+  const data = JSON.stringify(proposalArgs, null, 2);
   fs.writeFileSync("proposalArgs.json", data);
 }
 

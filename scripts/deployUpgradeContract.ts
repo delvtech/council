@@ -10,7 +10,6 @@ const provider = new hre.ethers.providers.JsonRpcProvider(RPC_HOST);
 // deploy the unfrozen vesting vault
 //*************************************************//
 async function main() {
-  console.log("PRIVATE_KEY", PRIVATE_KEY);
   if (!PRIVATE_KEY) {
     return;
   }

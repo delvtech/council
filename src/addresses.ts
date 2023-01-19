@@ -13,7 +13,7 @@ const addressesJson = {
     treasury: "0x82eF450FB7f06E3294F2f19ed1713b255Af0f541",
     vestingVault: "0x6De73946eab234F1EE61256F10067D713aF0e37A",
     frozenVestingVaultAddress: "0x716D4e863536aC862AD34bC4eCaCBa07d8831bEA",
-    unfrozenVestingVaultAddress: "0x7e6C3b228249f24bD3EccD88c97e0bdCfc20fB07",
+    unfrozenVestingVaultAddress: "0x1D13fF25b10C9a6741DFdce229073bed652197c7",
   },
   chainId: 1,
 };
