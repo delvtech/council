@@ -213,7 +213,7 @@ export async function getUpdateGrantsProposalArgs(
 
   const targets = [timeLockAddress];
   const callDatas = [calldataCoreVoting];
-  const proposalHash = createCallHash(callDatas, targets);
+  const proposalHash = await createCallHash(callDatas, targets);
 
   return {
     targets,

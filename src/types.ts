@@ -37,7 +37,7 @@ export interface ProposalInfo {
 export interface ProposalArgs {
   targets: string[];
   callDatas: string[];
-  proposalHash: Promise<string>;
+  proposalHash: string;
   targetsTimeLock: string[];
   calldatasTimeLock: string[];
   callHashTimelock: string;

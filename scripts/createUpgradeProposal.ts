@@ -24,17 +24,16 @@ interface ProposalArgs {
 /**
  * Creates the upgrade grants proposal
  */
-async function main() {
+export async function createUpgradeGrantsProposal() {
   if (!PRIVATE_KEY || !NUM_DAYS_TO_EXECUTE) {
     return;
   }
-
-  // const signer = new hre.ethers.Wallet(PRIVATE_KEY, provider);
 
   // sisyphus.eth
   const signer = await hre.ethers.getImpersonatedSigner(
     "0xC77FA6C05B4e472fEee7c0f9B20E70C5BF33a99B"
   );
+
   const { lockingVault, coreVoting } = addressesJson.addresses;
 
   console.log("creating the proposal");
@@ -105,7 +104,7 @@ async function main() {
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
-main()
+createUpgradeGrantsProposal()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error);
