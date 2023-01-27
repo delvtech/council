@@ -1,3 +1,4 @@
+import fs from "fs";
 import { SECONDS_PER_BLOCK } from "./constants";
 import { VestingVaultStorage } from "typechain/contracts/vaults/VestingVault.sol/AbstractVestingVault";
 import { Provider } from "@ethersproject/providers";
@@ -190,6 +191,9 @@ export async function createVestingGrantsUpgradeProposal(
   proposalArgs.forEach(([name, value]) => console.log(name, value));
 
   const proposalInfo: ProposalInfo = Object.fromEntries(proposalArgs);
+
+  const data = JSON.stringify(proposalInfo, null, 2);
+  fs.writeFileSync("proposalInfoTimeStamps.json", data);
   return proposalInfo;
 }
 

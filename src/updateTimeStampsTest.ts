@@ -53,6 +53,7 @@ async function main() {
   //*************************************************//
   console.log("deploying the upgraded vesting vault");
   const unfrozenVault = await deployVaultUpgrade(signer);
+  console.log("unfrozenVault", unfrozenVault.address);
 
   //*************************************************//
   // now create the proposoal
