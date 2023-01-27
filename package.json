@@ -45,6 +45,7 @@
     "chai-almost": "^1.0.1",
     "coveralls": "^3.1.0",
     "cspell": "^5.4.1",
+    "csvtojson": "^2.0.10",
     "eslint": "^7.27.0",
     "eslint-config-prettier": "^8.3.0",
     "ethers": "^5.7.2",
