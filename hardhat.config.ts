@@ -40,7 +40,6 @@ const config: HardhatUserConfig = {
     hardhat: {
       forking: {
         url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_MAINNET_API_KEY}`,
-        blockNumber: 15825655,
       },
       accounts: {
         accountsBalance: "100000000000000000000000", // 100000 ETH
