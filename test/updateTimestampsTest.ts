@@ -2,20 +2,22 @@ import { JsonRpcProvider } from "@ethersproject/providers";
 import { expect } from "chai";
 import { CoreVoting__factory } from "typechain";
 
+import { fetchGrantsByAddress } from "src/helpers/fetchGrantAddresses";
+
 import proposalArgs from "../proposalArgs.json";
 import addressesJson from "../src/addresses";
 import grants from "../src/grants";
 import { createSnapshot, restoreSnapshot } from "./helpers/snapshots";
 import csvtojson from "csvtojson";
-import { formatEther } from "ethers/lib/utils";
+import { formatEther, parseEther } from "ethers/lib/utils";
 
 // const { provider } = ethers;
-const { unfrozenVestingVaultAddress } = addressesJson.addresses;
+const { unfrozenVestingVaultAddress, vestingVault } = addressesJson.addresses;
 
 const LOCAL_RPC_HOST = "http://127.0.0.1:8545";
 const provider = new JsonRpcProvider(LOCAL_RPC_HOST);
 
-describe("Update Grants", function () {
+describe("Update Timestamps", function () {
   describe("deployVaultUpgrade", async () => {
     beforeEach(async () => {
       await createSnapshot(provider);

@@ -1,3 +1,4 @@
+import { Provider } from "@ethersproject/providers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import hre from "hardhat";
 import { VestingVault__factory } from "typechain";
@@ -5,7 +6,7 @@ import { VestingVaultStorage } from "typechain/contracts/vaults/VestingVault.sol
 
 export async function fetchGrantsByAddress(
   vestingVault: string,
-  signer: SignerWithAddress,
+  signer: Provider | SignerWithAddress,
   preserveAddresses: string[] = []
 ): Promise<Record<string, VestingVaultStorage.GrantStructOutput>> {
   const vestingVaultContract = VestingVault__factory.connect(
