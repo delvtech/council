@@ -114,6 +114,14 @@ describe("Update Grants", function () {
           );
         });
       });
+
+      it("should downgrade proxy implemenation", async () => {
+        expect(true).to.equal(false);
+      });
+
+      it("should have all excess tokens in unassigned", async () => {
+        expect(true).to.equal(false);
+      });
     });
   });
 });

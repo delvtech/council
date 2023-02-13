@@ -45,6 +45,9 @@ describe("Update Timestamps", function () {
       });
     });
   });
+  it("should downgrade proxy implemenation", async () => {
+    expect(true).to.equal(false);
+  });
 });
 
 interface GrantOutput {
