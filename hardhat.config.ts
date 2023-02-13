@@ -1,12 +1,18 @@
+import "@nomicfoundation/hardhat-toolbox";
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
-
+import "tsconfig-paths/register";
+import { config as dotEnvConfig } from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
+dotEnvConfig({ path: __dirname + "/.env" });
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
+  typechain: {
+    outDir: "typechain",
+  },
   solidity: {
     compilers: [
       {
@@ -33,8 +39,7 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       forking: {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_MAINNET_API_KEY}`,
-        blockNumber: 11853372,
+        url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_MAINNET_API_KEY}`,
       },
       accounts: {
         accountsBalance: "100000000000000000000000", // 100000 ETH
@@ -42,7 +47,7 @@ const config: HardhatUserConfig = {
       },
     },
     mainnet: {
-      url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_MAINNET_API_KEY}`,
+      url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_MAINNET_API_KEY}`,
     },
   },
 };

@@ -169,12 +169,13 @@ abstract contract AbstractVestingVault is IVotingVault {
         uint128 _expiration,
         uint128 _cliff,
         address _delegatee
-    ) public onlyManager {
+    ) public virtual onlyManager {
         // Consistency check
         require(
             _cliff <= _expiration && _startTime <= _expiration,
             "Invalid configuration"
         );
+
         // If no custom start time is needed we use this block.
         if (_startTime == 0) {
             _startTime = uint128(block.number);
