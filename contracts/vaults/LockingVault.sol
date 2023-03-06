@@ -13,7 +13,7 @@ abstract contract AbstractLockingVault is IVotingVault, ILockingVault {
     using Storage for *;
 
     // Immutables are in bytecode so don't need special storage treatment
-    IERC20 public immutable token;
+    IERC20 public immutable override token;
     // A constant which is how far back stale blocks are
     uint256 public immutable staleBlockLag;
 
@@ -148,7 +148,7 @@ abstract contract AbstractLockingVault is IVotingVault, ILockingVault {
 
     /// @notice Removes tokens from this contract and the voting power they represent
     /// @param amount The amount of token to withdraw
-    function withdraw(uint256 amount) external virtual {
+    function withdraw(uint256 amount) external virtual override {
         // Load our deposits storage
         Storage.AddressUint storage userData = _deposits()[msg.sender];
         // Reduce the user's stored balance
@@ -170,7 +170,7 @@ abstract contract AbstractLockingVault is IVotingVault, ILockingVault {
 
     /// @notice Changes a user's voting power
     /// @param newDelegate The new address which gets voting power
-    function changeDelegation(address newDelegate) external {
+    function changeDelegation(address newDelegate) external override {
         // Get the stored user data
         Storage.AddressUint storage userData = _deposits()[msg.sender];
         // Get the user balance

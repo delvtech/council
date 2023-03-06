@@ -21,7 +21,9 @@ jobs:
         - name: compile
           run: npm run build
         - name: test
-          run: npm run test
+          run:
+            export ALCHEMY_MAINNET_API_KEY=${{secrets.ALCHEMY_MAINNET_API_KEY}}
+            npm run test
 
 
 
