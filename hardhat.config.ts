@@ -1,5 +1,6 @@
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomiclabs/hardhat-waffle";
+import "@nomiclabs/hardhat-etherscan";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
@@ -7,6 +8,8 @@ import "tsconfig-paths/register";
 import { config as dotEnvConfig } from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
 dotEnvConfig({ path: __dirname + "/.env" });
+
+const { ETHERSCAN_API_KEY } = process.env;
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
@@ -49,7 +52,16 @@ const config: HardhatUserConfig = {
     mainnet: {
       url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_MAINNET_API_KEY}`,
     },
+    goerli: {
+      url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_GOERLI_API_KEY}`,
+    },
   },
 };
+
+if (ETHERSCAN_API_KEY) {
+  config.etherscan = {
+    apiKey: ETHERSCAN_API_KEY,
+  };
+}
 
 export default config;
