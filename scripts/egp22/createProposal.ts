@@ -2,15 +2,15 @@ import fs from "fs";
 import hre from "hardhat";
 import { CoreVoting__factory } from "typechain";
 
+import addressesJson from "src/addresses";
 import { DAY_IN_BLOCKS } from "src/constants";
-
-import addressesJson from "../src/addresses";
 import { ProposalInfo } from "src/types";
+import { Wallet } from "ethers";
 
-const { PRIVATE_KEY, NUM_DAYS_TO_EXECUTE, BALLOT } = process.env;
-const RPC_HOST = "http://127.0.0.1:8545";
+const { PRIVATE_KEY, NUM_DAYS_TO_EXECUTE, BALLOT, USE_TEST_SIGNER } =
+  process.env;
 
-const provider = new hre.ethers.providers.JsonRpcProvider(RPC_HOST);
+const { provider } = hre.ethers;
 
 interface ProposalArgs {
   targets: string[];
@@ -29,16 +29,20 @@ export async function createUpgradeGrantsProposal() {
     return;
   }
 
-  // sisyphus.eth
-  const signer = await hre.ethers.getImpersonatedSigner(
-    "0xC77FA6C05B4e472fEee7c0f9B20E70C5BF33a99B"
-  );
+  let signer = new hre.ethers.Wallet(PRIVATE_KEY, provider);
+  if (USE_TEST_SIGNER) {
+    console.log("USE_TEST_SIGNER", USE_TEST_SIGNER);
+    // sisyphus.eth
+    signer = (await hre.ethers.getImpersonatedSigner(
+      "0xC77FA6C05B4e472fEee7c0f9B20E70C5BF33a99B"
+    )) as unknown as Wallet;
+  }
 
   const { lockingVault, coreVoting } = addressesJson.addresses;
 
   console.log("creating the proposal");
 
-  const rawdata = fs.readFileSync("proposalArgs.json");
+  const rawdata = fs.readFileSync("scripts/egp22/proposalArgs.json");
   const args: ProposalArgs = JSON.parse(rawdata.toString());
   const {
     targets,
@@ -94,12 +98,11 @@ export async function createUpgradeGrantsProposal() {
     ["ballot", ballot],
   ];
 
-  console.log("Proposal created with:");
-  proposalArgs.forEach(([name, value]) => console.log(name, value));
+  console.log(`Proposal ${proposalId} created.`);
 
   const proposalInfo: ProposalInfo = Object.fromEntries(proposalArgs);
   const data = JSON.stringify(proposalInfo, null, 2);
-  fs.writeFileSync("proposalInfo.json", data);
+  fs.writeFileSync("scripts/egp22/proposalInfo.json", data);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

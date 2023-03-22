@@ -3,15 +3,15 @@
 [![Build Status](https://github.com/element-fi/council/workflows/Tests/badge.svg)](https://github.com/element-fi/council/actions)
 [![Coverage Status](https://coveralls.io/repos/github/element-fi/council/badge.svg?branch=main&t=ry86JL)](https://coveralls.io/github/element-fi/council?branch=main)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/element-fi/council/blob/master/LICENSE)
-  
+
 Council is a decentralized governance system that allows a community to manage a DAO. The governance system is designed to enable flexibility, improvements, and experimentation while successfully maintaining the security and robustness of the governed protocol.
 
-Council is inspired by and extends several forerunners in the DAO governance space including MakerDAO's governance model and the Compound Governor contracts. Like these systems, it is a fully on-chain voting architecture that coordinates the process of making permissioned smart contract calls from privileged addresses. 
+Council is inspired by and extends several forerunners in the DAO governance space including MakerDAO's governance model and the Compound Governor contracts. Like these systems, it is a fully on-chain voting architecture that coordinates the process of making permissioned smart contract calls from privileged addresses.
 
 **Council contains several architectural choices which make it a distinct new primitive in the decentralized governance space:**
 - Council does not have a single security threshold to make a call, instead, various actions can be given different security threshold requirements.
-- Council abstracts the vote allocation process for assigning voting power away from the actual voting process meaning that multiple complex vote allocation systems can run in parallel in the contracts. 
-- By default, Council ships with a Governance Steering Council (GSC) enabled which can be assigned different powers than the core voting system. 
+- Council abstracts the vote allocation process for assigning voting power away from the actual voting process meaning that multiple complex vote allocation systems can run in parallel in the contracts.
+- By default, Council ships with a Governance Steering Council (GSC) enabled which can be assigned different powers than the core voting system.
 Together, these features allow a wide range of voting processes and security procedures can be seamlessly integrated into one governance system.
 
 ## Bug Reporting
@@ -60,8 +60,21 @@ npm run build
 npm run test
 ```
 
-## Contributing 
-Council is a community-driven protocol and there are many ways to contribute to it. We encourage anyone to use this as their protocol or DAOs governance system. If you are interested in building on top of it, improving the code, please do! 
+## Contributing
+Council is a community-driven protocol and there are many ways to contribute to it. We encourage anyone to use this as their protocol or DAOs governance system. If you are interested in building on top of it, improving the code, please do!
 
-## Support 
+## Support
 If you have any questions, feedback, ideas for improvement, or even further experiments to test out with Council, come join our [#governance](https://discord.gg/z4EsSuaYCd) discord channel to talk more about this!
+
+
+## Proposals
+To submit the proposals you'll need to do the following steps:
+### Setup Repository
+1. Follow steps 1-3 to setup and buid this repo.
+### Setup Environment
+1. Next, you'll need make a new file `.env` and copy the contents of `.env.sample` to `.env`
+2. Add the private key for the wallet you'd like the create a proposal with.
+3. Add the Alchemy key to connect to the provider.
+
+### Deploying the proposals on-chain
+

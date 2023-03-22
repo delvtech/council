@@ -1,12 +1,12 @@
-import hre from "hardhat";
 import fs from "fs";
+import hre from "hardhat";
 
+import addressesJson from "src/addresses";
 import { getUpdateGrantsProposalArgs } from "src/createProposalUpdateGrants";
-
-import addressesJson from "../src/addresses";
-import grants from "../src/grants";
+import grants from "src/grants";
 
 const { PRIVATE_KEY } = process.env;
+const { provider } = hre.ethers;
 
 //*************************************************//
 // Returns the arguments needed to create an upgrade
@@ -25,9 +25,7 @@ async function main() {
     unfrozenVestingVaultAddress,
   } = addressesJson.addresses;
 
-  const provider = hre.ethers.getDefaultProvider();
-
-  console.log("creating the proposal");
+  console.log("getting the proposal arguments");
 
   const proposalArgs = await getUpdateGrantsProposalArgs(
     provider,
@@ -40,7 +38,7 @@ async function main() {
 
   console.log("proposalArgs", proposalArgs);
   const data = JSON.stringify(proposalArgs, null, 2);
-  fs.writeFileSync("proposalArgs.json", data);
+  fs.writeFileSync("scripts/egp22/proposalArgs.json", data);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
