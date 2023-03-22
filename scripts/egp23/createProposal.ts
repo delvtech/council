@@ -1,4 +1,5 @@
-import { fs } from "fs";
+import { Wallet } from "ethers";
+import fs from "fs";
 import hre from "hardhat";
 
 import addressesJson from "src/addresses";
@@ -6,7 +7,7 @@ import { createUpdateTimeStampsProposal } from "src/createProposalUpdateTimeStam
 import { fetchGrantsByAddress } from "src/helpers/fetchGrantAddresses";
 import { logGrants } from "src/helpers/logGrants";
 
-const { PRIVATE_KEY, NUM_DAYS_TO_EXECUTE } = process.env;
+const { PRIVATE_KEY, NUM_DAYS_TO_EXECUTE, USE_TEST_SIGNER } = process.env;
 
 const { provider } = hre.ethers;
 
@@ -24,7 +25,13 @@ async function main() {
   const { vestingVault, lockingVault, unfrozenVestingVaultAddress } =
     addressesJson.addresses;
 
-  const signer = new hre.ethers.Wallet(PRIVATE_KEY, provider);
+  let signer = new hre.ethers.Wallet(PRIVATE_KEY, provider);
+  if (USE_TEST_SIGNER) {
+    // sisyphus.eth
+    signer = (await hre.ethers.getImpersonatedSigner(
+      "0xC77FA6C05B4e472fEee7c0f9B20E70C5BF33a99B"
+    )) as unknown as Wallet;
+  }
 
   // log all the grants
   console.log("logging all grants");

@@ -77,4 +77,22 @@ To submit the proposals you'll need to do the following steps:
 3. Add the Alchemy key to connect to the provider.
 
 ### Deploying the proposals on-chain
+There are two scripts to create proposals egp-22 and egp-23.  There are located at:
+```
+  scripts/egp22/createProposal.sh
+  scripts/egp23/createProposal.sh
+```
+
+They are currently set to run on a local hardhat as a safeguard.  In each file, change
+```bash
+  # this
+  NETWORK=hardhat
+  # to this
+  NETWORK=mainnet
+```
+
+Then, simple run the bash script:
+```
+  ./scripts/epg22/createProposal.sh
+```
 
