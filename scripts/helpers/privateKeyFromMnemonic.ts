@@ -5,6 +5,7 @@ async function main() {
     "test test test test test test test test test test test test";
   const wallet = ethers.utils.HDNode.fromMnemonic(mnemonic);
   const wallet2 = wallet.derivePath("m/44'/60'/0'/0/1");
+  console.log("wallet2 address: ", wallet2.address);
   console.log("wallet2 private key: ", wallet2.privateKey);
 }
 
