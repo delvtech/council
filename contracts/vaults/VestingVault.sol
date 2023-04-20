@@ -405,12 +405,16 @@ abstract contract AbstractVestingVault is IVotingVault {
         // Get our reference to historical data
         History.HistoricalBalances memory votingPower = _votingPower();
         // Find the historical data and clear everything more than 'staleBlockLag' into the past
-        return
-            votingPower.findAndClear(
-                user,
-                blockNumber,
-                block.number - staleBlockLag
-            );
+
+        uint256 staleBlock = 0;
+
+        // Though unlikely, staleBlockLag could be set to a number higher than
+        // the current block, especially on a fresh chain like a local testnet.
+        if (staleBlockLag < block.number) {
+            staleBlock = block.number - staleBlockLag;
+        }
+
+        return votingPower.findAndClear(user, blockNumber, staleBlock);
     }
 
     /// @notice Loads the voting power of a user without changing state
