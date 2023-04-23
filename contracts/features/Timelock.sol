@@ -31,8 +31,14 @@ contract Timelock is Authorizable, ReentrancyBlock {
     }
 
     /// @notice Stores at the callHash the current block timestamp
-    /// @param callHash The hash to map the timestamp to
-    function registerCall(bytes32 callHash) external onlyOwner {
+    /// @param targets List of target addresses the timelock contract will interact with
+    /// @param calldatas Execution calldata for each target
+    function registerCall(address[] memory targets, bytes[] calldata calldatas)
+        external
+        onlyOwner
+    {
+        // hash provided data to access the mapping
+        bytes32 callHash = keccak256(abi.encode(targets, calldatas));
         // We only want to register a call which is not already active
         require(callTimestamps[callHash] == 0, "already registered");
         // Set the timestamp for this call package to be the current time
@@ -40,8 +46,14 @@ contract Timelock is Authorizable, ReentrancyBlock {
     }
 
     /// @notice Removes stored callHash data
-    /// @param callHash Which entry of the mapping to remove
-    function stopCall(bytes32 callHash) external onlyOwner {
+    /// @param targets List of target addresses as it was when registered
+    /// @param calldatas Execution calldata as it was when registered
+    function stopCall(address[] memory targets, bytes[] calldata calldatas)
+        external
+        onlyOwner
+    {
+        // hash provided data to access the mapping
+        bytes32 callHash = keccak256(abi.encode(targets, calldatas));
         // We only want this to actually execute when a real thing is deleted to
         // prevent re-ordering attacks
         require(callTimestamps[callHash] != 0, "No call to be removed");
@@ -89,11 +101,15 @@ contract Timelock is Authorizable, ReentrancyBlock {
     /// @notice Allow an increase in wait time for a given call
     /// can only be executed once for each call
     /// @param timeValue Amount of time to increase by
-    /// @param callHash The mapping entry to increase time
-    function increaseTime(uint256 timeValue, bytes32 callHash)
-        external
-        onlyAuthorized
-    {
+    /// @param targets List of target addresses as it was when registered
+    /// @param calldatas Execution calldata as it was when registered
+    function increaseTime(
+        uint256 timeValue,
+        address[] memory targets,
+        bytes[] calldata calldatas
+    ) external onlyAuthorized {
+        // hash provided data to access the mapping
+        bytes32 callHash = keccak256(abi.encode(targets, calldatas));
         require(
             timeIncreases[callHash] == false,
             "value can only be changed once"
