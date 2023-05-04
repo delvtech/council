@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copied from https://github.com/element-fi/elf-contracts/blob/a6cb960896301b7562ced70a8b221f3cc964ea0a/contracts/libraries/ERC20Permit.sol
+// Copied from https://github.com/delv-tech/elf-contracts/blob/a6cb960896301b7562ced70a8b221f3cc964ea0a/contracts/libraries/ERC20Permit.sol
 
 pragma solidity ^0.8.3;
 
