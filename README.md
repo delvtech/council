@@ -1,8 +1,8 @@
 # Council
 
-[![Build Status](https://github.com/delv-tech/council/workflows/Tests/badge.svg)](https://github.com/delv-tech/council/actions)
-[![Coverage Status](https://coveralls.io/repos/github/delv-tech/council/badge.svg?branch=main&t=ry86JL)](https://coveralls.io/github/delv-tech/council?branch=main)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/delv-tech/council/blob/master/LICENSE)
+[![Build Status](https://github.com/delvtech/council/workflows/Tests/badge.svg)](https://github.com/delvtech/council/actions)
+[![Coverage Status](https://coveralls.io/repos/github/delvtech/council/badge.svg?branch=main&t=ry86JL)](https://coveralls.io/github/delvtech/council?branch=main)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/delvtech/council/blob/master/LICENSE)
   
 Council is a decentralized governance system that allows a community to manage a DAO. The governance system is designed to enable flexibility, improvements, and experimentation while successfully maintaining the security and robustness of the governed protocol.
 
@@ -24,7 +24,7 @@ Council is a community-driven governance protocol and there are many ways to con
 
 If you have a suggestion for a new feature, extension, or cool use case and want to help the community, drop by the #developers channel in our [discord](https://discord.gg/srgcTGccGe) to discuss and you will have a warm welcome!
 
-When contributing, please be sure to follow our contribution [guidelines](https://github.com/delv-tech/elf-contracts/blob/master/CONTRIBUTING.md) when proposing any new code. Lastly, because Council is a community-driven governance protocol, any new code contributions are more likely to be accepted into future deployments of the protocol if they have been openly discussed within the community first.
+When contributing, please be sure to follow our contribution [guidelines](https://github.com/delvtech/elf-contracts/blob/master/CONTRIBUTING.md) when proposing any new code. Lastly, because Council is a community-driven governance protocol, any new code contributions are more likely to be accepted into future deployments of the protocol if they have been openly discussed within the community first.
 
 For a technical overview of Council's smart contracts, please read our documentation [here](https://docs.element.fi/governance-council/council-protocol-smart-contracts).
 
@@ -40,7 +40,7 @@ For a technical overview of Council's smart contracts, please read our documenta
 ### 2. Setup
 
 ```
-git clone git@github.com:delv-tech/council.git
+git clone git@github.com:delvtech/council.git
 ```
 
 ```
