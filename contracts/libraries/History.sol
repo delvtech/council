@@ -174,7 +174,7 @@ library History {
     /// @param blocknumber The blocknumber we want to load the historical state of
     /// @param staleBlock A block number which we can [but are not obligated to] delete history older than
     /// @return The found data
-    function findAndClear(
+    function findAndUpdate(
         HistoricalBalances memory wrapper,
         address who,
         uint256 blocknumber,

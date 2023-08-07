@@ -54,7 +54,7 @@ abstract contract AbstractLockingVault is IVotingVault, ILockingVault {
 
     /// @notice Returns the historical voting power tracker
     /// @return A struct which can push to and find items in block indexed storage
-    function _votingPower()
+    t
         internal
         pure
         returns (History.HistoricalBalances memory)
@@ -77,7 +77,7 @@ abstract contract AbstractLockingVault is IVotingVault, ILockingVault {
         History.HistoricalBalances memory votingPower = _votingPower();
         // Find the historical data and clear everything more than 'staleBlockLag' into the past
         return
-            votingPower.findAndClear(
+            votingPower.findAndUpdate(
                 user,
                 blockNumber,
                 block.number - staleBlockLag

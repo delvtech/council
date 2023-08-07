@@ -317,7 +317,7 @@ describe("Historical data tracker", function () {
     Array.from(Array(99).keys()).forEach((i) => {
       it(`clears safely ${i}th trial `, async () => {
         const staleBlock = BigNumber.from(blockNumbers[i]).add(1);
-        historicalTracker.findAndClear(
+        historicalTracker.findAndUpdate(
           BigNumber.from(blockNumbers[i]).add(1),
           staleBlock
         );
@@ -359,7 +359,7 @@ describe("Historical data tracker", function () {
     });
     it("Leaves one when asked to clear everything", async () => {
       const staleBlock = BigNumber.from(blockNumbers[99]).add(1);
-      historicalTracker.findAndClear(
+      historicalTracker.findAndUpdate(
         BigNumber.from(blockNumbers[99]).add(1),
         staleBlock
       );
