@@ -168,7 +168,6 @@ library History {
     }
 
     /// @notice Finds the data stored with the highest blocknumber which is less than or equal to a provided block number
-    ///         Opportunistically clears any data older than staleBlock which is possible to clear.
     /// @param wrapper The memory struct which points to the storage we want to search
     /// @param who The address which indexes the historical data we want to search
     /// @param blocknumber The blocknumber we want to load the historical state of
@@ -195,8 +194,6 @@ library History {
         //        this won't trigger if no stale data is found. Plus it won't trigger on minIndex == staleIndex
         //        == maxIndex and clear the whole array.
         if (staleIndex > minIndex) {
-            // Delete the outdated stored info
-            _clear(minIndex, staleIndex, storageData);
             // Reset the array info with stale index as the new minIndex
             _setBounds(storageData, staleIndex, length);
         }
@@ -269,36 +266,6 @@ library History {
         // tried to load father into the past than has been preserved
         require(_pastBlock <= blocknumber, "Search Failure");
         return (staleIndex, _loadedData);
-    }
-
-    /// @notice Clears storage between two bounds in array
-    /// @param oldMin The first index to set to zero
-    /// @param newMin The new minimum filled index, ie clears to index < newMin
-    /// @param data The storage array pointer
-    function _clear(
-        uint256 oldMin,
-        uint256 newMin,
-        uint256[] storage data
-    ) private {
-        // Correctness checks on this call
-        require(oldMin <= newMin);
-        // This function is private and trusted and should be only called by functions which ensure
-        // that oldMin < newMin < length
-        assembly {
-            // The layout of arrays in solidity is [length][data]....[data] so this pointer is the
-            // slot to write to data
-            let dataLocation := add(data.slot, 1)
-            // Loop through each index which is below new min and clear the storage
-            // Note - Uses strict min so if given an input like oldMin = 5 newMin = 5 will be a no op
-            for {
-                let i := oldMin
-            } lt(i, newMin) {
-                i := add(i, 1)
-            } {
-                // store at the starting data pointer + i 256 bits of zero
-                sstore(add(dataLocation, i), 0)
-            }
-        }
     }
 
     /// @notice Loads and unpacks the block number index and stored data from a data array
