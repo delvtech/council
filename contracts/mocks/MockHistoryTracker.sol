@@ -57,12 +57,12 @@ contract MockHistoryTracker {
         return balances.find(_presetUser, which);
     }
 
-    function findAndClear(uint256 which, uint256 stale)
+    function findAndUpdate(uint256 which, uint256 stale)
         external
         returns (uint256)
     {
         History.HistoricalBalances memory balances = History.load("balances");
-        return balances.findAndClear(_presetUser, which, stale);
+        return balances.findAndUpdate(_presetUser, which, stale);
     }
 
     function loadBounds() external view returns (uint256, uint256) {

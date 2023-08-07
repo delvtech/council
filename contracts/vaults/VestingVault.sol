@@ -406,7 +406,7 @@ abstract contract AbstractVestingVault is IVotingVault {
         History.HistoricalBalances memory votingPower = _votingPower();
         // Find the historical data and clear everything more than 'staleBlockLag' into the past
         return
-            votingPower.findAndClear(
+            votingPower.findAndUpdate(
                 user,
                 blockNumber,
                 block.number - staleBlockLag
