@@ -12,7 +12,6 @@ const { provider } = hre.ethers;
 // Returns the arguments needed to create an upgrade
 // grants proposal.
 //*************************************************//
-
 async function main() {
   if (!PRIVATE_KEY) {
     return;
@@ -25,11 +24,13 @@ async function main() {
     unfrozenVestingVaultAddress,
   } = addressesJson.addresses;
 
+  const { grantUpdatesForEGPTBD } = grants;
+
   console.log("getting the proposal arguments");
 
   const proposalArgs = await getUpdateGrantsProposalArgs(
     provider,
-    grants,
+    grantUpdatesForEGPTBD,
     unfrozenVestingVaultAddress,
     frozenVestingVaultAddress,
     vestingVault,
@@ -38,7 +39,7 @@ async function main() {
 
   console.log("proposalArgs", proposalArgs);
   const data = JSON.stringify(proposalArgs, null, 2);
-  fs.writeFileSync("scripts/egp22/proposalArgs.json", data);
+  fs.writeFileSync("scripts/egp-tbd/proposalArgs.json", data);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

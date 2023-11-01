@@ -1,4 +1,3 @@
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import fs from "fs";
 import hre from "hardhat";
 import { CoreVoting__factory, Timelock__factory } from "typechain";
@@ -8,10 +7,9 @@ import { ProposalInfo } from "src/types";
 import { fetchGrantsByAddress } from "src/helpers/fetchGrantAddresses";
 import { logGrants } from "src/helpers/logGrants";
 import { consoleGrants } from "src/helpers/consoleGrants";
-import grants from "src/grants";
+import grantUpdatesForEGP22 from "src/grants";
 
-const { PRIVATE_KEY, NUM_DAYS_TO_EXECUTE, USE_TEST_SIGNER } = process.env;
-const { provider } = hre.ethers;
+const { USE_TEST_SIGNER } = process.env;
 
 /**
  * Creates the upgrade grants proposal
@@ -33,13 +31,13 @@ async function main() {
   const { proposalId, targets, callDatas, targetsTimeLock, calldatasTimeLock } =
     proposalInfo;
 
-  // console.log("executing proposal");
-  // try {
-  //   return await coreVotingContract.execute(proposalId, targets, callDatas);
-  // } catch (err: any) {
-  //   console.log("proposalId", proposalId, "failed");
-  //   console.log("err", err.reason);
-  // }
+  console.log("executing proposal");
+  try {
+    return await coreVotingContract.execute(proposalId, targets, callDatas);
+  } catch (err: any) {
+    console.log("proposalId", proposalId, "failed");
+    console.log("err", err.reason);
+  }
 
   console.log("executing timelock proposal");
   try {
@@ -49,7 +47,7 @@ async function main() {
     console.log("err", err.reason);
   }
 
-  const granteeAddresses = grants.map((g) => g.who);
+  const granteeAddresses = grantUpdatesForEGP22.map((g) => g.who);
 
   const grantsBeforeProposal = await fetchGrantsByAddress(vestingVault, signer);
   console.log("logging all grants");

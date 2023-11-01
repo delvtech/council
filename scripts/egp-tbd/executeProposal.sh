@@ -4,4 +4,4 @@
 NETWORK=hardhat
 
 # executing the proposal
-npx hardhat run scripts/egp22/executeProposal.ts --no-compile --network $NETWORK
+npx hardhat run scripts/egp-tbd/executeProposal.ts --no-compile --network $NETWORK
