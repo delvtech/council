@@ -101,7 +101,7 @@ const grantUpdatesForEGP22: Grant[] = [
   },
 ];
 
-const grantUpdatesForEGPTBD: Grant[] = [
+const grantUpdatesForEGP27: Grant[] = [
   {
     method: "reduceGrant",
     // Patrick Morris
@@ -152,7 +152,7 @@ const grantUpdatesForEGPTBD: Grant[] = [
 
 const grants = {
   grantUpdatesForEGP22,
-  grantUpdatesForEGPTBD,
+  grantUpdatesForEGP27,
 };
 
 export default grants;

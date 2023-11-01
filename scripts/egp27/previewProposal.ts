@@ -2,7 +2,7 @@ import fs from "fs";
 import hre from "hardhat";
 
 import addressesJson from "src/addresses";
-import { getUpdateGrantsProposalArgs } from "scripts/egp-tbd/createProposalUpdateGrants";
+import { getUpdateGrantsProposalArgs } from "scripts/egp27/createProposalUpdateGrants";
 import grants from "src/grants";
 
 const { PRIVATE_KEY } = process.env;
@@ -25,13 +25,13 @@ export async function main() {
     unfrozenVestingVaultAddress,
   } = addressesJson.addresses;
 
-  const { grantUpdatesForEGPTBD } = grants;
+  const { grantUpdatesForEGP27 } = grants;
 
   console.log("getting the proposal arguments");
 
   const proposalArgs = await getUpdateGrantsProposalArgs(
     provider,
-    grantUpdatesForEGPTBD,
+    grantUpdatesForEGP27,
     unfrozenVestingVaultAddress,
     frozenVestingVaultAddress,
     vestingVault,
@@ -40,7 +40,7 @@ export async function main() {
 
   console.log("proposalArgs", proposalArgs);
   const data = JSON.stringify(proposalArgs, null, 2);
-  fs.writeFileSync("scripts/egp-tbd/proposalArgs.json", data);
+  fs.writeFileSync("scripts/egp27/proposalArgs.json", data);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
