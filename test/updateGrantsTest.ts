@@ -4,7 +4,7 @@ import { CoreVoting__factory } from "typechain";
 
 import proposalArgs from "../proposalArgs.json";
 import addressesJson from "../src/addresses";
-import grants from "../src/grants";
+import grantUpdatesForEGP22 from "../src/grants";
 import { createSnapshot, restoreSnapshot } from "./helpers/snapshots";
 import csvtojson from "csvtojson";
 import { formatEther } from "ethers/lib/utils";
@@ -107,7 +107,7 @@ describe("Update Grants", function () {
         );
 
         // make sure all grants update like we want
-        grants.forEach((grant) => {
+        grantUpdatesForEGP22.forEach((grant) => {
           const grantAfter = grantsAfter.find((g) => g.address === grant.who);
           expect(formatEther(grant.amount).toString()).to.be.eq(
             grantAfter?.allocation

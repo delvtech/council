@@ -6,10 +6,11 @@ import {
   Timelock__factory,
 } from "typechain";
 
+import grants from "src/grants";
+
 import addressesJson from "./addresses";
 import { createProposalUpdateGrants } from "./createProposalUpdateGrants";
 import { deployVaultUpgrade } from "./deployVaultUpgrade";
-import grants from "./grants";
 import { consoleGrants } from "./helpers/consoleGrants";
 import { fetchGrantsByAddress } from "./helpers/fetchGrantAddresses";
 import { logGrants } from "./helpers/logGrants";
@@ -33,7 +34,7 @@ async function main() {
   const { coreVoting, timeLock, vestingVault, lockingVault } =
     addressesJson.addresses;
 
-  const granteeAddresses = grants.map((g) => g.who);
+  const granteeAddresses = grants.grantUpdatesForEGP22.map((g) => g.who);
 
   // sisyphus.eth
   const signer = await hre.ethers.getImpersonatedSigner(
@@ -87,7 +88,7 @@ async function main() {
   // create propopsal
   const proposalInfo = await createProposalUpdateGrants(
     signer,
-    grants,
+    grants.grantUpdatesForEGP22,
     unfrozenVault.address,
     votingVaultAddresses,
     extraVaultDatas
