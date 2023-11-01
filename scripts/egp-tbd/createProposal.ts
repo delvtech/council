@@ -25,6 +25,9 @@ interface ProposalArgs {
  * Creates the upgrade grants proposal
  */
 export async function createUpgradeGrantsProposal() {
+  console.log("PRIVATE_KEY", PRIVATE_KEY);
+  console.log("NUM_DAYS_TO_EXECUTE", NUM_DAYS_TO_EXECUTE);
+  console.log("USE_TEST_SIGNER", USE_TEST_SIGNER);
   if (!PRIVATE_KEY || !NUM_DAYS_TO_EXECUTE) {
     return;
   }
@@ -37,7 +40,7 @@ export async function createUpgradeGrantsProposal() {
     )) as unknown as Wallet;
   }
 
-  const { coreVoting, vestingVault } = addressesJson.addresses;
+  const { coreVoting, vestingVault, lockingVault } = addressesJson.addresses;
 
   console.log("creating the proposal");
 
@@ -62,7 +65,7 @@ export async function createUpgradeGrantsProposal() {
   const lastCall = Math.round(
     DAY_IN_BLOCKS * Number(NUM_DAYS_TO_EXECUTE) + currentBlock
   );
-  const votingVaultAddresses = [vestingVault];
+  const votingVaultAddresses = [lockingVault];
   const extraVaultData = ["0x00"];
 
   const tx = await coreVotingContract.proposal(
@@ -106,9 +109,9 @@ export async function createUpgradeGrantsProposal() {
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
-createUpgradeGrantsProposal()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+// createUpgradeGrantsProposal()
+//   .then(() => process.exit(0))
+//   .catch((error) => {
+//     console.error(error);
+//     process.exit(1);
+//   });

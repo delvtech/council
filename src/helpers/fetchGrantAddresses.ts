@@ -25,6 +25,8 @@ export async function fetchGrantsByAddress(
     .filter((a) => a != hre.ethers.constants.AddressZero)
     .filter((a) => a != "0x0000000000000000000000000000000000000001");
 
+  grantAddresses.push("0x4edb5dd988b78b40e1b38592a4761f694e05ef05");
+
   // now fetch the actual grants
   const txs = grantAddresses.map((a) => vestingVaultContract.getGrant(a));
   const grants: VestingVaultStorage.GrantStructOutput[] = await Promise.all(

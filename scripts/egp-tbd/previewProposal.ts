@@ -12,7 +12,8 @@ const { provider } = hre.ethers;
 // Returns the arguments needed to create an upgrade
 // grants proposal.
 //*************************************************//
-async function main() {
+export async function main() {
+  console.log("PRIVATE_KEY", PRIVATE_KEY);
   if (!PRIVATE_KEY) {
     return;
   }

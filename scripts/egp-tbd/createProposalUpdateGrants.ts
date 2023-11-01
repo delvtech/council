@@ -15,7 +15,6 @@ import {
   ProposalInfo,
   ReduceGrant,
 } from "src/types";
-import { parseEther } from "ethers/lib/utils";
 
 export async function createProposalUpdateGrants(
   signer: Signer,
@@ -24,6 +23,7 @@ export async function createProposalUpdateGrants(
   votingVaultAddresses: string[],
   extraVaultDatas: string[]
 ): Promise<ProposalInfo> {
+  console.log("grants", grants);
   const provider = hre.ethers.getDefaultProvider();
 
   const { coreVoting, timeLock, vestingVault } = addressesJson.addresses;
@@ -156,7 +156,10 @@ export async function getUpdateGrantsProposalArgs(
   const vestingVaultInterface = new ethers.utils.Interface(vaultInterface.abi);
   const callDatasUpdateGrant: string[] = [];
 
+  console.log("entering for-loop");
   for (let i = 0; i < grants.length; i++) {
+    console.log("i", i);
+    console.log("callDatasUpdateGrant", callDatasUpdateGrant);
     const grant = grants[i];
     const { method } = grant;
     if (isAddGrant(grant)) {
@@ -187,6 +190,7 @@ export async function getUpdateGrantsProposalArgs(
       callDatasUpdateGrant.push(calldata);
     }
   }
+  console.log("after for-loop");
 
   // step 3 is to reset the vesting vault implementation address
   const callDataProxyDowngrade = proxyInterface.encodeFunctionData(
@@ -194,23 +198,11 @@ export async function getUpdateGrantsProposalArgs(
     [frozenVaultAddress]
   );
 
-  // step 4 is to claim the un issued shares
-
-  // amount from this proposal 1,098,837.90
-  // amount from previous proposal 1,324,041.10
-  // total amount: 2,422,879.00
-  const claimAmount = parseEther(String("2,422,879.00")).toString();
-  const delvAddress = "0xF6094C3A380AD6161Fb8240F3043392A0E427CAC";
-  const callDataClaim = vestingVaultInterface.encodeFunctionData("claim", [
-    claimAmount,
-    delvAddress,
-  ]);
-
+  console.log("callDatasUpdateGrant", callDatasUpdateGrant);
   const calldatasTimeLock = [
     callDataProxyUpgrade,
     ...callDatasUpdateGrant,
     callDataProxyDowngrade,
-    callDataClaim,
   ];
 
   // we are only hitting the vesting vault's proxy address

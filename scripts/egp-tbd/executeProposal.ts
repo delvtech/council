@@ -7,14 +7,14 @@ import { ProposalInfo } from "src/types";
 import { fetchGrantsByAddress } from "src/helpers/fetchGrantAddresses";
 import { logGrants } from "src/helpers/logGrants";
 import { consoleGrants } from "src/helpers/consoleGrants";
-import grantUpdatesForEGP22 from "src/grants";
+import grants from "src/grants";
 
 const { USE_TEST_SIGNER } = process.env;
 
 /**
  * Creates the upgrade grants proposal
  */
-async function main() {
+export async function main() {
   console.log("USE_TEST_SIGNER", USE_TEST_SIGNER);
   // sisyphus.eth
   const signer = await hre.ethers.getImpersonatedSigner(
@@ -26,18 +26,24 @@ async function main() {
   const coreVotingContract = CoreVoting__factory.connect(coreVoting, signer);
   const timelockContract = Timelock__factory.connect(timeLock, signer);
 
-  const rawdata = fs.readFileSync("scripts/egp22/proposalInfo.json");
+  const rawdata = fs.readFileSync("scripts/egp-tbd/proposalInfo.json");
   const proposalInfo: ProposalInfo = JSON.parse(rawdata.toString());
   const { proposalId, targets, callDatas, targetsTimeLock, calldatasTimeLock } =
     proposalInfo;
 
   console.log("executing proposal");
   try {
-    return await coreVotingContract.execute(proposalId, targets, callDatas);
+    await coreVotingContract.execute(proposalId, targets, callDatas);
   } catch (err: any) {
     console.log("proposalId", proposalId, "failed");
     console.log("err", err.reason);
   }
+
+  const lockDuration = await timelockContract.waitTime();
+  const lockDurationHexString = lockDuration.toHexString().replace("0x0", "0x");
+  console.log("jumping forward so timelock can execute");
+  await hre.network.provider.send("hardhat_mine", [lockDurationHexString]);
+  await hre.network.provider.send("hardhat_mine", [lockDurationHexString]);
 
   console.log("executing timelock proposal");
   try {
@@ -47,15 +53,15 @@ async function main() {
     console.log("err", err.reason);
   }
 
-  const granteeAddresses = grantUpdatesForEGP22.map((g) => g.who);
+  const granteeAddresses = grants.grantUpdatesForEGPTBD.map((g) => g.who);
 
-  const grantsBeforeProposal = await fetchGrantsByAddress(vestingVault, signer);
+  const grantsAfterProposal = await fetchGrantsByAddress(vestingVault, signer);
   console.log("logging all grants");
-  logGrants(grantsBeforeProposal, "grantsAfterRemoveREAL.csv");
+  logGrants(grantsAfterProposal, "grantsAfterEGP27.csv");
   // console the grants in grants.ts
   consoleGrants(
     Object.fromEntries(
-      Object.entries(grantsBeforeProposal).filter(([address]) =>
+      Object.entries(grantsAfterProposal).filter(([address]) =>
         granteeAddresses.includes(address)
       )
     )
@@ -64,9 +70,9 @@ async function main() {
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+// main()
+//   .then(() => process.exit(0))
+//   .catch((error) => {
+//     console.error(error);
+//     process.exit(1);
+//   });
