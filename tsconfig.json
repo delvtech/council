@@ -9,6 +9,8 @@
       "paths": {
         "artifacts": ["./artifacts"],
         "artifacts/*": ["./artifacts/*"],
+        "scripts": ["./scripts"],
+        "scripts/*": ["./scripts/*"],
         "src": ["./src"],
         "src/*": ["./src/*"],
         "test": ["./test"],
@@ -19,8 +21,8 @@
     },
     "include": [
       "./artifacts",
-      "./src",
       "./scripts",
+      "./src",
       "./test",
       "./typechain"
     ],
