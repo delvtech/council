@@ -17,8 +17,7 @@ contract UnfrozenVestingVault is AbstractVestingVault {
     // Therefore they now revert
 
     /// @notice Removes a grant.
-    /// @dev The manager has the power to remove a grant at any time. Any withdrawable tokens will be
-    /// sent to the grant owner.
+    /// @dev The manager has the power to remove a grant at any time.
     /// @param _who The Grant owner.
     function reduceGrant(address _who, uint128 newAllocation) public {
         // load the grant
