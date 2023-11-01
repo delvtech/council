@@ -25,11 +25,13 @@ async function main() {
     unfrozenVestingVaultAddress,
   } = addressesJson.addresses;
 
+  const { grantUpdatesForEGP22 } = grants;
+
   console.log("getting the proposal arguments");
 
   const proposalArgs = await getUpdateGrantsProposalArgs(
     provider,
-    grants,
+    grantUpdatesForEGP22,
     unfrozenVestingVaultAddress,
     frozenVestingVaultAddress,
     vestingVault,

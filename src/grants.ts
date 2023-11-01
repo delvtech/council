@@ -38,7 +38,7 @@ const grantsExample: Grant[] = [
   },
 ];
 
-const grants: Grant[] = [
+const grantUpdatesForEGP22: Grant[] = [
   // 0x561C1693fD7c874763f99D0F456C0D2353c85e26	500,000	219178.08
   {
     method: "reduceGrant",
@@ -100,5 +100,59 @@ const grants: Grant[] = [
     amount: parseEther(String("92054.79")).toString(),
   },
 ];
+
+const grantUpdatesForEGPTBD: Grant[] = [
+  {
+    method: "reduceGrant",
+    // Patrick Morris
+    who: "0xFB18b8F2bBE88c4C29ca5a12ee404DB4d640fe4E",
+    amount: parseEther(String("58410.96")).toString(),
+  },
+  {
+    method: "reduceGrant",
+    // Violet Vienhage
+    who: "0x4103672489e420076B012Dda2Ba2B0c414d985ca",
+    amount: parseEther(String("663379.00")).toString(),
+  },
+  {
+    method: "reduceGrant",
+    // Cash DeLeon
+    who: "0xfb0e31B422E606Ca996E4415243EBF15c2E5535E",
+    amount: parseEther(String("32671.23")).toString(),
+  },
+  {
+    method: "reduceGrant",
+    // Will Villanueva
+    who: "0x84ad922d23A7613e0d25F36CB65CD5F92a155110",
+    amount: parseEther(String("4979200.91")).toString(),
+  },
+  {
+    method: "reduceGrant",
+    // Mihai Cosma
+    who: "0xE68e82c3C49dF3d9C8B04B0bb8e5F1Cdc28DaE52",
+    amount: "0",
+  },
+
+  // Old grant values: 85000000000000000000000,0,16950970,22183646,16950970,4250000000000000000000,0xA87b950E831207631de8A1d5ac01afC7391ED2ef,0,0
+  {
+    method: "addGrantAndDelegate",
+    // Mihai Cosma
+    who: "0x4edb5dd988b78b40e1b38592a4761f694e05ef05",
+    amount: "85000000000000000000000",
+    // Following values taken from old grant.
+    startBlock: 16950970,
+    // this is actually a block number
+    expirationInDays: 22183646,
+    // this is actuall a block number
+    cliffEndsInDays: 16950970,
+    // who to initially delegate to
+    delegatee: "0xA87b950E831207631de8A1d5ac01afC7391ED2ef",
+  },
+];
+
+const grants = {
+  grantUpdatesForEGP22,
+  grantUpdatesForEGPTBD,
+};
 
 export default grants;
