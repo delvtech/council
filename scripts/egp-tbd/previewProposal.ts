@@ -2,7 +2,7 @@ import fs from "fs";
 import hre from "hardhat";
 
 import addressesJson from "src/addresses";
-import { getUpdateGrantsProposalArgs } from "src/createProposalUpdateGrants";
+import { getUpdateGrantsProposalArgs } from "scripts/egp-tbd/createProposalUpdateGrants";
 import grants from "src/grants";
 
 const { PRIVATE_KEY } = process.env;
