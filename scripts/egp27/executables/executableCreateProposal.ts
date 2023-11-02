@@ -1,5 +1,5 @@
 // # Script to update grants with new values
-import { createUpgradeGrantsProposal } from "./createProposal";
+import { createUpgradeGrantsProposal } from "../createProposal";
 
 async function main() {
   await createUpgradeGrantsProposal();
