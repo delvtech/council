@@ -5,7 +5,7 @@ import { main as jumpForward } from "scripts/helpers/jumpForward";
 import { main as readUnassignedTokens } from "src/readUnassignedTokens";
 import { main as getGrants } from "src/getGrants";
 import { main as previewProposal } from "./previewProposal";
-import { main as executeProposal } from "./executeProposal";
+import { main as executeProposal } from "./executeProposalAndTimelock";
 
 async function main() {
   await previewProposal();

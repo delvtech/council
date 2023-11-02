@@ -1,15 +1,11 @@
 import { Wallet } from "ethers";
 import fs from "fs";
 import hre from "hardhat";
-import { CoreVoting__factory, Timelock__factory } from "typechain";
+import { CoreVoting__factory } from "typechain";
 
 import addressesJson from "src/addresses";
-import { ProposalInfo } from "src/types";
-import { fetchGrantsByAddress } from "src/helpers/fetchGrantAddresses";
-import { logGrants } from "src/helpers/logGrants";
-import { consoleGrants } from "src/helpers/consoleGrants";
-import grants from "src/grants";
 import { sleep } from "src/helpers/sleep";
+import { ProposalInfo } from "src/types";
 
 const { PRIVATE_KEY, USE_TEST_SIGNER } = process.env;
 const { provider } = hre.ethers;
@@ -39,14 +35,12 @@ export async function main() {
   }
   await sleep(10_000);
 
-  const { coreVoting, vestingVault, timeLock } = addressesJson.addresses;
+  const { coreVoting } = addressesJson.addresses;
   const coreVotingContract = CoreVoting__factory.connect(coreVoting, signer);
-  const timelockContract = Timelock__factory.connect(timeLock, signer);
 
   const rawdata = fs.readFileSync("scripts/egp27/proposalInfo.json");
   const proposalInfo: ProposalInfo = JSON.parse(rawdata.toString());
-  const { proposalId, targets, callDatas, targetsTimeLock, calldatasTimeLock } =
-    proposalInfo;
+  const { proposalId, targets, callDatas } = proposalInfo;
 
   console.log("executing proposal");
   try {
@@ -55,32 +49,4 @@ export async function main() {
     console.log("proposalId", proposalId, "failed");
     console.log("err", err.reason);
   }
-
-  const lockDuration = await timelockContract.waitTime();
-  const lockDurationHexString = lockDuration.toHexString().replace("0x0", "0x");
-  console.log("jumping forward so timelock can execute");
-  await hre.network.provider.send("hardhat_mine", [lockDurationHexString]);
-  await hre.network.provider.send("hardhat_mine", [lockDurationHexString]);
-
-  console.log("executing timelock proposal");
-  try {
-    await timelockContract.execute(targetsTimeLock, calldatasTimeLock);
-  } catch (err: any) {
-    console.log("proposalId", proposalId, "failed");
-    console.log("err", err.reason);
-  }
-
-  const granteeAddresses = grants.grantUpdatesForEGP27.map((g) => g.who);
-
-  const grantsAfterProposal = await fetchGrantsByAddress(vestingVault, signer);
-  console.log("logging all grants");
-  logGrants(grantsAfterProposal, "grantsAfterEGP27.csv");
-  // console the grants in grants.ts
-  consoleGrants(
-    Object.fromEntries(
-      Object.entries(grantsAfterProposal).filter(([address]) =>
-        granteeAddresses.includes(address)
-      )
-    )
-  );
 }
