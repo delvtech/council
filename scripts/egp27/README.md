@@ -20,6 +20,12 @@ You'll need to update the private key to an address with eth in it for performin
 Assuming the types have been built correctly during the installation process, you can now run:
 
 ```bash
+npx hardhat node
+```
+
+In a separate terminal, run:
+
+```bash
 npx hardhat run scripts/egp27/testCreateAndExecute.ts --no-compile --network hardhat
 ```
 NOTE that the network is hardhat, not mainnet
