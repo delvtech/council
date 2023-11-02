@@ -48,3 +48,10 @@ If the proposal passes quorum, then we can execute it:
 ```bash
  npx hardhat run scripts/egp27/executables/executableExecuteProposal.ts --no-compile --network mainnet
 ```
+
+## EXECUTING THE TIMELOCKED PROPOSAL
+If the proposal passes the wait time on the timelock, then we can execute it:
+
+```bash
+ npx hardhat run scripts/egp27/executables/executableExecuteTimelock.ts --no-compile --network mainnet
+```
