@@ -4,22 +4,16 @@ import { main as setQuorum } from "scripts/helpers/setQuorum";
 import { main as jumpForward } from "scripts/helpers/jumpForward";
 import { main as readUnassignedTokens } from "src/readUnassignedTokens";
 import { main as getGrants } from "src/getGrants";
+import { main as previewProposal } from "./previewProposal";
 import { main as executeProposal } from "./executeProposal";
 
 async function main() {
-  // console.log("previewProposal");
-  // await previewProposal();
-  console.log("setQuorum");
+  await previewProposal();
   await setQuorum();
-  console.log("createUpgradeGrantsProposal");
   await createUpgradeGrantsProposal();
-  console.log("jumpForward");
   await jumpForward();
-  console.log("executeProposal");
   await executeProposal();
-  console.log("readUnassignedTokens");
   await readUnassignedTokens();
-  console.log("getGrants");
   await getGrants();
 }
 

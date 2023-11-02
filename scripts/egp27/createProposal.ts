@@ -6,6 +6,7 @@ import addressesJson from "src/addresses";
 import { DAY_IN_BLOCKS } from "src/constants";
 import { ProposalInfo } from "src/types";
 import { Wallet } from "ethers";
+import { sleep } from "src/helpers/sleep";
 
 const { PRIVATE_KEY, NUM_DAYS_TO_EXECUTE, BALLOT, USE_TEST_SIGNER } =
   process.env;
@@ -25,22 +26,27 @@ interface ProposalArgs {
  * Creates the upgrade grants proposal
  */
 export async function createUpgradeGrantsProposal() {
-  console.log("PRIVATE_KEY", PRIVATE_KEY);
-  console.log("NUM_DAYS_TO_EXECUTE", NUM_DAYS_TO_EXECUTE);
-  console.log("USE_TEST_SIGNER", USE_TEST_SIGNER);
   if (!PRIVATE_KEY || !NUM_DAYS_TO_EXECUTE) {
     return;
   }
 
   let signer = new hre.ethers.Wallet(PRIVATE_KEY, provider);
   if (USE_TEST_SIGNER) {
+    console.log("******************************************");
+    console.log("USING TEST SIGNER ", signer.address);
+    console.log("******************************************");
     // sisyphus.eth
     signer = (await hre.ethers.getImpersonatedSigner(
       "0xC77FA6C05B4e472fEee7c0f9B20E70C5BF33a99B"
     )) as unknown as Wallet;
+  } else {
+    console.log("******************************************");
+    console.log("USING SIGNER ", signer.address);
+    console.log("******************************************");
   }
+  await sleep(10_000);
 
-  const { coreVoting, vestingVault, lockingVault } = addressesJson.addresses;
+  const { coreVoting, lockingVault } = addressesJson.addresses;
 
   console.log("creating the proposal");
 
@@ -106,12 +112,3 @@ export async function createUpgradeGrantsProposal() {
   const data = JSON.stringify(proposalInfo, null, 2);
   fs.writeFileSync("scripts/egp27/proposalInfo.json", data);
 }
-
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-// createUpgradeGrantsProposal()
-//   .then(() => process.exit(0))
-//   .catch((error) => {
-//     console.error(error);
-//     process.exit(1);
-//   });

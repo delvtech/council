@@ -84,6 +84,7 @@ export async function main() {
   );
   const unassigned = await vestingVaultContract.unassigned();
   console.log("unassigned", formatEther(unassigned));
+  return unassigned;
 }
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
@@ -94,6 +95,12 @@ export async function main() {
 //     process.exit(1);
 //   });
 
+/**
+ * This deploys a version of unfrozen vesting vault that let's us inspect the unassigned tokens
+ * @param signer
+ * @param staleBlockLag
+ * @returns
+ */
 export async function deployVault2Upgrade(
   signer: Signer,
   staleBlockLag = Math.round(DAY_IN_BLOCKS * 30)

@@ -156,10 +156,7 @@ export async function getUpdateGrantsProposalArgs(
   const vestingVaultInterface = new ethers.utils.Interface(vaultInterface.abi);
   const callDatasUpdateGrant: string[] = [];
 
-  console.log("entering for-loop");
   for (let i = 0; i < grants.length; i++) {
-    console.log("i", i);
-    console.log("callDatasUpdateGrant", callDatasUpdateGrant);
     const grant = grants[i];
     const { method } = grant;
     if (isAddGrant(grant)) {
@@ -190,7 +187,6 @@ export async function getUpdateGrantsProposalArgs(
       callDatasUpdateGrant.push(calldata);
     }
   }
-  console.log("after for-loop");
 
   // step 3 is to reset the vesting vault implementation address
   const callDataProxyDowngrade = proxyInterface.encodeFunctionData(

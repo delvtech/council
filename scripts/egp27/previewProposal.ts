@@ -13,8 +13,8 @@ const { provider } = hre.ethers;
 // grants proposal.
 //*************************************************//
 export async function main() {
-  console.log("PRIVATE_KEY", PRIVATE_KEY);
   if (!PRIVATE_KEY) {
+    console.log("NO PRIVATE KEY, EXITING");
     return;
   }
 
@@ -42,12 +42,3 @@ export async function main() {
   const data = JSON.stringify(proposalArgs, null, 2);
   fs.writeFileSync("scripts/egp27/proposalArgs.json", data);
 }
-
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });

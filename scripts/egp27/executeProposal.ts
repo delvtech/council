@@ -1,3 +1,4 @@
+import { Wallet } from "ethers";
 import fs from "fs";
 import hre from "hardhat";
 import { CoreVoting__factory, Timelock__factory } from "typechain";
@@ -8,19 +9,35 @@ import { fetchGrantsByAddress } from "src/helpers/fetchGrantAddresses";
 import { logGrants } from "src/helpers/logGrants";
 import { consoleGrants } from "src/helpers/consoleGrants";
 import grants from "src/grants";
+import { sleep } from "src/helpers/sleep";
 
-const { USE_TEST_SIGNER } = process.env;
+const { PRIVATE_KEY, USE_TEST_SIGNER } = process.env;
+const { provider } = hre.ethers;
 
 /**
  * Creates the upgrade grants proposal
  */
 export async function main() {
-  console.log("USE_TEST_SIGNER", USE_TEST_SIGNER);
-  // sisyphus.eth
-  const signer = await hre.ethers.getImpersonatedSigner(
-    "0xC77FA6C05B4e472fEee7c0f9B20E70C5BF33a99B"
-  );
   // [signer] = await hre.ethers.getSigners();
+  if (!PRIVATE_KEY) {
+    return;
+  }
+
+  let signer = new hre.ethers.Wallet(PRIVATE_KEY, provider);
+  if (USE_TEST_SIGNER) {
+    console.log("******************************************");
+    console.log("USING TEST SIGNER ", signer.address);
+    console.log("******************************************");
+    // sisyphus.eth
+    signer = (await hre.ethers.getImpersonatedSigner(
+      "0xC77FA6C05B4e472fEee7c0f9B20E70C5BF33a99B"
+    )) as unknown as Wallet;
+  } else {
+    console.log("******************************************");
+    console.log("USING SIGNER ", signer.address);
+    console.log("******************************************");
+  }
+  await sleep(10_000);
 
   const { coreVoting, vestingVault, timeLock } = addressesJson.addresses;
   const coreVotingContract = CoreVoting__factory.connect(coreVoting, signer);
@@ -67,12 +84,3 @@ export async function main() {
     )
   );
 }
-
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-// main()
-//   .then(() => process.exit(0))
-//   .catch((error) => {
-//     console.error(error);
-//     process.exit(1);
-//   });

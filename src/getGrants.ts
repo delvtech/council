@@ -23,7 +23,7 @@ import { logGrants } from "./helpers/logGrants";
 export async function main() {
   const { vestingVault } = addressesJson.addresses;
 
-  const granteeAddresses = grants.grantUpdatesForEGP22.map((g) => g.who);
+  const granteeAddresses = grants.grantUpdatesForEGP27.map((g) => g.who);
 
   // sisyphus.eth
   const signer = await hre.ethers.getImpersonatedSigner(
@@ -37,13 +37,14 @@ export async function main() {
   ]);
 
   // log all the grants
-  const grantsBeforeProposal = await fetchGrantsByAddress(vestingVault, signer);
+  const fetchedGrants = await fetchGrantsByAddress(vestingVault, signer);
+  const blockNumber = await hre.ethers.provider.getBlockNumber();
   console.log("logging all grants");
-  logGrants(grantsBeforeProposal, "grantsBeforeAddRemove.csv");
+  logGrants(fetchedGrants, `grants${blockNumber}.csv`);
   // console the grants in grants.ts
   consoleGrants(
     Object.fromEntries(
-      Object.entries(grantsBeforeProposal).filter(([address]) =>
+      Object.entries(fetchedGrants).filter(([address]) =>
         granteeAddresses.includes(address)
       )
     )
