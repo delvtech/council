@@ -1,10 +1,7 @@
 import { Signer } from "ethers";
 import { formatEther, parseEther } from "ethers/lib/utils";
 import hre from "hardhat";
-import {
-  SimpleProxy__factory,
-  UnfrozenVestingVault2__factory,
-} from "typechain";
+import { SimpleProxy__factory, ViewUnassigned__factory } from "typechain";
 
 import { DAY_IN_BLOCKS } from "src/constants";
 import { sleep } from "src/helpers/sleep";
@@ -15,7 +12,7 @@ import addressesJson from "./addresses";
 /**
  *  Performs a mainnet fork test to read the unassigned tokens in the VestingVault
  *  that performs the following:
- *     Deploys a new UnfrozenVestingVault2 with ability read unassigned()
+ *     Deploys a new ViewUnassigned with ability read unassigned()
  *     Reads the unassigned vaule
  *
  *  In addition, the full list of grants are fetched and logged before and after the proposal so we
@@ -47,7 +44,7 @@ export async function main() {
   //*************************************************//
   console.log("deploying the upgraded vesting vault");
   // this one has an unassigned() method
-  const unfrozenVault = await deployVault2Upgrade(signer);
+  const unfrozenVault = await deployViewUnassigned(signer);
   console.log("unfrozenVault", unfrozenVault.address);
 
   //*************************************************//
@@ -78,7 +75,7 @@ export async function main() {
   //*************************************************//
   // check to see that the grants are updated as expected
   //*************************************************//
-  const vestingVaultContract = UnfrozenVestingVault2__factory.connect(
+  const vestingVaultContract = ViewUnassigned__factory.connect(
     vestingVault,
     signer
   );
@@ -101,11 +98,11 @@ export async function main() {
  * @param staleBlockLag
  * @returns
  */
-export async function deployVault2Upgrade(
+export async function deployViewUnassigned(
   signer: Signer,
   staleBlockLag = Math.round(DAY_IN_BLOCKS * 30)
 ) {
-  const deployer = new UnfrozenVestingVault2__factory(signer);
+  const deployer = new ViewUnassigned__factory(signer);
   const { elementToken } = addressesJson.addresses;
 
   console.log("deploying vault with:");

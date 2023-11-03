@@ -46,12 +46,6 @@ export async function main() {
   const proposalInfo: ProposalInfo = JSON.parse(rawdata.toString());
   const { proposalId, targetsTimeLock, calldatasTimeLock } = proposalInfo;
 
-  const lockDuration = await timelockContract.waitTime();
-  const lockDurationHexString = lockDuration.toHexString().replace("0x0", "0x");
-  console.log("jumping forward so timelock can execute");
-  await hre.network.provider.send("hardhat_mine", [lockDurationHexString]);
-  await hre.network.provider.send("hardhat_mine", [lockDurationHexString]);
-
   console.log("executing timelock proposal");
   try {
     await timelockContract.execute(targetsTimeLock, calldatasTimeLock);

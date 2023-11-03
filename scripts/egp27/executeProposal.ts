@@ -14,7 +14,6 @@ const { provider } = hre.ethers;
  * Creates the upgrade grants proposal
  */
 export async function main() {
-  // [signer] = await hre.ethers.getSigners();
   if (!PRIVATE_KEY) {
     return;
   }

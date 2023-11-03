@@ -90,7 +90,6 @@ export async function createVestingGrantsUpgradeProposal(
 
   const ballot = 0; // 0 - YES, 1 - NO, 2 - ABSTAIN
 
-  // create the arguments to coreVoting.proposal()
   const coreVotingContract = CoreVoting__factory.connect(
     coreVotingAddress,
     signer
@@ -147,6 +146,7 @@ export async function getUpdateGrantsProposalArgs(
   timeLockAddress: string
 ): Promise<ProposalArgs> {
   const proxyInterface = new ethers.utils.Interface(SimpleProxy__factory.abi);
+  // step 1 is to upgrade the implementation contract so we can reduce/add/remove grants
   const callDataProxyUpgrade = proxyInterface.encodeFunctionData(
     "upgradeProxy",
     [unfrozenVaultAddress]
@@ -201,7 +201,7 @@ export async function getUpdateGrantsProposalArgs(
     callDataProxyDowngrade,
   ];
 
-  // we are only hitting the vesting vault's proxy address
+  // we are only hitting the vesting vault's proxy address, so set all targets to the proxy
   const targetsTimeLock = calldatasTimeLock.map(() => vestingVaultAddress);
   const callHashTimelock = await createCallHash(
     calldatasTimeLock,
