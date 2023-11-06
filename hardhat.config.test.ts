@@ -1,4 +1,4 @@
-import "@nomiclabs/hardhat-waffle";
+import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 

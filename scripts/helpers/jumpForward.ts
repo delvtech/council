@@ -6,7 +6,7 @@ import addressesJson from "src/addresses";
 const RPC_HOST = "http://127.0.0.1:8545";
 const provider = new hre.ethers.providers.JsonRpcProvider(RPC_HOST);
 
-async function main() {
+export async function main() {
   const { coreVoting } = addressesJson.addresses;
 
   const coreVotingContract = CoreVoting__factory.connect(coreVoting, provider);
@@ -18,9 +18,9 @@ async function main() {
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+// main()
+//   .then(() => process.exit(0))
+//   .catch((error) => {
+//     console.error(error);
+//     process.exit(1);
+//   });

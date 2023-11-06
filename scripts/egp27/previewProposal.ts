@@ -2,7 +2,7 @@ import fs from "fs";
 import hre from "hardhat";
 
 import addressesJson from "src/addresses";
-import { getUpdateGrantsProposalArgs } from "src/createProposalUpdateGrants";
+import { getUpdateGrantsProposalArgs } from "scripts/egp27/createProposalUpdateGrants";
 import grants from "src/grants";
 
 const { PRIVATE_KEY } = process.env;
@@ -12,9 +12,9 @@ const { provider } = hre.ethers;
 // Returns the arguments needed to create an upgrade
 // grants proposal.
 //*************************************************//
-
 export async function main() {
   if (!PRIVATE_KEY) {
+    console.log("NO PRIVATE KEY, EXITING");
     return;
   }
 
@@ -25,13 +25,13 @@ export async function main() {
     unfrozenVestingVaultAddress,
   } = addressesJson.addresses;
 
-  const { grantUpdatesForEGP22 } = grants;
+  const { grantUpdatesForEGP27 } = grants;
 
   console.log("getting the proposal arguments");
 
   const proposalArgs = await getUpdateGrantsProposalArgs(
     provider,
-    grantUpdatesForEGP22,
+    grantUpdatesForEGP27,
     unfrozenVestingVaultAddress,
     frozenVestingVaultAddress,
     vestingVault,
@@ -40,14 +40,5 @@ export async function main() {
 
   console.log("proposalArgs", proposalArgs);
   const data = JSON.stringify(proposalArgs, null, 2);
-  fs.writeFileSync("scripts/egp22/proposalArgs.json", data);
+  fs.writeFileSync("scripts/egp27/proposalArgs.json", data);
 }
-
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-// main()
-//   .then(() => process.exit(0))
-//   .catch((error) => {
-//     console.error(error);
-//     process.exit(1);
-//   });
