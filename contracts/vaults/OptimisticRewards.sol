@@ -9,7 +9,7 @@ import "../libraries/MerkleRewards.sol";
 
 // This contract follows an optimistic reward model, an authorized address the 'proposer'
 // can submit a new merkle root and after a delay it is set the new merkle root.
-// Durning the period before the root is accepted governance can prevent the update
+// During the period before the root is accepted governance can prevent the update
 // by removing that proposed root and resetting the timer.
 
 // We've chosen this model to allow rewards flexibility. Any replicable off-chain program
