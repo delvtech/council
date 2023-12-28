@@ -1,3 +1,4 @@
+import { Wallet } from "ethers";
 import { parseEther } from "ethers/lib/utils";
 import hre from "hardhat";
 
@@ -7,6 +8,9 @@ import addressesJson from "./addresses";
 import { consoleGrants } from "./helpers/consoleGrants";
 import { fetchGrantsByAddress } from "./helpers/fetchGrantAddresses";
 import { logGrants } from "./helpers/logGrants";
+
+const { PRIVATE_KEY, USE_TEST_SIGNER } = process.env;
+const { provider } = hre.ethers;
 
 /**
  *  Performs a mainnet fork test to update grants in the vesting vault.  This is a full runthrough
@@ -21,20 +25,32 @@ import { logGrants } from "./helpers/logGrants";
  *  can look at a diff of the grants.
  */
 export async function main() {
-  const { vestingVault } = addressesJson.addresses;
+  if (!PRIVATE_KEY) {
+    return;
+  }
 
+  const { vestingVault } = addressesJson.addresses;
   const granteeAddresses = grants.grantUpdatesForEGP27.map((g) => g.who);
 
-  // sisyphus.eth
-  const signer = await hre.ethers.getImpersonatedSigner(
-    "0xC77FA6C05B4e472fEee7c0f9B20E70C5BF33a99B"
-  );
-
-  // give some eth
-  await hre.network.provider.send("hardhat_setBalance", [
-    signer.address,
-    parseEther("1000").toHexString().replace("0x0", "0x"),
-  ]);
+  let signer = new hre.ethers.Wallet(PRIVATE_KEY, provider);
+  if (USE_TEST_SIGNER) {
+    console.log("******************************************");
+    console.log("USING TEST SIGNER ", signer.address);
+    console.log("******************************************");
+    // sisyphus.eth
+    signer = (await hre.ethers.getImpersonatedSigner(
+      "0xC77FA6C05B4e472fEee7c0f9B20E70C5BF33a99B"
+    )) as unknown as Wallet;
+    // give some eth
+    await hre.network.provider.send("hardhat_setBalance", [
+      signer.address,
+      parseEther("1000").toHexString().replace("0x0", "0x"),
+    ]);
+  } else {
+    console.log("******************************************");
+    console.log("USING SIGNER ", signer.address);
+    console.log("******************************************");
+  }
 
   // log all the grants
   const fetchedGrants = await fetchGrantsByAddress(vestingVault, signer);
@@ -50,11 +66,3 @@ export async function main() {
     )
   );
 }
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-// main()
-//   .then(() => process.exit(0))
-//   .catch((error) => {
-//     console.error(error);
-//     process.exit(1);
-//   });

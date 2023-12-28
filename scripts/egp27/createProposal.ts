@@ -1,3 +1,4 @@
+import { formatEther } from "ethers/lib/utils";
 import fs from "fs";
 import hre from "hardhat";
 import { CoreVoting__factory } from "typechain";
@@ -48,7 +49,7 @@ export async function createUpgradeGrantsProposal() {
 
   const { coreVoting, lockingVault } = addressesJson.addresses;
 
-  console.log("creating the proposal");
+  console.log("creating proposal egp-27");
 
   const rawdata = fs.readFileSync("scripts/egp27/proposalArgs.json");
   const args: ProposalArgs = JSON.parse(rawdata.toString());
@@ -111,4 +112,59 @@ export async function createUpgradeGrantsProposal() {
   const proposalInfo: ProposalInfo = Object.fromEntries(proposalArgs);
   const data = JSON.stringify(proposalInfo, null, 2);
   fs.writeFileSync("scripts/egp27/proposalInfo.json", data);
+}
+
+export async function estimateUpgradeGrantsProposal() {
+  if (!PRIVATE_KEY || !NUM_DAYS_TO_EXECUTE) {
+    return;
+  }
+
+  let signer = new hre.ethers.Wallet(PRIVATE_KEY, provider);
+  if (USE_TEST_SIGNER) {
+    console.log("******************************************");
+    console.log("USING TEST SIGNER ", signer.address);
+    console.log("******************************************");
+    // sisyphus.eth
+    signer = (await hre.ethers.getImpersonatedSigner(
+      "0xC77FA6C05B4e472fEee7c0f9B20E70C5BF33a99B"
+    )) as unknown as Wallet;
+  } else {
+    console.log("******************************************");
+    console.log("USING SIGNER ", signer.address);
+    console.log("******************************************");
+  }
+  await sleep(10_000);
+
+  const { coreVoting, lockingVault } = addressesJson.addresses;
+
+  console.log("estimating proposal egp-27");
+
+  const rawdata = fs.readFileSync("scripts/egp27/proposalArgs.json");
+  const args: ProposalArgs = JSON.parse(rawdata.toString());
+  const { targets, callDatas } = args;
+
+  const ballot = BALLOT ?? 0; // 0 - YES, 1 - NO, 2 - ABSTAIN
+
+  // create the arguments to coreVoting.proposal()
+  const coreVotingContract = CoreVoting__factory.connect(coreVoting, signer);
+
+  // last chance to execute to vote is ~ NUM_DAYS_TO_EXECUTE days from now
+  const currentBlock = await provider.getBlockNumber();
+  const lastCall = Math.round(
+    DAY_IN_BLOCKS * Number(NUM_DAYS_TO_EXECUTE) + currentBlock
+  );
+  const votingVaultAddresses = [lockingVault];
+  const extraVaultData = ["0x00"];
+
+  const result = await coreVotingContract.estimateGas.proposal(
+    votingVaultAddresses,
+    extraVaultData,
+    targets,
+    callDatas,
+    lastCall,
+    ballot
+  );
+
+  console.log("ether", Number(formatEther(result)) * 1_000_000_000);
+  console.log("dollars", Number(formatEther(result)) * 1_000_000_000 * 2300);
 }

@@ -18,15 +18,16 @@ export async function main() {
     return;
   }
 
-  let signer = new hre.ethers.Wallet(PRIVATE_KEY, provider);
+  const signer = new hre.ethers.Wallet(PRIVATE_KEY, provider);
   if (USE_TEST_SIGNER) {
-    console.log("******************************************");
-    console.log("USING TEST SIGNER ", signer.address);
-    console.log("******************************************");
-    // sisyphus.eth
-    signer = (await hre.ethers.getImpersonatedSigner(
-      "0xC77FA6C05B4e472fEee7c0f9B20E70C5BF33a99B"
-    )) as unknown as Wallet;
+    return;
+    // console.log("******************************************");
+    // console.log("USING TEST SIGNER ", signer.address);
+    // console.log("******************************************");
+    // // sisyphus.eth
+    // signer = (await hre.ethers.getImpersonatedSigner(
+    //   "0xC77FA6C05B4e472fEee7c0f9B20E70C5BF33a99B"
+    // )) as unknown as Wallet;
   } else {
     console.log("******************************************");
     console.log("USING SIGNER ", signer.address);

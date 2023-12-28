@@ -1,7 +1,7 @@
-import { Wallet } from "ethers";
+import { BigNumber, Wallet } from "ethers";
 import fs from "fs";
 import hre from "hardhat";
-import { CoreVoting__factory, Timelock__factory } from "typechain";
+import { Timelock__factory } from "typechain";
 
 import addressesJson from "src/addresses";
 import { ProposalInfo } from "src/types";
@@ -18,7 +18,6 @@ const { provider } = hre.ethers;
  * Creates the upgrade grants proposal
  */
 export async function main() {
-  // [signer] = await hre.ethers.getSigners();
   if (!PRIVATE_KEY) {
     return;
   }
@@ -37,7 +36,7 @@ export async function main() {
     console.log("USING SIGNER ", signer.address);
     console.log("******************************************");
   }
-  await sleep(10_000);
+  // await sleep(10_000);
 
   const { vestingVault, timeLock } = addressesJson.addresses;
   const timelockContract = Timelock__factory.connect(timeLock, signer);
@@ -48,10 +47,19 @@ export async function main() {
 
   console.log("executing timelock proposal");
   try {
+    console.log("targetsTimeLock", targetsTimeLock);
+    console.log("calldatasTimeLock", calldatasTimeLock);
+    const gasEstimate = await timelockContract.estimateGas.execute(
+      targetsTimeLock,
+      calldatasTimeLock
+    );
+    console.log("gasEstimate", gasEstimate.toString());
     await timelockContract.execute(targetsTimeLock, calldatasTimeLock);
   } catch (err: any) {
+    console.log("err", err);
     console.log("proposalId", proposalId, "failed");
     console.log("err", err.reason);
+    return;
   }
 
   const granteeAddresses = grants.grantUpdatesForEGP27.map((g) => g.who);
@@ -67,4 +75,7 @@ export async function main() {
       )
     )
   );
+}
+function formatEther(gasEstimate: BigNumber): any {
+  throw new Error("Function not implemented.");
 }
