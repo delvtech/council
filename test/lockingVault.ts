@@ -196,6 +196,15 @@ describe("Locking Vault", function () {
     expect(votingPower).to.be.eq(one.mul(3));
   });
 
+  it("Does not allow changing delegates to zero address", async () => {
+    // User 0 deposits and delegates to themselves
+    await vault.deposit(signers[0].address, one, signers[0].address);
+    // We try to change the delegation to zero address
+    await expect(vault.changeDelegation(zeroAddress)).to.be.revertedWith(
+      "Zero addr delegation"
+    );
+  });
+
   it("Withdraws properly", async () => {
     // First we setup the user and give accounts some voting power
     await vault.deposit(signers[0].address, one, signers[2].address);
