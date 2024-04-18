@@ -1,6 +1,7 @@
 import "@nomiclabs/hardhat-waffle";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
+import "dotenv/config";
 
 import { HardhatUserConfig } from "hardhat/config";
 
