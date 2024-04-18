@@ -171,6 +171,8 @@ abstract contract AbstractLockingVault is IVotingVault, ILockingVault {
     /// @notice Changes a user's voting power
     /// @param newDelegate The new address which gets voting power
     function changeDelegation(address newDelegate) external override {
+        // No delegating to zero
+        require(newDelegate != address(0), "Zero addr delegation");
         // Get the stored user data
         Storage.AddressUint storage userData = _deposits()[msg.sender];
         // Get the user balance
