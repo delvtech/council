@@ -26,7 +26,7 @@ If you have a suggestion for a new feature, extension, or cool use case and want
 
 When contributing, please be sure to follow our contribution [guidelines](https://github.com/delvtech/elf-contracts/blob/master/CONTRIBUTING.md) when proposing any new code. Lastly, because Council is a community-driven governance protocol, any new code contributions are more likely to be accepted into future deployments of the protocol if they have been openly discussed within the community first.
 
-For a technical overview of Council's smart contracts, please read our documentation [here](https://docs-delv.gitbook.io/element-protocol-docs/governance-council/council-protocol-smart-contracts).
+For a technical overview of Council's smart contracts, please read our documentation [here](https://docs-delv.gitbook.io/element-developer-docs/governance-council/council-protocol-smart-contracts).
 
 ### Architecture Overview Diagram
 ![image](https://user-images.githubusercontent.com/32653033/135169921-9a295182-88fc-4b53-b6c4-3d29cf41f71c.png)
