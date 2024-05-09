@@ -3,6 +3,7 @@
 [![Build Status](https://github.com/delvtech/council/workflows/Tests/badge.svg)](https://github.com/delvtech/council/actions)
 [![Coverage Status](https://coveralls.io/repos/github/delvtech/council/badge.svg?branch=main&t=ry86JL)](https://coveralls.io/github/delvtech/council?branch=main)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/delvtech/council/blob/master/LICENSE)
+[![Static Badge](https://img.shields.io/badge/DELV-Terms%20Of%20Service-orange)](https://delv-public.s3.us-east-2.amazonaws.com/delv-terms-of-service.pdf)
   
 Council is a decentralized governance system that allows a community to manage a DAO. The governance system is designed to enable flexibility, improvements, and experimentation while successfully maintaining the security and robustness of the governed protocol.
 
