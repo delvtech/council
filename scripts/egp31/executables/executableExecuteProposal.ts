@@ -1,10 +1,8 @@
 // # Script to update grants with new values
-import { main as getGrants } from "src/getGrants";
-import { main as executeProposal } from "../executeProposal";
+import { executeProposal } from "../executeProposal";
 
 async function main() {
   await executeProposal();
-  await getGrants();
 }
 
 // We recommend this pattern to be able to use async/await everywhere

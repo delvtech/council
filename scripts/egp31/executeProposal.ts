@@ -1,44 +1,24 @@
-import { Wallet } from "ethers";
 import fs from "fs";
-import hre from "hardhat";
 import { CoreVoting__factory } from "typechain";
 
 import addressesJson from "src/addresses";
 import { sleep } from "src/helpers/sleep";
 import { ProposalInfo } from "src/types";
+import { getSigner } from "scripts/helpers/getSigner";
+import { Wallet } from "ethers";
 
-const { PRIVATE_KEY, USE_TEST_SIGNER } = process.env;
-const { provider } = hre.ethers;
+export async function executeProposal(signer: Wallet | undefined) {
+  await sleep(1_000);
 
-/**
- * Creates the upgrade grants proposal
- */
-export async function main() {
-  if (!PRIVATE_KEY) {
+  signer = signer || (await getSigner());
+  if (!signer) {
     return;
   }
-
-  const signer = new hre.ethers.Wallet(PRIVATE_KEY, provider);
-  if (USE_TEST_SIGNER) {
-    return;
-    // console.log("******************************************");
-    // console.log("USING TEST SIGNER ", signer.address);
-    // console.log("******************************************");
-    // // sisyphus.eth
-    // signer = (await hre.ethers.getImpersonatedSigner(
-    //   "0xC77FA6C05B4e472fEee7c0f9B20E70C5BF33a99B"
-    // )) as unknown as Wallet;
-  } else {
-    console.log("******************************************");
-    console.log("USING SIGNER ", signer.address);
-    console.log("******************************************");
-  }
-  await sleep(10_000);
 
   const { coreVoting } = addressesJson.addresses;
   const coreVotingContract = CoreVoting__factory.connect(coreVoting, signer);
 
-  const rawdata = fs.readFileSync("scripts/egp27/proposalInfo.json");
+  const rawdata = fs.readFileSync("scripts/egp31/proposalInfo.json");
   const proposalInfo: ProposalInfo = JSON.parse(rawdata.toString());
   const { proposalId, targets, callDatas } = proposalInfo;
 

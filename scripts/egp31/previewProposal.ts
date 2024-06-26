@@ -1,44 +1,74 @@
 import fs from "fs";
-import hre from "hardhat";
+import { ethers } from "hardhat";
+import { parseEther } from "ethers/lib/utils";
+import { ProposalArgs } from "src/types";
 
 import addressesJson from "src/addresses";
-import { getUpdateGrantsProposalArgs } from "scripts/egp27/createProposalUpdateGrants";
-import grants from "src/grants";
+import {
+  ERC20Permit__factory,
+  Timelock__factory,
+  Treasury__factory,
+} from "typechain";
+import { createCallHash } from "src/helpers/createCallHash";
 
 const { PRIVATE_KEY } = process.env;
-const { provider } = hre.ethers;
+const delvWalletAddress = "0xF6094C3A380AD6161Fb8240F3043392A0E427CAC";
 
 //*************************************************//
-// Returns the arguments needed to create an upgrade
-// grants proposal.
+// Returns arguments to transfer funds from the treasury to the delv wallet.
 //*************************************************//
-export async function main() {
+export async function previewProposal() {
   if (!PRIVATE_KEY) {
     console.log("NO PRIVATE KEY, EXITING");
     return;
   }
 
-  const {
-    timeLock,
-    vestingVault,
-    frozenVestingVaultAddress,
-    unfrozenVestingVaultAddress,
-  } = addressesJson.addresses;
-
-  const { grantUpdatesForEGP27 } = grants;
+  const { treasury, elementToken, timeLock } = addressesJson.addresses;
 
   console.log("getting the proposal arguments");
 
-  const proposalArgs = await getUpdateGrantsProposalArgs(
-    provider,
-    grantUpdatesForEGP27,
-    unfrozenVestingVaultAddress,
-    frozenVestingVaultAddress,
-    vestingVault,
-    timeLock
-  );
+  const proposalArgs = await getProposalArgs(treasury, elementToken, timeLock);
 
   console.log("proposalArgs", proposalArgs);
   const data = JSON.stringify(proposalArgs, null, 2);
-  fs.writeFileSync("scripts/egp27/proposalArgs.json", data);
+  fs.writeFileSync("scripts/egp31/proposalArgs.json", data);
+}
+
+export async function getProposalArgs(
+  treasuryAddress: string,
+  tokenAddress: string,
+  timeLockAddress: string
+): Promise<ProposalArgs> {
+  const treasuryInterface = new ethers.utils.Interface(Treasury__factory.abi);
+  const callDataSendFunds = treasuryInterface.encodeFunctionData("sendFunds", [
+    tokenAddress,
+    parseEther(String(4_000_000)),
+    delvWalletAddress,
+  ]);
+
+  const calldatasTimeLock = [callDataSendFunds];
+  const targetsTimeLock = [treasuryAddress];
+  const callHashTimelock = await createCallHash(
+    calldatasTimeLock,
+    targetsTimeLock
+  );
+
+  const timeLockInterface = new ethers.utils.Interface(Timelock__factory.abi);
+  const calldataCoreVoting = timeLockInterface.encodeFunctionData(
+    "registerCall",
+    [callHashTimelock]
+  );
+
+  const targets = [timeLockAddress];
+  const callDatas = [calldataCoreVoting];
+  const proposalHash = await createCallHash(callDatas, targets);
+
+  return {
+    targets,
+    callDatas,
+    proposalHash,
+    targetsTimeLock,
+    calldatasTimeLock,
+    callHashTimelock,
+  };
 }

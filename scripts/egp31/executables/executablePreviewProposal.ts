@@ -1,8 +1,8 @@
 // # Script to update grants with new values
-import { estimateUpgradeGrantsProposal } from "../createProposal";
+import { previewProposal } from "scripts/egp31/previewProposal";
 
 async function main() {
-  await estimateUpgradeGrantsProposal();
+  await previewProposal();
 }
 
 // We recommend this pattern to be able to use async/await everywhere
