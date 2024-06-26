@@ -4,11 +4,7 @@ import { parseEther } from "ethers/lib/utils";
 import { ProposalArgs } from "src/types";
 
 import addressesJson from "src/addresses";
-import {
-  ERC20Permit__factory,
-  Timelock__factory,
-  Treasury__factory,
-} from "typechain";
+import { Timelock__factory, Treasury__factory } from "typechain";
 import { createCallHash } from "src/helpers/createCallHash";
 
 const { PRIVATE_KEY } = process.env;
@@ -29,7 +25,6 @@ export async function previewProposal() {
 
   const proposalArgs = await getProposalArgs(treasury, elementToken, timeLock);
 
-  console.log("proposalArgs", proposalArgs);
   const data = JSON.stringify(proposalArgs, null, 2);
   fs.writeFileSync("scripts/egp31/proposalArgs.json", data);
 }
