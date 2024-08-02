@@ -9,8 +9,7 @@ import { Wallet } from "ethers";
 import { sleep } from "src/helpers/sleep";
 import { getSigner } from "scripts/helpers/getSigner";
 
-const { PRIVATE_KEY, NUM_DAYS_TO_EXECUTE, BALLOT, USE_TEST_SIGNER } =
-  process.env;
+const { NUM_DAYS_TO_EXECUTE, BALLOT } = process.env;
 
 const { provider } = hre.ethers;
 
@@ -30,9 +29,9 @@ export async function createProposal(signer: Wallet | undefined) {
 
   const { coreVoting, lockingVault } = addressesJson.addresses;
 
-  console.log("creating proposal egp-31");
+  console.log("creating proposal egp-32");
 
-  const rawdata = fs.readFileSync("scripts/egp31/proposalArgs.json");
+  const rawdata = fs.readFileSync("scripts/egp32/proposalArgs.json");
   const args: ProposalArgs = JSON.parse(rawdata.toString());
   const {
     targets,
@@ -92,5 +91,5 @@ export async function createProposal(signer: Wallet | undefined) {
 
   const proposalInfo: ProposalInfo = Object.fromEntries(proposalArgs);
   const data = JSON.stringify(proposalInfo, null, 2);
-  fs.writeFileSync("scripts/egp31/proposalInfo.json", data);
+  fs.writeFileSync("scripts/egp32/proposalInfo.json", data);
 }
