@@ -26,7 +26,7 @@ export async function previewProposal() {
   const proposalArgs = await getProposalArgs(treasury, elementToken, timeLock);
 
   const data = JSON.stringify(proposalArgs, null, 2);
-  fs.writeFileSync("scripts/egp35/proposalArgs.json", data);
+  fs.writeFileSync("scripts/egp36/proposalArgs.json", data);
 }
 
 export async function getProposalArgs(

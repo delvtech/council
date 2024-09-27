@@ -26,7 +26,7 @@ npx hardhat node
 In a separate terminal, run:
 
 ```bash
-npx hardhat run scripts/egp35/testCreateAndExecute.ts --no-compile --network hardhat
+npx hardhat run scripts/egp36/testCreateAndExecute.ts --no-compile --network hardhat
 ```
 NOTE that the network is hardhat, not mainnet
 
@@ -36,7 +36,7 @@ There will be a lot of output regarding the grants created and the new unassigne
 To create the proposal arguments, run:
 
 ```bash
-npx hardhat run scripts/egp35/executables/executablePreviewProposal.ts --no-compile --network mainnet
+npx hardhat run scripts/egp36/executables/executablePreviewProposal.ts --no-compile --network mainnet
 
 ```
 
@@ -53,7 +53,7 @@ PRIVATE_KEY=ACTUAL_KEY!!!!
 Then run:
 
 ```bash
-npx hardhat run scripts/egp35/executables/executableCreateProposal.ts --no-compile --network mainnet
+npx hardhat run scripts/egp36/executables/executableCreateProposal.ts --no-compile --network mainnet
 ```
 
 NOTE that the network is updated to mainnet, not hardhat
@@ -62,12 +62,12 @@ NOTE that the network is updated to mainnet, not hardhat
 If the proposal passes quorum, then we can execute it:
 
 ```bash
- npx hardhat run scripts/egp35/executables/executableExecuteProposal.ts --no-compile --network mainnet
+ npx hardhat run scripts/egp36/executables/executableExecuteProposal.ts --no-compile --network mainnet
 ```
 
 ## EXECUTING THE TIMELOCKED PROPOSAL
 If the proposal passes the wait time on the timelock, then we can execute it:
 
 ```bash
- npx hardhat run scripts/egp35/executables/executableExecuteTimelock.ts --no-compile --network mainnet
+ npx hardhat run scripts/egp36/executables/executableExecuteTimelock.ts --no-compile --network mainnet
 ```

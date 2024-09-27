@@ -1,5 +1,5 @@
 // # Script to update grants with new values
-import { previewProposal } from "scripts/egp35/previewProposal";
+import { previewProposal } from "scripts/egp36/previewProposal";
 
 async function main() {
   await previewProposal();

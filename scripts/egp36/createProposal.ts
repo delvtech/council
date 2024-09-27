@@ -29,9 +29,9 @@ export async function createProposal(signer: Wallet | undefined) {
 
   const { coreVoting, lockingVault } = addressesJson.addresses;
 
-  console.log("creating proposal egp-35");
+  console.log("creating proposal egp-36");
 
-  const rawdata = fs.readFileSync("scripts/egp35/proposalArgs.json");
+  const rawdata = fs.readFileSync("scripts/egp36/proposalArgs.json");
   const args: ProposalArgs = JSON.parse(rawdata.toString());
   const {
     targets,
@@ -91,5 +91,5 @@ export async function createProposal(signer: Wallet | undefined) {
 
   const proposalInfo: ProposalInfo = Object.fromEntries(proposalArgs);
   const data = JSON.stringify(proposalInfo, null, 2);
-  fs.writeFileSync("scripts/egp35/proposalInfo.json", data);
+  fs.writeFileSync("scripts/egp36/proposalInfo.json", data);
 }
