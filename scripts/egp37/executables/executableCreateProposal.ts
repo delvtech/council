@@ -1,33 +1,12 @@
 import hre from "hardhat";
-import { Wallet } from "ethers";
 // # Script to update grants with new values
 import { createProposal } from "../createProposal";
 import { sleep } from "src/helpers/sleep";
-
-const { USE_TEST_SIGNER, PRIVATE_KEY } = process.env;
+import { getSigner } from "scripts/helpers/getSigner";
 
 async function main() {
-  const { provider } = hre.ethers;
+  const signer = await getSigner();
 
-  if (!PRIVATE_KEY) {
-    console.log("NO PRIVATE KEY, EXITING");
-    return;
-  }
-  let signer = new hre.ethers.Wallet(PRIVATE_KEY, provider);
-
-  if (USE_TEST_SIGNER === "true") {
-    console.log("******************************************");
-    console.log("USING TEST SIGNER ", signer.address);
-    console.log("******************************************");
-    // sisyphus.eth
-    signer = (await hre.ethers.getImpersonatedSigner(
-      "0xC77FA6C05B4e472fEee7c0f9B20E70C5BF33a99B"
-    )) as unknown as Wallet;
-  } else {
-    console.log("******************************************");
-    console.log("USING SIGNER ", signer.address);
-    console.log("******************************************");
-  }
   await sleep(10_000);
   await createProposal(signer);
 }

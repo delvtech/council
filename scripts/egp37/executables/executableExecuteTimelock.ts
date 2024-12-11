@@ -1,7 +1,9 @@
+import { getSigner } from "scripts/helpers/getSigner";
 import { executeTimelock } from "../executeTimelock";
 
 async function main() {
-  await executeTimelock();
+  const signer = await getSigner();
+  await executeTimelock(signer);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -1,3 +1,4 @@
+import hre from "hardhat";
 // # Script to update grants with new values
 import { getSigner } from "scripts/helpers/getSigner";
 import { executeProposal } from "../executeProposal";

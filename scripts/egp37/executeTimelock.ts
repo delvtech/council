@@ -15,7 +15,7 @@ export async function executeTimelock(signer: Wallet | undefined) {
   const { timeLock } = addressesJson.addresses;
   const timelockContract = Timelock__factory.connect(timeLock, signer);
 
-  const rawdata = fs.readFileSync("scripts/egp36/proposalInfo.json");
+  const rawdata = fs.readFileSync("scripts/egp37/proposalInfo.json");
   const proposalInfo: ProposalInfo = JSON.parse(rawdata.toString());
   const { proposalId, targetsTimeLock, calldatasTimeLock } = proposalInfo;
 
