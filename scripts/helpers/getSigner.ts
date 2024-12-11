@@ -11,7 +11,7 @@ export async function getSigner(): Promise<Wallet | undefined> {
   }
 
   let signer = new hre.ethers.Wallet(PRIVATE_KEY, provider);
-  if (USE_TEST_SIGNER) {
+  if (USE_TEST_SIGNER === "true") {
     // sisyphus.eth
     signer = (await hre.ethers.getImpersonatedSigner(
       "0xC77FA6C05B4e472fEee7c0f9B20E70C5BF33a99B"

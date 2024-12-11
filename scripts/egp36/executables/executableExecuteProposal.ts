@@ -1,8 +1,10 @@
 // # Script to update grants with new values
+import { getSigner } from "scripts/helpers/getSigner";
 import { executeProposal } from "../executeProposal";
 
 async function main() {
-  await executeProposal();
+  const signer = await getSigner();
+  await executeProposal(signer);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
