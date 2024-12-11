@@ -9,6 +9,10 @@ import { HardhatUserConfig } from "hardhat/config";
 dotEnvConfig({ path: __dirname + "/.env" });
 
 const { ETHERSCAN_API_KEY } = process.env;
+console.log(
+  "process.env.ALCHEMY_MAINNET_API_KEY",
+  process.env.ALCHEMY_MAINNET_API_KEY
+);
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
@@ -41,7 +45,7 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       forking: {
-        // blockNumber: 18472527,
+        blockNumber: 21376798,
         url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_MAINNET_API_KEY}`,
         enabled: true,
       },
