@@ -42,9 +42,15 @@ export async function createProposal(signer: Wallet | undefined) {
     callHashTimelock,
   } = args;
 
-  const ballot = BALLOT ?? 0; // 0 - YES, 1 - NO, 2 - ABSTAIN
-
   // create the arguments to coreVoting.proposal()
+  const ballot = Number(BALLOT) ?? 0; // 0 - YES, 1 - NO, 2 - ABSTAIN
+  console.log("ballot", ballot);
+  if (signer.address !== process.env.TEST_SIGNER_ADDRESS && ballot !== 2) {
+    console.log("process.env.TEST_SIGNER", process.env.TEST_SIGNER);
+    console.log("signer", signer.address);
+    throw new Error("Only ABSTAIN is allowed for creating proposals");
+  }
+
   const coreVotingContract = CoreVoting__factory.connect(coreVoting, signer);
 
   // last chance to execute to vote is ~ NUM_DAYS_TO_EXECUTE days from now

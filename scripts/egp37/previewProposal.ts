@@ -34,6 +34,7 @@ export async function getProposalArgs(
   tokenAddress: string,
   timeLockAddress: string
 ): Promise<ProposalArgs> {
+  // Actual proposal actions.
   const treasuryInterface = new ethers.utils.Interface(Treasury__factory.abi);
   const callDataSendFunds = treasuryInterface.encodeFunctionData("sendFunds", [
     tokenAddress,
@@ -41,19 +42,23 @@ export async function getProposalArgs(
     delvWalletAddress,
   ]);
 
+  // Calldatas and targets to be executed from the Timelock
   const calldatasTimeLock = [callDataSendFunds];
   const targetsTimeLock = [treasuryAddress];
+  // Hash of of the Timelock calldatas and targets
   const callHashTimelock = await createCallHash(
     calldatasTimeLock,
     targetsTimeLock
   );
 
+  // CoreVoting proposal is a 'registerCall' on the Timelock with the hash above.
   const timeLockInterface = new ethers.utils.Interface(Timelock__factory.abi);
   const calldataCoreVoting = timeLockInterface.encodeFunctionData(
     "registerCall",
     [callHashTimelock]
   );
 
+  // The proposal hash is the CoreVoting targets and calldatas.
   const targets = [timeLockAddress];
   const callDatas = [calldataCoreVoting];
   const proposalHash = await createCallHash(callDatas, targets);
