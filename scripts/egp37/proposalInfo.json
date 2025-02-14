@@ -1,0 +1,25 @@
+{
+  "proposalId": 22,
+  "votingVaults": [
+    "0x02Bd4A3b1b95b01F2Aa61655415A5d3EAAcaafdD"
+  ],
+  "extraVaultData": [
+    "0x00"
+  ],
+  "targets": [
+    "0x81758f3361A769016eae4844072FA6d7f828a651"
+  ],
+  "callDatas": [
+    "0x88b49b83eb2ec278a4808639f4998a9f436b97d12d093b39d8d4ae671f947748574c95fd"
+  ],
+  "proposalHash": "0xd6f622af77eab0fed4a80b0bb86ce74a289089d465d8dda94179192f8c7a2ddd",
+  "targetsTimeLock": [
+    "0x82eF450FB7f06E3294F2f19ed1713b255Af0f541"
+  ],
+  "calldatasTimeLock": [
+    "0x8522d1b20000000000000000000000005c6d51ecba4d8e4f20373e3ce96a62342b125d6d00000000000000000000000000000000000000000001287626ee52197b000000000000000000000000000000f6094c3a380ad6161fb8240f3043392a0e427cac"
+  ],
+  "callHashTimelock": "0xeb2ec278a4808639f4998a9f436b97d12d093b39d8d4ae671f947748574c95fd",
+  "lastCall": 21946387,
+  "ballot": 2
+}
