@@ -4,11 +4,17 @@ import { parseEther } from "ethers/lib/utils";
 import { ProposalArgs } from "src/types";
 
 import addressesJson from "src/addresses";
-import { Timelock__factory, Treasury__factory } from "typechain";
+import {
+  ERC20PermitWithMint__factory,
+  Timelock__factory,
+  Treasury__factory,
+} from "typechain";
 import { createCallHash } from "src/helpers/createCallHash";
 
 const { PRIVATE_KEY } = process.env;
 const delvWalletAddress = "0xF6094C3A380AD6161Fb8240F3043392A0E427CAC";
+
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 //*************************************************//
 // Returns arguments to transfer funds from the treasury to the delv wallet.
@@ -35,11 +41,11 @@ export async function getProposalArgs(
   timeLockAddress: string
 ): Promise<ProposalArgs> {
   // Actual proposal actions.
-  const treasuryInterface = new ethers.utils.Interface(Treasury__factory.abi);
-  const callDataSendFunds = treasuryInterface.encodeFunctionData("sendFunds", [
-    tokenAddress,
-    parseEther(String(1_400_000)),
-    delvWalletAddress,
+  const elfiTokenInterface = new ethers.utils.Interface(
+    ERC20PermitWithMint__factory.abi
+  );
+  const callDataSendFunds = elfiTokenInterface.encodeFunctionData("setOwner", [
+    ethers.ZeroAddress,
   ]);
 
   // Calldatas and targets to be executed from the Timelock
