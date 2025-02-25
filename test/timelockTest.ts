@@ -65,15 +65,18 @@ describe("Timelock", () => {
         newWaitTime,
       ]);
 
-      const callHash = await createCallHash([calldata], [timelock.address]);
-      await timelock.connect(signers[0]).registerCall(callHash);
+      await timelock
+        .connect(signers[0])
+        .registerCall([timelock.address], [calldata]);
 
       // execute once to update wait time through the execute function
       await timelock
         .connect(signers[0])
         .execute([timelock.address], [calldata]);
       // execute again to check against the new wait time
-      await timelock.connect(signers[0]).registerCall(callHash);
+      await timelock
+        .connect(signers[0])
+        .registerCall([timelock.address], [calldata]);
       const tx = timelock
         .connect(signers[0])
         .execute([timelock.address], [calldata]);
@@ -82,14 +85,14 @@ describe("Timelock", () => {
     });
 
     it("fails if call not registered", async () => {
-      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
-      const callHash = await createCallHash(calldata, [timelock.address]);
+      const calldatas = ["0x12345678ffffffff", "0x12345678ffffffff"];
+      const callHash = await createCallHash(calldatas, [timelock.address]);
 
       const call = await timelock.callTimestamps(callHash);
       expect(call).to.be.eq(0);
       const tx = timelock
         .connect(signers[0])
-        .execute([timelock.address], calldata);
+        .execute([timelock.address], calldatas);
       await expect(tx).to.be.revertedWith("call has not been initialized");
     });
 
@@ -100,9 +103,9 @@ describe("Timelock", () => {
         newWaitTime,
       ]);
 
-      const callHash = await createCallHash([calldata], [timelock.address]);
-
-      await timelock.connect(signers[0]).registerCall(callHash);
+      await timelock
+        .connect(signers[0])
+        .registerCall([timelock.address], [calldata]);
       await delay(1000);
       await timelock
         .connect(signers[0])
@@ -122,7 +125,9 @@ describe("Timelock", () => {
 
       const callHash = await createCallHash([calldata], [timelock.address]);
 
-      await timelock.connect(signers[0]).registerCall(callHash);
+      await timelock
+        .connect(signers[0])
+        .registerCall([timelock.address], [calldata]);
       await delay(1000);
       await timelock
         .connect(signers[0])
@@ -145,29 +150,36 @@ describe("Timelock", () => {
       await restoreSnapshot(provider);
     });
 
+    let calldatas: BytesLike[];
+    let targets: string[];
     let callHash: string;
 
     before(async () => {
-      const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
-      callHash = await createCallHash(calldata, [timelock.address]);
+      calldatas = ["0x12345678ffffffff", "0x12345678ffffffff"];
+      targets = [timelock.address];
+      callHash = await createCallHash(calldatas, targets);
 
       // Register the call for execution
-      await timelock.registerCall(callHash);
+      await timelock.registerCall([timelock.address], calldatas);
     });
 
     it("fails if not authorized", async () => {
-      const tx = timelock.connect(signers[0]).increaseTime(1000, callHash);
+      const tx = timelock
+        .connect(signers[0])
+        .increaseTime(1000, targets, calldatas);
       await expect(tx).to.be.revertedWith("Sender not Authorized");
     });
 
     it("fails if attempted more than once", async () => {
-      await timelock.connect(signers[1]).increaseTime(1234, callHash);
-      const tx = timelock.connect(signers[1]).increaseTime(5678, callHash);
+      await timelock.connect(signers[1]).increaseTime(1234, targets, calldatas);
+      const tx = timelock
+        .connect(signers[1])
+        .increaseTime(5678, targets, calldatas);
       await expect(tx).to.be.revertedWith("value can only be changed once");
     });
 
     it("successful time increase", async () => {
-      await timelock.connect(signers[1]).increaseTime(1234, callHash);
+      await timelock.connect(signers[1]).increaseTime(1234, targets, calldatas);
       const blockNum = await provider.getBlockNumber();
       const block = await provider.getBlock(blockNum);
       const { timestamp } = block;
@@ -186,16 +198,19 @@ describe("Timelock", () => {
 
     it("fails if not governance", async () => {
       const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
-      const callHash = await createCallHash(calldata, [timelock.address]);
 
-      const tx = timelock.connect(signers[1]).registerCall(callHash);
+      const tx = timelock
+        .connect(signers[1])
+        .registerCall([timelock.address], calldata);
       await expect(tx).to.be.revertedWith("Sender not owner");
     });
 
     it("successful call register", async () => {
       const calldata = ["0x12345678ffffffff", "0x12345678fffffffe"];
       const callHash = await createCallHash(calldata, [timelock.address]);
-      await timelock.connect(signers[0]).registerCall(callHash);
+      await timelock
+        .connect(signers[0])
+        .registerCall([timelock.address], calldata);
       const call = await timelock.callTimestamps(callHash);
       expect(call).to.not.eq(0);
     });
@@ -211,33 +226,36 @@ describe("Timelock", () => {
 
     it("fails if not governance", async () => {
       const calldata = ["0x12345678ffffffff", "0x12345678ffffffff"];
-      const callHash = await createCallHash(calldata, [timelock.address]);
 
-      const tx = timelock.connect(signers[1]).stopCall(callHash);
+      const tx = timelock
+        .connect(signers[1])
+        .stopCall([timelock.address], calldata);
       await expect(tx).to.be.revertedWith("Sender not owner");
     });
 
     it("successful call stop", async () => {
       const calldata = ["0x12345678ffffffff", "0x12345678fffffffe"];
       const callHash = await createCallHash(calldata, [timelock.address]);
-      await timelock.connect(signers[0]).registerCall(callHash);
-      await timelock.connect(signers[0]).stopCall(callHash);
+      await timelock
+        .connect(signers[0])
+        .registerCall([timelock.address], calldata);
+      await timelock.connect(signers[0]).stopCall([timelock.address], calldata);
       const call = await timelock.callTimestamps(callHash);
       expect(call).to.be.eq(0);
     });
 
     it("doesn't register twice", async () => {
       const calldata = ["0x12345678ffffffff", "0x12345678fffffffe"];
-      const callHash = await createCallHash(calldata, [timelock.address]);
-      await timelock.connect(signers[0]).registerCall(callHash);
-      const tx = timelock.registerCall(callHash);
+      await timelock
+        .connect(signers[0])
+        .registerCall([timelock.address], calldata);
+      const tx = timelock.registerCall([timelock.address], calldata);
       await expect(tx).to.be.revertedWith("already registered");
     });
 
     it("doesn't stop on an already empty call", async () => {
       const calldata = ["0x12345678ffffffff", "0x12345678fffffffe"];
-      const callHash = await createCallHash(calldata, [timelock.address]);
-      const tx = timelock.stopCall(callHash);
+      const tx = timelock.stopCall([timelock.address], calldata);
       await expect(tx).to.be.revertedWith("No call to be removed");
     });
   });
