@@ -434,6 +434,7 @@ abstract contract AbstractVestingVault is IVotingVault {
     function _getWithdrawableAmount(VestingVaultStorage.Grant memory _grant)
         internal
         view
+        virtual
         returns (uint256)
     {
         if (block.number < _grant.cliff || block.number < _grant.created) {
@@ -468,6 +469,7 @@ abstract contract AbstractVestingVault is IVotingVault {
     function _currentVotingPower(VestingVaultStorage.Grant memory _grant)
         internal
         view
+        virtual
         returns (uint256)
     {
         uint256 withdrawable = _getWithdrawableAmount(_grant);
